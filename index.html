@@ -560,47 +560,6 @@
                 "isTransparent": true
               }
               </script>
-<script>
-/* Capture real-time price from TradingView widget via postMessage */
-(function(){
-  var _tvLast = 0;
-  window.addEventListener('message', function(e) {
-    try {
-      if(!e.data) return;
-      var msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-      var price = null, ch = null, chp = null, open = null;
-      if(msg && msg.name === 'quote' && Array.isArray(msg.data)) {
-        msg.data.forEach(function(it) {
-          var k=it.n, v=parseFloat(it.v);
-          if(k==='lp'||k==='last_price') price=v;
-          else if(k==='ch') ch=v;
-          else if(k==='chp') chp=v;
-          else if(k==='open_price'||k==='prev_close_price'){if(!open)open=v;}
-        });
-      }
-      if(!price && msg && msg.type==='QUOTES' && msg.data) {
-        var d=msg.data;
-        price=parseFloat(d.lp||d.last_price||0)||null;
-        ch=parseFloat(d.ch)||null; chp=parseFloat(d.chp)||null;
-        open=parseFloat(d.open_price||d.prev_close_price||0)||null;
-      }
-      if(price && isFinite(price) && price > 500 && price !== _tvLast) {
-        _tvLast = price;
-        if(typeof applyMarketPrice === 'function') {
-          applyMarketPrice({
-            price: price,
-            open: open || (window.GV_MARKET_PRICE && window.GV_MARKET_PRICE.open) || price,
-            prevClose: open || price,
-            change: ch || 0, changePct: chp || 0,
-            source: 'Live: TradingView OANDA:XAUUSD'
-          });
-        }
-      }
-    } catch(err) {}
-  });
-})();
-</script>
-
 </div>
 </div>
 </div>
@@ -744,10 +703,9 @@
 <!-- Size -->
 <div style="display:flex;flex-direction:column;gap:5px">
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Bar Size</label>
-<div style="position:relative">
-<input id="ph-size" type="number" min="1" step="0.001" value="1" oninput="calcPhysical()" placeholder="kg" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;padding:9px 36px 9px 11px;font-size:14px;font-weight:600;color:#B8860B;font-family:'Inter',sans-serif;outline:none;width:100%">
-<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:12px;color:#9A9488;pointer-events:none">kg</span>
-</div>
+<select id="ph-size" onchange="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
+<option selected="" value="1000">1 kg — minimum trade size</option>
+</select>
 <div style="font-size:10px;color:#B8860B;margin-top:4px">Minimum order starts at 1 kg. Increase Quantity for unlimited kg.</div>
 </div>
 <!-- Qty -->
@@ -2819,13 +2777,13 @@ function calcOrder() {
 // ── Central Live Market Price API ─────────────────────────
 // All internal screens use ONE shared price store: window.GV_MARKET_PRICE.
 // TradingView is kept only as an external chart/reference widget; system calculations do not read iframe values.
-let currentPrice = 3329.40;
+let currentPrice = 0;
 window.currentPrice = currentPrice;
 window.GV_MARKET_PRICE = {
   symbol: 'XAU/USD',
-  price: 3329.40,
-  open: 3329.40,
-  prevClose: 3329.40,
+  price: 0,
+  open: 0,
+  prevClose: 0,
   change: 0,
   changePct: 0,
   source: 'Loading live API...',
@@ -2833,7 +2791,7 @@ window.GV_MARKET_PRICE = {
   status: 'loading'
 };
 
-const openPrice = 3329.40;
+const openPrice = 0;
 const priceHistory = [];
 
 function parseNum(v){
@@ -2843,7 +2801,7 @@ function parseNum(v){
   return Number.isFinite(n) ? n : NaN;
 }
 
-// ── Price fetch ───────────────────────────────────────────────────────
+// ── Price fetch: JSONP + XHR + GoldAPI.io ─────────────────────────
 function jsonpFetch(url, cbParam, ms){
   return new Promise(function(resolve, reject){
     var cb = '_gvcb_' + Date.now();
@@ -2858,7 +2816,10 @@ function jsonpFetch(url, cbParam, ms){
       resolve(data);
     };
     sc.src = url + (url.indexOf('?')>=0?'&':'?') + cbParam + '=' + cb;
-    sc.onerror = function(){ clearTimeout(t); delete window[cb]; reject(new Error('script error')); };
+    sc.onerror = function(){
+      clearTimeout(t); delete window[cb];
+      reject(new Error('script load error'));
+    };
     document.head.appendChild(sc);
   });
 }
@@ -2867,47 +2828,22 @@ function xhrGet(url, ms, headers){
   return new Promise(function(resolve, reject){
     var xhr = new XMLHttpRequest();
     var done = false;
-    var t = setTimeout(function(){ if(!done){done=true;xhr.abort();reject(new Error('timeout'));} }, ms||8000);
+    var t = setTimeout(function(){
+      if(!done){done=true;xhr.abort();reject(new Error('timeout'));}
+    }, ms||8000);
     xhr.open('GET', url, true);
     if(headers) Object.keys(headers).forEach(function(k){ try{xhr.setRequestHeader(k,headers[k]);}catch(e){} });
-    xhr.onload = function(){ clearTimeout(t); if(done)return; done=true; if(xhr.status>=200&&xhr.status<300) resolve(xhr.responseText); else reject(new Error('HTTP '+xhr.status)); };
-    xhr.onerror = function(){ clearTimeout(t); if(!done){done=true;reject(new Error('network error'));} };
+    xhr.onload = function(){
+      clearTimeout(t); if(done) return; done=true;
+      if(xhr.status>=200&&xhr.status<300) resolve(xhr.responseText);
+      else reject(new Error('HTTP '+xhr.status));
+    };
+    xhr.onerror = function(){clearTimeout(t);if(!done){done=true;reject(new Error('network error'));}};
     xhr.send();
   });
 }
 
-// Source 1: TradingView public quote API (same data as widget)
-async function fetchGoldFromTradingView(){
-  // Multiple TV endpoints to try
-  var endpoints = [
-    'https://scanner.tradingview.com/symbol?symbol=OANDA%3AXAUUSD&fields=close,change,change_abs,open,prev_close&no_404=1',
-    'https://quote-feed.tradingview.com/l?symbols=OANDA:XAUUSD'
-  ];
-  for(var i=0;i<endpoints.length;i++){
-    try{
-      var text = await xhrGet(endpoints[i], 6000);
-      var d = JSON.parse(text);
-      // Format 1: {close:4105, change:33, change_abs:0.82, open:4072}
-      var price = parseFloat(d.close || d.lp || d.price || 0);
-      if(!price && d['OANDA:XAUUSD']) {
-        var q = d['OANDA:XAUUSD'];
-        price = parseFloat(q.close || q.lp || 0);
-        d = q;
-      }
-      if(price && isFinite(price) && price > 500) {
-        var chg = parseFloat(d.change_abs || d.ch || 0);
-        var pct = parseFloat(d.change || d.chp || 0);
-        var open = parseFloat(d.open || d.prev_close || (price - chg));
-        return {price:price, open:open, prevClose:open,
-          change:chg, changePct:pct,
-          source:'Live: TradingView OANDA:XAUUSD'};
-      }
-    }catch(e){}
-  }
-  throw new Error('TradingView scanner: no price');
-}
-
-// Source 2: goldprice.org JSONP
+// Source 1: goldprice.org JSONP (works from file://)
 async function fetchGoldFromGoldpriceOrg(){
   var data = await jsonpFetch('https://data-asg.goldprice.org/GetData/USD-XAU/1','callback',8000);
   var raw = Array.isArray(data) ? data[0] : String(data);
@@ -2918,10 +2854,11 @@ async function fetchGoldFromGoldpriceOrg(){
   return {price:price,open:price-chg,prevClose:price-chg,change:chg,changePct:pct,source:'Live: GoldPrice.org'};
 }
 
-// Source 3: GoldAPI.io
+// Source 2: GoldAPI.io (XHR, works on HTTP/localhost)
 async function fetchGoldFromGoldApiIO(){
+  var key='goldapi-44f3d4de2f2385be24c4f857f118106f-io';
   var text=await xhrGet('https://www.goldapi.io/api/XAU/USD',8000,
-    {'x-access-token':'goldapi-44f3d4de2f2385be24c4f857f118106f-io','Content-Type':'application/json'});
+    {'x-access-token':key,'Content-Type':'application/json'});
   var d=JSON.parse(text);
   if(!d||!d.price) throw new Error('GoldAPI.io: no price');
   var price=parseFloat(d.price), open=parseFloat(d.open_price)||price;
@@ -2929,39 +2866,34 @@ async function fetchGoldFromGoldApiIO(){
     change:parseFloat(d.ch)||0,changePct:parseFloat(d.chp)||0,source:'Live: GoldAPI.io'};
 }
 
-// Source 4: metals.live
+// Source 3: metals.live
 async function fetchGoldFromMetalsLive(){
   var text=await xhrGet('https://api.metals.live/v1/spot/gold',8000);
   var data=JSON.parse(text); var price=NaN;
-  if(Array.isArray(data)){ for(var i=0;i<data.length;i++){ var it=data[i]; if(Array.isArray(it)) price=parseNum(it[1]); else if(it&&typeof it==='object') price=parseNum(it.gold||it.price||it.usd); if(price) break; } }
-  else if(data&&typeof data==='object') price=parseNum(data.gold||data.price);
+  if(Array.isArray(data)){
+    for(var i=0;i<data.length;i++){
+      var it=data[i];
+      if(Array.isArray(it)) price=parseNum(it[1]);
+      else if(it&&typeof it==='object') price=parseNum(it.gold||it.price||it.value||it.usd);
+      if(price) break;
+    }
+  } else if(data&&typeof data==='object') price=parseNum(data.gold||data.price);
   if(!price||!isFinite(price)) throw new Error('metals.live: invalid');
   return {price:price,open:price,prevClose:price,source:'Live: metals.live'};
 }
 
-// Source 5: Stooq
+// Source 4: Stooq via allorigins
 async function fetchGoldFromStooq(){
-  var text=await xhrGet('https://api.allorigins.win/raw?url='+encodeURIComponent('https://stooq.com/q/l/?s=xauusd&f=sd2t2ohlcv&h&e=csv'),10000);
-  var lines=text.trim().split(/\r?\n/); if(lines.length<2) throw new Error('Stooq: no rows');
+  var rawUrl='https://stooq.com/q/l/?s=xauusd&f=sd2t2ohlcv&h&e=csv';
+  var text=await xhrGet('https://api.allorigins.win/raw?url='+encodeURIComponent(rawUrl),10000);
+  var lines=text.trim().split(/\r?\n/);
+  if(lines.length<2) throw new Error('Stooq: no rows');
   var head=lines[0].split(',').map(function(x){return x.trim().toLowerCase();});
   var vals=lines[1].split(','); var row={};
   head.forEach(function(h,i){row[h]=vals[i]&&vals[i].trim();});
   var close=parseNum(row.close||row.last);
   if(!close) throw new Error('Stooq: invalid');
   return {price:close,open:parseNum(row.open)||close,prevClose:parseNum(row.open)||close,source:'Live: Stooq'};
-}
-
-async function getLiveGoldPrice(){
-  var providers=[fetchGoldFromTradingView,fetchGoldFromGoldpriceOrg,fetchGoldFromGoldApiIO,fetchGoldFromMetalsLive,fetchGoldFromStooq];
-  var errors=[];
-  for(var i=0;i<providers.length;i++){
-    try{
-      var r=await providers[i]();
-      if(r&&r.price&&isFinite(r.price)&&r.price>500) return r;
-    }catch(e){errors.push(providers[i].name+': '+(e.message||String(e)));}
-  }
-  console.warn('All gold APIs failed:',errors.join(' | '));
-  return getSimulatedPrice();
 }
 
 var _simSessionOpen = 0;
@@ -3059,7 +2991,7 @@ async function refreshMarketPrice(){
     var data = await getLiveGoldPrice();
     applyMarketPrice(data);
     var st=document.getElementById('live-api-status');
-    if(st){ st.textContent=data.source||'Live'; st.className='badge badge-success'; }
+    if(st){ st.textContent='Live API connected'; st.className='badge badge-success'; }
   } catch(e) {
     var st=document.getElementById('live-api-status');
     if(st){ st.textContent='Live API unavailable'; st.className='badge badge-warning'; }
@@ -3134,7 +3066,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initChart();
   calcOrder();
   refreshMarketPrice();
-  setInterval(refreshMarketPrice, 8000);
+  setInterval(refreshMarketPrice, 15000);
 });
 </script>
 <!-- TRADE BLOTTER -->
@@ -3500,8 +3432,7 @@ function fmtWeight(g){
 function calcPhysical() {
   // Physical trading starts at 1 kg; quantity has no maximum limit.
   if(!document.getElementById('ph-size')) return;
-  var kg  = Math.max(1, parseFloat(gv('ph-size',1)) || 1);
-  var w = kg * 1000;
+  var w   = Math.max(1000, parseFloat(gv('ph-size',1000)) || 1000);
   var qty = Math.max(1, parseInt(gv('ph-qty',1),10) || 1);
   var cur = gv('ph-cur','USD');
   var pt  = gv('ph-ptype','market');
