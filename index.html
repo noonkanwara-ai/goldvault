@@ -1580,1115 +1580,386 @@
 </div>
 <!-- ===================== CHECKLIST CENTER ===================== -->
 <div class="page" id="page-checklist">
-<div class="module-head">
-<div class="module-eyebrow">Operations / Checklist Center</div>
-<div class="module-title">Checklist Center</div>
-<div class="module-sub">Scrap Gold Purchase, Scrap Gold Sales, Physical Gold Sales and Physical Gold Purchase checklists. All forms support data entry, live calculation summary and paper-style print/export.</div>
-</div>
-<div class="container" style="max-width:1560px">
-<div class="ops-grid" style="margin-bottom:16px">
-<div class="ops-kpi"><div class="label">Checklist types</div><div class="value" style="font-size:20px">Purchase / Sales / Physical</div><div class="sub">Client Sells + Physical Gold</div></div>
-<div class="ops-kpi"><div class="label">Linked calculation</div><div class="value" style="font-size:20px">Active</div><div class="sub">Input → Summary → Print</div></div>
-<div class="ops-kpi"><div class="label">Documents</div><div class="value">AM / Loco</div><div class="sub">Refinery / Bank / EBTS</div></div>
-<div class="ops-kpi"><div class="label">Output</div><div class="value" style="font-size:20px">Print Form</div><div class="sub">Paper-style checklist</div></div>
-</div>
-<div id="checklistSwitchButtons" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-<button class="btn btn-gold" id="btnChecklistPurchase" onclick="showChecklistPanel('purchase')">Scrap Gold Purchase Checklist</button>
-<button class="btn" id="btnChecklistSales" onclick="showChecklistPanel('sales')">Scrap Gold Sales Checklist</button>
-<button class="btn" id="btnChecklistClientBuys" onclick="showChecklistPanel('clientBuys')">Physical Gold - 1 Kilo Gold Bar - Sales</button>
-<button class="btn" id="btnChecklistPhysicalPurchase" onclick="showChecklistPanel('physicalPurchase')">Physical Gold - 1 Kilo Gold Bar - Purchase</button>
-</div>
-<div class="ops-card checklist-panel active" id="checklistPanelPurchase" style="padding:14px;margin-bottom:18px;border-color:rgba(184,134,11,.25)">
-<div class="section-label">Scrap Gold Purchase Checklist</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-  <button class="btn btn-gold btn-sm" onclick="clSaveCase('purchase', clGetActive('purchase'))">
-    💾 Save Case
-  </button>
-  <button class="btn btn-sm" onclick="clNewCase('purchase')">
-    ➕ New Case
-  </button>
-  <span id="cl-status-purchase" style="font-size:11px;color:#9A9488"></span>
-</div>
-<div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
-<div id="cl-form-purchase">
+  <div class="module-head">
+    <div class="module-eyebrow">Operations / Checklist Center</div>
+    <div class="module-title">Checklist Center</div>
+    <div class="module-sub">Full HSHSG Checklist Center embedded inside Operation only. Other modules and top navigation are preserved.</div>
+  </div>
+  <div class="container" style="max-width:1880px;padding-top:18px">
+    <iframe id="hshsgChecklistCenterFrame" title="HSHSG Checklist Center" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;&gt;
+&lt;title&gt;HSHSG Checklist Center&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#0f1115;--panel:#161a22;--card:#1d2330;--line:#303746;--text:#f8fafc;--muted:#cbd5e1;--gold:#c69214;--green:#52d18a;--blue:#5aa7ff;--danger:#ef4444}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,&quot;Helvetica Neue&quot;,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.nav{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line);background:#0b0d11;position:sticky;top:0;z-index:10}
+.brand{display:flex;gap:12px;align-items:center;font-weight:800;font-size:20px}.mark{width:36px;height:36px;border:1px solid var(--gold);border-radius:10px;display:grid;place-items:center;color:var(--gold)}.brand span{color:var(--gold)}.nav small{color:var(--muted);font-size:14px}
+.hero{padding:28px 32px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#111827,#0b0d11)}
+.hero h1{font-size:38px;margin:0 0 8px}.hero p{margin:0;color:var(--muted);font-size:17px}.stats{display:flex;gap:14px;margin-top:18px}.stat{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:13px 18px;min-width:150px}.stat b{display:block;color:var(--gold);font-size:22px}.stat small{color:var(--muted);letter-spacing:.08em}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 32px;border-bottom:1px solid var(--line)}
+.tab{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;color:var(--text);cursor:pointer;min-height:126px}.tab.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(198,146,20,.35);background:#191713}.tab h3{margin:8px 0 4px;font-size:20px}.tab p{margin:0;color:var(--muted);font-size:14px}.badge{float:right;color:var(--gold);border:1px solid rgba(198,146,20,.4);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700}
+.panel{display:none}.panel.active{display:block}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;padding:24px 32px;max-width:1880px;margin:auto}.form{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.side{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;height:max-content;position:sticky;top:84px}
+.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:18px}.btn{border:1px solid var(--line);background:#242b38;color:var(--text);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--gold);color:#111;border-color:var(--gold)}.btn.danger{color:#fecaca;border-color:#7f1d1d;background:#301416}
+.docHead{text-align:center;margin:8px 0 22px}.logo{font-weight:900;color:#22406f;font-size:25px}.docHead h2{font-size:22px;margin:6px 0 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.field label{display:block;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}.field input,.field textarea{width:100%;background:#0f141d;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px;font-size:15px}.field textarea{min-height:90px}.full{grid-column:1/-1}
+.section{margin:24px 0}.section h3{color:var(--gold);font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:8px;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{border:1px solid var(--line);padding:8px;vertical-align:middle}th{background:#252b36;color:#fff}.desc{width:42%;font-weight:600}.sub{font-size:12px;color:var(--muted);font-weight:400}.check{text-align:center;width:78px}input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}td input{width:100%;background:#0f141d;border:1px solid #394253;border-radius:6px;color:var(--text);padding:7px}.rowhead td{background:#303642;color:#fff;font-weight:800}.readonly{opacity:.9;color:#fef3c7!important}
+.summary h3{margin:0 0 4px}.summary p{margin:0 0 12px;color:var(--muted)}.sumrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:9px 0;gap:12px}.sumrow span:first-child{color:var(--muted)}.sumrow b{color:#fff;text-align:right}.total{margin-top:12px;padding:14px;border:1px solid rgba(198,146,20,.45);border-radius:12px;background:rgba(198,146,20,.08)}.total b{color:var(--gold);font-size:20px}
+.formula{margin-top:14px;color:#dbeafe;background:#111827;border:1px solid #334155;border-radius:12px;padding:12px;font-size:13px}.formula b{color:#facc15}
 
-<div id="scrapPurchaseFrame-wrap" style="width:100%;border-radius:10px">
-<style>
+.txbar{padding:20px 32px;border-bottom:1px solid var(--line);background:#0f1115}
+.txwrap{max-width:1880px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+.txhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.txhead h2{margin:0;font-size:22px}.txactions{display:flex;gap:8px;flex-wrap:wrap}
+.txfilters{display:grid;grid-template-columns:1.2fr .9fr .9fr .9fr;gap:10px;margin-bottom:12px}
+.txfilters input,.txfilters select{background:#0f141d;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px;font-size:14px}
+.txcontrols{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;color:var(--muted);font-size:13px}
+.txcontrols select{background:#0f141d;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:8px}
+.txtablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.txtable{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}.txtable th{background:#252b36;color:#fff;position:sticky;top:0;z-index:2}.txtable td,.txtable th{border:1px solid var(--line);padding:9px}
+.txpill{display:inline-block;border:1px solid rgba(198,146,20,.45);color:var(--gold);border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
+.txstatus{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}
+.txstatus.Completed{background:rgba(82,209,138,.14);color:#86efac}.txstatus.InProgress{background:rgba(250,204,21,.14);color:#fde047}.txstatus.Draft{background:rgba(148,163,184,.16);color:#cbd5e1}
+@media(max-width:900px){.txfilters{grid-template-columns:1fr}.txtable{font-size:12px}}@media print{.txbar{display:none!important}}
 
-:root{--bg:#0b0b0b;--panel:#111;--panel2:#181818;--panel3:#202020;--line:#2f2f2f;--gold:#b8860b;--text:#f3f0e8;--muted:#a69f91;--muted2:#716b60;--green:#74c69d;--red:#ff6b6b;--blue:#5ba4f5;--amber:#ffb347;--paper:#f4f1e8;--ink:#151515;--paperLine:#9f9f9f;}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#0D0D0D;color:#F0EDE6;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:1.45}button,input,select,textarea{font-family:inherit}
-.wrap{max-width:1560px;margin:0 auto;padding:22px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:4px 0 18px}.eyebrow{color:#B8860B;letter-spacing:.12em;text-transform:uppercase;font-size:11px;margin-bottom:6px}.title{font-family:Georgia,serif;font-size:34px;line-height:1.1}.sub{color:#a69f91;margin-top:6px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;background:rgba(91,164,245,.12);border:1px solid rgba(91,164,245,.24);color:#5ba4f5;font-size:11px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}.screen-card{background:#111111;border:1px solid #2f2f2f;border-radius:14px;overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.35)}
-.form-head{padding:18px 20px;background:linear-gradient(90deg,rgba(184,134,11,.18),rgba(184,134,11,.04));border-bottom:1px solid #2f2f2f;display:flex;justify-content:space-between;gap:20px}.company{font-weight:800;font-size:16px}.addr{font-size:12px;color:#a69f91;margin-top:2px}.status{display:inline-flex;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800}.ok{background:rgba(45,106,79,.22);color:#74C69D}.warn{background:#3d2800;color:#B8860B}.info{background:#0d2040;color:#5ba4f5}
-.block{border-bottom:1px solid #2f2f2f}.block-title{display:flex;align-items:center;gap:8px;color:#B8860B;font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:13px;padding:15px 20px 10px}.block-title:before{content:'';width:8px;height:8px;border-radius:50%;background:#B8860B}.block-body{padding:0 20px 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:5px}.label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#716b60}input,select,textarea{background:#181818;border:1px solid #2f2f2f;border-radius:7px;color:#F0EDE6;padding:9px 10px;font-size:13px;outline:none}input:focus,select:focus,textarea:focus{border-color:rgba(184,134,11,.65)}textarea{min-height:70px;resize:vertical}.readonly{background:#060606;color:#B8860B;font-weight:800;border-color:rgba(184,134,11,.38)}.mini{padding:7px 8px}.formula{font-family:Consolas,monospace;background:#050505;border:1px solid rgba(184,134,11,.35);border-radius:9px;color:#e4ca73;padding:10px 12px;margin-top:10px;line-height:1.65}.small{font-size:11px;color:#716b60;margin-top:4px}.chk{width:18px;height:18px;accent-color:#B8860B}
-table{width:100%;border-collapse:collapse}.doc th,.doc td,.process th,.process td{border:1px solid #2f2f2f;padding:8px;vertical-align:middle}.doc th,.process th{background:#080808;color:#a69f91;font-size:11px;text-transform:uppercase;letter-spacing:.045em;text-align:left}.doc td:first-child,.process td:first-child{font-weight:700}.process .titlecell{background:#0b0b0b;color:#F0EDE6;font-weight:800}.process .subrule{font-size:11px;color:#a69f91;font-weight:400;margin-top:3px}.inputcell{padding:0!important}.inputcell input{border:0;border-radius:0;background:#141414;width:100%;height:40px}.inputcell input.readonly{background:#050505;color:#B8860B}.right{text-align:right}.center{text-align:center}.muted{color:#a69f91}
-.side{position:sticky;top:74px;background:#111111;border:1px solid #2f2f2f;border-radius:14px;overflow:hidden}.side-head{padding:15px 17px;border-bottom:1px solid #2f2f2f;background:rgba(184,134,11,.08)}.side-title{font-weight:900;font-size:15px}.summary{padding:14px 17px}.sumrow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}.sumrow span:first-child{font-size:12px;color:#a69f91}.sumrow span:last-child{text-align:right;font-weight:900}.sumrow.em span:last-child{color:#B8860B;font-size:16px}.workflow{padding:0 17px 16px}.step{display:flex;gap:10px;padding:8px 0;align-items:flex-start}.dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#181818;border:1px solid #2f2f2f;color:#716b60;font-weight:900;font-size:11px}.step.done .dot{background:rgba(45,106,79,.2);border-color:rgba(116,198,157,.28);color:#74C69D}.step.active .dot{background:rgba(184,134,11,.2);border-color:rgba(184,134,11,.45);color:#B8860B}.stxt b{display:block;font-size:12px}.stxt span{font-size:11px;color:#716b60}.actions{display:grid;gap:8px;padding:14px 17px;border-top:1px solid #2f2f2f}.btn{border:1px solid #2f2f2f;background:#181818;color:#F0EDE6;border-radius:8px;padding:10px 12px;font-weight:800;cursor:pointer}.btn.gold{background:#B8860B;color:#000;border-color:#B8860B}.btn:hover{filter:brightness(1.12)}.journal{font-family:Consolas,monospace;background:#050505;border:1px solid #2f2f2f;border-radius:10px;padding:12px;line-height:1.75;color:#a69f91}.toast{position:fixed;right:20px;bottom:20px;background:#181818;border:1px solid rgba(184,134,11,.42);border-radius:10px;padding:12px 14px;display:none;z-index:200}.toast.show{display:block}
-.paper-preview{margin-top:18px;background:#111111;color:#F0EDE6;border-radius:10px;padding:20px;border:1px solid #d7d2c7}.paper-preview .p-head{text-align:center;font-weight:700;margin-bottom:10px}.paper-preview table{font-size:11px}.paper-preview th,.paper-preview td{border:1px solid #333;padding:4px 5px;color:#111}.paper-preview th{background:#ddd}.paper-preview input{background:white;color:#111;border:0;padding:2px 4px;width:100%;font-size:11px}.print-note{font-size:12px;color:#a69f91;margin:10px 0 0}
-@media(max-width:1100px){.layout{grid-template-columns:1fr}.side{position:static}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.grid,.grid2,.grid3{grid-template-columns:1fr}.hero{display:block}}
-@media print{body{background:white;color:black}.side,nav,.hero,.actions,.print-note{display:none}.wrap{padding:0}.layout{display:block}.screen-card{border:0;box-shadow:none}.block{page-break-inside:avoid}.screen-card{background:white;color:black}input,textarea,select{color:black;background:white;border:1px solid #999}.readonly{color:black;background:#f3f3f3}.formula{color:black;background:#f7f7f7;border:1px solid #999}.block-title{color:black}.block-title:before{background:#333}}
-
-/* Printable paper-style checklist */
-.print-form{display:none}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111827;border:1px solid var(--gold);padding:12px 20px;border-radius:12px;display:none;z-index:99}
+@media(max-width:1200px){.layout{grid-template-columns:1fr}.side{position:static}.tabs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.tabs,.grid{grid-template-columns:1fr}.nav{padding:0 16px}.layout,.tabs,.hero{padding-left:16px;padding-right:16px}}
 @media print{
-  nav,.hero,.layout{display:none!important}
-  .wrap{max-width:none;margin:0;padding:0}
-  .print-form{display:block!important;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:10px;padding:8mm}
-  .print-form *{box-sizing:border-box;color:#000!important}
-  .pf-company{text-align:center;font-weight:bold;font-size:13px;margin-bottom:2px}
-  .pf-title{text-align:center;font-weight:bold;font-size:12px;margin-bottom:8px}
-  .pf-meta{width:100%;border-collapse:collapse;margin-bottom:6px}
-  .pf-meta td{border:0;padding:2px 4px;height:18px;vertical-align:bottom}
-  .pf-line{display:inline-block;min-width:170px;border-bottom:1px solid #000;height:14px;padding-left:4px}
-  .pf-table{width:100%;border-collapse:collapse;table-layout:fixed}
-  .pf-table th,.pf-table td{border:1px solid #000;padding:3px 4px;vertical-align:middle;height:22px;font-size:10px}
-  .pf-table th{background:#d9d9d9!important;font-weight:normal;text-align:left}
-  .pf-center{text-align:center}.pf-right{text-align:right}.pf-small{font-size:8px}.pf-bold{font-weight:bold}.pf-gray{background:#d9d9d9!important}.pf-remarks{height:36px;vertical-align:top!important}
-  @page{size:A4 portrait;margin:8mm}
+ body{background:#fff;color:#000;font-size:11px}.nav,.hero,.tabs,.toolbar,.side{display:none!important}.layout{display:block;padding:0;max-width:none}.form{border:0;padding:0;background:#fff}.panel{display:none!important}.panel.active{display:block!important}
+ .docHead{margin-top:0}.logo{color:#1f3b6d}.grid{grid-template-columns:1fr 1fr;gap:8px}.field input,.field textarea,td input{border:0;border-bottom:1px solid #000;border-radius:0;background:#fff;color:#000;padding:2px}.field label{color:#000;font-size:10px}
+ th{background:#d9d9d9!important;color:#000}td,th{border:1px solid #000;padding:4px}.section{margin:10px 0}.section h3{color:#000;border:0;margin-bottom:4px}.sub{color:#000}.formula{display:none}.check input{appearance:none;border:1px solid #000;width:10px;height:10px}.check input:checked:after{content:&quot;✓&quot;;font-size:10px;position:relative;top:-5px}.page-break{page-break-before:always}
 }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;nav class=&quot;nav&quot;&gt;&lt;div class=&quot;brand&quot;&gt;&lt;div class=&quot;mark&quot;&gt;◆&lt;/div&gt;Gold&lt;span&gt;Vault&lt;/span&gt; Pro&lt;/div&gt;&lt;small&gt;Checklist Center · Hua Seng Heng Singapore Pte Ltd.&lt;/small&gt;&lt;/nav&gt;
+&lt;section class=&quot;hero&quot;&gt;&lt;h1&gt;HSHSG Checklist Center&lt;/h1&gt;&lt;p&gt;ฟอร์มปรับให้ตรงกับ Word Template จริง 4 แบบ · สูตรคำนวณกลับมาแล้ว · Export / Import Excel · Print PDF&lt;/p&gt;&lt;div class=&quot;stats&quot;&gt;&lt;div class=&quot;stat&quot;&gt;&lt;small&gt;FORMS&lt;/small&gt;&lt;b&gt;4&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;stat&quot;&gt;&lt;small&gt;EXPORT&lt;/small&gt;&lt;b&gt;Excel&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;stat&quot;&gt;&lt;small&gt;PRINT&lt;/small&gt;&lt;b&gt;PDF&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;div class=&quot;tabs&quot;&gt;
+&lt;button class=&quot;tab active&quot; onclick=&quot;showPanel(&#x27;purchase&#x27;)&quot;&gt;&lt;span class=&quot;badge&quot;&gt;PURCHASE&lt;/span&gt;&lt;div&gt;🔄&lt;/div&gt;&lt;h3&gt;Scrap Gold Purchase&lt;/h3&gt;&lt;p&gt;ตรงกับ Scrap Gold Purchase Template&lt;/p&gt;&lt;/button&gt;
+&lt;button class=&quot;tab&quot; onclick=&quot;showPanel(&#x27;sales&#x27;)&quot;&gt;&lt;span class=&quot;badge&quot;&gt;SALES&lt;/span&gt;&lt;div&gt;📤&lt;/div&gt;&lt;h3&gt;Scrap Gold Sales&lt;/h3&gt;&lt;p&gt;Option 1 AM Fixing / Option 2 Loco London&lt;/p&gt;&lt;/button&gt;
+&lt;button class=&quot;tab&quot; onclick=&quot;showPanel(&#x27;kilo-sales&#x27;)&quot;&gt;&lt;span class=&quot;badge&quot;&gt;1KG SALES&lt;/span&gt;&lt;div&gt;🏅&lt;/div&gt;&lt;h3&gt;Physical Gold – 1 Kilo Sales&lt;/h3&gt;&lt;p&gt;Customer MT · Release letter · POD&lt;/p&gt;&lt;/button&gt;
+&lt;button class=&quot;tab&quot; onclick=&quot;showPanel(&#x27;kilo-purchase&#x27;)&quot;&gt;&lt;span class=&quot;badge&quot;&gt;1KG PURCHASE&lt;/span&gt;&lt;div&gt;📥&lt;/div&gt;&lt;h3&gt;Physical Gold – 1 Kilo Purchase&lt;/h3&gt;&lt;p&gt;LPs / Counterparty · Export Optional&lt;/p&gt;&lt;/button&gt;
+&lt;/div&gt;
 
+&lt;section class=&quot;txbar&quot;&gt;&lt;div class=&quot;txwrap&quot;&gt;
+&lt;div class=&quot;txhead&quot;&gt;&lt;div&gt;&lt;h2&gt;Transaction List&lt;/h2&gt;&lt;div style=&quot;color:var(--muted);font-size:14px&quot;&gt;รวมทุกรายการจากแบบฟอร์มทั้ง 4 ประเภทในแต่ละวัน&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;txactions&quot;&gt;&lt;button class=&quot;btn primary&quot; onclick=&quot;newCase()&quot;&gt;＋ New Transaction&lt;/button&gt;&lt;button class=&quot;btn&quot; onclick=&quot;exportExcel()&quot;&gt;⬇ Export All Excel&lt;/button&gt;&lt;button class=&quot;btn&quot; onclick=&quot;openImport()&quot;&gt;⬆ Import Excel&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;txfilters&quot;&gt;
+&lt;input id=&quot;txSearch&quot; placeholder=&quot;Search customer / counterparty / ref no.&quot; oninput=&quot;renderTransactions()&quot;&gt;
+&lt;input id=&quot;txDate&quot; type=&quot;date&quot; onchange=&quot;renderTransactions()&quot;&gt;
+&lt;select id=&quot;txType&quot; onchange=&quot;renderTransactions()&quot;&gt;&lt;option value=&quot;&quot;&gt;All Types&lt;/option&gt;&lt;option value=&quot;purchase&quot;&gt;Scrap Gold Purchase&lt;/option&gt;&lt;option value=&quot;sales&quot;&gt;Scrap Gold Sales&lt;/option&gt;&lt;option value=&quot;kilo-sales&quot;&gt;Physical Gold – 1 Kilo Sales&lt;/option&gt;&lt;option value=&quot;kilo-purchase&quot;&gt;Physical Gold – 1 Kilo Purchase&lt;/option&gt;&lt;/select&gt;
+&lt;select id=&quot;txStatus&quot; onchange=&quot;renderTransactions()&quot;&gt;&lt;option value=&quot;&quot;&gt;All Status&lt;/option&gt;&lt;option value=&quot;Draft&quot;&gt;Draft&lt;/option&gt;&lt;option value=&quot;In Progress&quot;&gt;In Progress&lt;/option&gt;&lt;option value=&quot;Completed&quot;&gt;Completed&lt;/option&gt;&lt;/select&gt;
+&lt;/div&gt;
+&lt;div class=&quot;txcontrols&quot;&gt;
+  &lt;div id=&quot;txCount&quot;&gt;0 transactions&lt;/div&gt;
+  &lt;div&gt;
+    Show 
+    &lt;select id=&quot;txPageSize&quot; onchange=&quot;txPage=1;renderTransactions()&quot;&gt;
+      &lt;option value=&quot;10&quot;&gt;10 rows&lt;/option&gt;
+      &lt;option value=&quot;20&quot;&gt;20 rows&lt;/option&gt;
+      &lt;option value=&quot;50&quot;&gt;50 rows&lt;/option&gt;
+      &lt;option value=&quot;9999&quot;&gt;All rows&lt;/option&gt;
+    &lt;/select&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;txtablewrap&quot;&gt;
+&lt;table class=&quot;txtable&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Date&lt;/th&gt;&lt;th&gt;Customer / Counterparty&lt;/th&gt;&lt;th&gt;Transaction Type&lt;/th&gt;&lt;th&gt;Ref No.&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Action&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;txBody&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;6&quot; style=&quot;color:var(--muted);text-align:center&quot;&gt;No transactions yet&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;txcontrols&quot;&gt;
+  &lt;button class=&quot;btn&quot; onclick=&quot;txPage=Math.max(1,txPage-1);renderTransactions()&quot;&gt;‹ Previous&lt;/button&gt;
+  &lt;div id=&quot;txPageInfo&quot;&gt;Page 1 / 1&lt;/div&gt;
+  &lt;button class=&quot;btn&quot; onclick=&quot;txPage=txPage+1;renderTransactions()&quot;&gt;Next ›&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/section&gt;
 
-</style>
+&lt;input type=&quot;file&quot; id=&quot;importFile&quot; accept=&quot;.xlsx,.xls,.json&quot; style=&quot;display:none&quot; onchange=&quot;importExcel(event)&quot;&gt;
+&lt;div id=&quot;app&quot;&gt;&lt;/div&gt;&lt;div id=&quot;toast&quot;&gt;&lt;/div&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+const FORMS={
+purchase:{title:&#x27;Scrap Gold Purchase&#x27;,prefix:&#x27;sp&#x27;,calc:&#x27;calcPurchase&#x27;,fields:[
+[&#x27;Scrap Ref.&#x27;,&#x27;sp_ref&#x27;,&#x27;HSH 1602&#x27;],[&#x27;Date&#x27;,&#x27;sp_date&#x27;,&#x27;date&#x27;],[&#x27;Customer / Agent&#x27;,&#x27;sp_customer&#x27;,&#x27;&#x27;],[&#x27;Collection Date&#x27;,&#x27;sp_collection&#x27;,&#x27;date&#x27;],
+[&#x27;Quantity Kg&#x27;,&#x27;sp_qty&#x27;,&#x27;number&#x27;],[&#x27;Purity Factor เช่น 0.992&#x27;,&#x27;sp_purity&#x27;,&#x27;number&#x27;],[&#x27;ETD Origin&#x27;,&#x27;sp_etd&#x27;,&#x27;&#x27;],[&#x27;MAWB No.&#x27;,&#x27;sp_mawb&#x27;,&#x27;&#x27;],
+[&#x27;ETA Destination&#x27;,&#x27;sp_eta&#x27;,&#x27;&#x27;],[&#x27;Flight 1&#x27;,&#x27;sp_flight1&#x27;,&#x27;SQ CGK – SIN&#x27;],[&#x27;Flight 2&#x27;,&#x27;sp_flight2&#x27;,&#x27;SQ SIN – ZRH&#x27;],[&#x27;BBL / XAU/USD Price&#x27;,&#x27;sp_price&#x27;,&#x27;number&#x27;],
+[&#x27;Advance %&#x27;,&#x27;sp_adv&#x27;,&#x27;95&#x27;],[&#x27;Discount per troy oz&#x27;,&#x27;sp_disc&#x27;,&#x27;number&#x27;],[&#x27;Assay Results Oz&#x27;,&#x27;sp_final&#x27;,&#x27;number&#x27;],[&#x27;Remarks&#x27;,&#x27;sp_remarks&#x27;,&#x27;textarea&#x27;]],
+tables:[
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;Customer Invoice / Packing List&#x27;,&#x27;Vault confirmation / trust receipt&#x27;,&#x27;Mawb&#x27;,&#x27;HSH Invoice / Packing List / COC (if any)&#x27;,&#x27;HSH Gold receipt Note&#x27;,&#x27;Customer funds withdrawal instruction&#x27;]},
+{h:&#x27;Scrap gold collected&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;100% Scrap gold received&#x27;,&#x27;Dr Scrap HSH / Cr Scrap customer&#x27;,&#x27;sp_100oz&#x27;]]},
+{h:&#x27;Customer advance funds withdrawal&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;95% Funds paid&#x27;,&#x27;Dr customer / Cr bank&#x27;,&#x27;sp_95usd&#x27;]]},
+{h:&#x27;Customer advance credit&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;95% Loco Ldn received&#x27;,&#x27;Dr Scrap Customer / Cr customer&#x27;,&#x27;sp_95oz&#x27;]]},
+{h:&#x27;Customer charges&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Discount @ per troy oz&#x27;,&#x27;Dr customer / Cr P&amp;L-Physical XAU&#x27;,&#x27;sp_discusd&#x27;]]},
+{h:&#x27;Premium / Discount &amp; Assay Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;Premium / Discount – Debit / credit advice&#x27;,&#x27;Refinery assay statement&#x27;]},
+{h:&#x27;Final Assay Statement&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Assay results&#x27;,&#x27;&#x27;,&#x27;sp_finalcopy&#x27;]]},
+{h:&#x27;Customer balance credit&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Balance 5% Loco Ldn received&#x27;,&#x27;Dr Scrap customer / Cr customer&#x27;,&#x27;sp_baloz&#x27;],[&#x27;Scrap adjustment&#x27;,&#x27;Cr Scrap HSH / Dr Scrap customer&#x27;,&#x27;sp_adjoz&#x27;]]},
+{h:&#x27;Customer balance funds withdrawal&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Date&#x27;,&#x27;Done by&#x27;],rows:[[&#x27;% Funds paid&#x27;,&#x27;Dr customer / Cr bank&#x27;,&#x27;sp_balusd&#x27;]]}],
+formula:[&#x27;100% Scrap Oz = Quantity Kg × 32.148 × Purity Factor ÷ Fine Factor 0.9999&#x27;,&#x27;95% Loco Ldn = 100% Scrap Oz × 95%&#x27;,&#x27;Funds Paid USD = 95% Loco Ldn × BBL/XAU Price&#x27;,&#x27;Discount USD = Quantity Kg × 32.148 × Discount per oz&#x27;,&#x27;Balance 5% Loco Ldn = Assay Results Oz − 95% Loco Ldn&#x27;,&#x27;Scrap Adjustment = 100% Scrap Oz − Assay Results Oz&#x27;]},
+sales:{title:&#x27;Scrap Gold Sales&#x27;,prefix:&#x27;ss&#x27;,calc:&#x27;calcSales&#x27;,fields:[
+[&#x27;Scrap Ref.&#x27;,&#x27;ss_ref&#x27;,&#x27;HSH 1602&#x27;],[&#x27;Date&#x27;,&#x27;ss_date&#x27;,&#x27;date&#x27;],[&#x27;Refinery / Customer&#x27;,&#x27;ss_customer&#x27;,&#x27;&#x27;],[&#x27;Quantity Kg&#x27;,&#x27;ss_qty&#x27;,&#x27;number&#x27;],
+[&#x27;Purity Factor เช่น 0.992&#x27;,&#x27;ss_purity&#x27;,&#x27;number&#x27;],[&#x27;XAU/USD Price&#x27;,&#x27;ss_price&#x27;,&#x27;number&#x27;],[&#x27;Advance %&#x27;,&#x27;ss_adv&#x27;,&#x27;95&#x27;],[&#x27;Assay Results Oz&#x27;,&#x27;ss_final&#x27;,&#x27;number&#x27;],[&#x27;Remarks&#x27;,&#x27;ss_remarks&#x27;,&#x27;textarea&#x27;]],
+tables:[
+{h:&#x27;Advance credit via AM fixing (Option 1)&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;HSH pre-alert refinery on shipment/AM fixing&#x27;,&#x27;HSH Proforma Invoice / Funds withdrawal form&#x27;]},
+{h:&#x27;Scrap gold arrived refinery on value date&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;95% scrap gold delivered&#x27;,&#x27;Dr refinery / Cr Scrap HSH&#x27;,&#x27;ss_del_oz&#x27;]]},
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;1. MT103 from refinery  2. Precredit from refinery&#x27;]},
+{h:&#x27;Refinery transfer USD to HSH&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Funds received&#x27;,&#x27;Dr bank / Cr eBTS&#x27;,&#x27;ss_fund_usd&#x27;]]},
+{h:&#x27;Advance credit via loco ldn (Option 2)&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;95% scrap gold delivered&#x27;,&#x27;Dr refinery / Cr Scrap HSH&#x27;,&#x27;ss_loco_del&#x27;],[&#x27;95% Loco Ldn received&#x27;,&#x27;Dr eBTS / Cr Refinery&#x27;,&#x27;ss_loco_rcv&#x27;]]},
+{h:&#x27;Documentation / Assay&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Date&#x27;,&#x27;Docs received&#x27;],rows:[&#x27;EBTS Loco Ldn credited to our unallocated account&#x27;,&#x27;1. Assay result  2. Refinery charge&#x27;]},
+{h:&#x27;Final Assay Statement&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Assay results&#x27;,&#x27;&#x27;,&#x27;ss_finalcopy&#x27;]]},
+{h:&#x27;Balance credit via AM fixing (Option 1)&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;HSH confirm balance oz on AM fixing&#x27;,&#x27;HSH Proforma Invoice / Funds withdrawal form&#x27;]},
+{h:&#x27;Scrap gold arrived refinery on value date&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;5% scrap gold delivered&#x27;,&#x27;Assay results - 95% Loco Ldn received / Dr eBTS / Cr Refinery&#x27;,&#x27;ss_bal_oz&#x27;]]},
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Docs received&#x27;,&#x27;Done/Checked by&#x27;],rows:[&#x27;MT103 from Refinery&#x27;]},
+{h:&#x27;Refinery transfer USD to HSH&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;Funds received&#x27;,&#x27;Dr bank / Cr eBTS&#x27;,&#x27;ss_bal_usd&#x27;]]},
+{h:&#x27;Balance credit via loco ldn (Option 2)&#x27;,cols:[&#x27;Description&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done/Checked by&#x27;],rows:[[&#x27;5% scrap gold delivered&#x27;,&#x27;Dr eBTS / Cr Refinery&#x27;,&#x27;ss_loco_bal&#x27;]]},
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email refinery&#x27;,&#x27;Email customer&#x27;,&#x27;Date&#x27;,&#x27;Docs received&#x27;],rows:[&#x27;EBTS Loco Ldn credited to our unallocated account&#x27;]}],
+formula:[&#x27;Gross Oz = Quantity Kg × 32.150747 × Purity Factor&#x27;,&#x27;95% Scrap Gold Delivered = Gross Oz × 95%&#x27;,&#x27;95% Loco Ldn Received = 95% Scrap Gold Delivered&#x27;,&#x27;Funds Received USD = 95% Scrap Gold Delivered × XAU/USD Price&#x27;,&#x27;5% Scrap Gold Delivered = Assay Results Oz − 95% Loco Ldn Received&#x27;,&#x27;Balance Credit via Loco Ldn = Assay Results Oz − 95% Loco Ldn Received&#x27;]},
+&#x27;kilo-sales&#x27;:{title:&#x27;Physical Gold – 1 Kilo Gold Bar – Sales&#x27;,prefix:&#x27;ks&#x27;,calc:&#x27;calcKiloSales&#x27;,fields:[
+[&#x27;HSH Ref.&#x27;,&#x27;ks_ref&#x27;,&#x27;&#x27;],[&#x27;Date&#x27;,&#x27;ks_date&#x27;,&#x27;date&#x27;],[&#x27;Customer Name&#x27;,&#x27;ks_customer&#x27;,&#x27;&#x27;],[&#x27;Pur Ref No./Counterparty&#x27;,&#x27;ks_purref&#x27;,&#x27;&#x27;],
+[&#x27;Quantity Kg&#x27;,&#x27;ks_qty&#x27;,&#x27;1&#x27;],[&#x27;Premium / Discount USD Per Oz&#x27;,&#x27;ks_prem&#x27;,&#x27;number&#x27;],[&#x27;Brand&#x27;,&#x27;ks_brand&#x27;,&#x27;&#x27;],[&#x27;XAU/USD Price&#x27;,&#x27;ks_price&#x27;,&#x27;number&#x27;],[&#x27;Remarks&#x27;,&#x27;ks_remarks&#x27;,&#x27;textarea&#x27;]],
+tables:[
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email customer&#x27;,&#x27;Docs Received&#x27;,&#x27;Done by&#x27;],rows:[&#x27;Customer MT / release instruction letter&#x27;,&#x27;HSH Release instruction letter&#x27;,&#x27;HSH Invoice / Packing List&#x27;,&#x27;HSH Bar List / Delivery order (if necessary)&#x27;]},
+{h:&#x27;Description&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done by&#x27;],rows:[[&#x27;Account Balances as at (USD)&#x27;,&#x27;Customer margin / Dr Bank / Cr Customer&#x27;,&#x27;ks_acct&#x27;],[&#x27;Funds Received (USD)&#x27;,&#x27;Dr bank / Cr customer&#x27;,&#x27;ks_funds&#x27;],[&#x27;Physical gold delivered (XAU)&#x27;,&#x27;Dr customer / Cr HSHSG-Physical Allocated&#x27;,&#x27;ks_oz&#x27;],[&#x27;Premium charged (USD)&#x27;,&#x27;Dr customer / Cr P&amp;L Physical XAU&#x27;,&#x27;ks_premusd&#x27;]]},
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email customer&#x27;,&#x27;Docs Received&#x27;,&#x27;Done by&#x27;],rows:[&#x27;Customer SOA, margin control&#x27;,&#x27;HSH – Debit/Credit advice&#x27;,&#x27;Vault permit : MC / OO / RM No. (if necessary)&#x27;,&#x27;Customer acknowledgement / POD from vault&#x27;]}],
+formula:[&#x27;Physical Gold Delivered XAU = Quantity Kg × 32.148&#x27;,&#x27;Premium charged USD = Quantity Kg × 32.148 × Premium/Discount USD per Oz&#x27;,&#x27;Funds Received USD = Quantity Kg × 32.148 × XAU/USD Price&#x27;]},
+&#x27;kilo-purchase&#x27;:{title:&#x27;Physical Gold - 1 Kilo gold bar – Purchase&#x27;,prefix:&#x27;kp&#x27;,calc:&#x27;calcKiloPurchase&#x27;,fields:[
+[&#x27;HSH Ref.&#x27;,&#x27;kp_ref&#x27;,&#x27;&#x27;],[&#x27;Date&#x27;,&#x27;kp_date&#x27;,&#x27;date&#x27;],[&#x27;Counterparty&#x27;,&#x27;kp_counterparty&#x27;,&#x27;&#x27;],[&#x27;Sales Ref No./Client name&#x27;,&#x27;kp_salesref&#x27;,&#x27;&#x27;],
+[&#x27;Quantity Kg&#x27;,&#x27;kp_qty&#x27;,&#x27;1&#x27;],[&#x27;Premium / Discount USD Per Oz&#x27;,&#x27;kp_prem&#x27;,&#x27;number&#x27;],[&#x27;Brand&#x27;,&#x27;kp_brand&#x27;,&#x27;&#x27;],[&#x27;XAU/USD Price&#x27;,&#x27;kp_price&#x27;,&#x27;number&#x27;],[&#x27;Remarks&#x27;,&#x27;kp_remarks&#x27;,&#x27;textarea&#x27;]],
+tables:[
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email customer&#x27;,&#x27;Docs Received&#x27;,&#x27;Done by&#x27;],rows:[&#x27;Vault confirmation mail / transfer note&#x27;,&#x27;Customer Invoice/Packing List/Bar List&#x27;,&#x27;Customer funds withdrawal instruction&#x27;]},
+{h:&#x27;Description&#x27;,cols:[&#x27;Description&#x27;,&#x27;USD&#x27;,&#x27;Oz&#x27;,&#x27;Date&#x27;,&#x27;Done by&#x27;],rows:[[&#x27;Physical gold received (XAU)&#x27;,&#x27;Dr HSHSG-Physical Allocated / Cr Supplier: LPs&#x27;,&#x27;kp_oz&#x27;],[&#x27;Funds Paid (USD)&#x27;,&#x27;Dr Supplier: LPs / Cr bank&#x27;,&#x27;kp_funds&#x27;],[&#x27;Premium charged (USD)&#x27;,&#x27;Discount: Dr Supplier LPs / Cr P&amp;L · Premium: Dr P&amp;L / Cr Supplier LPs&#x27;,&#x27;kp_premusd&#x27;]]},
+{h:&#x27;Documentation&#x27;,cols:[&#x27;Documentation&#x27;,&#x27;Email vault&#x27;,&#x27;Email customer&#x27;,&#x27;Docs Received&#x27;,&#x27;Done by&#x27;],rows:[&#x27;Customer SOA, margin control&#x27;,&#x27;Premium/Discount – Debit/Credit advice&#x27;]},
+{h:&#x27;For export (optional)&#x27;,cols:[&#x27;For export (optional)&#x27;,&#x27;Email vault&#x27;,&#x27;Email customer&#x27;,&#x27;Docs Received&#x27;,&#x27;Done by&#x27;],rows:[&#x27;Export Invoice/Packing List/Bar List&#x27;,&#x27;Export MAWB&#x27;,&#x27;Destination vault confirmation (Dr Dest vault / Cr vault)&#x27;]}],
+formula:[&#x27;Physical Gold Received XAU = Quantity Kg × 32.148&#x27;,&#x27;Premium/Discount USD = Quantity Kg × 32.148 × Premium/Discount USD per Oz&#x27;,&#x27;Funds Paid USD = Quantity Kg × 32.148 × XAU/USD Price&#x27;]}
+};
+function fieldHTML([label,id,val]){
+ let type=(val===&#x27;date&#x27;||val===&#x27;number&#x27;)?val:&#x27;text&#x27;, value=(val!==&#x27;date&#x27;&amp;&amp;val!==&#x27;number&#x27;&amp;&amp;val!==&#x27;textarea&#x27;)?val:&#x27;&#x27;;
+ if(val===&#x27;textarea&#x27;) return `&lt;div class=&quot;field full&quot;&gt;&lt;label&gt;${label}&lt;/label&gt;&lt;textarea id=&quot;${id}&quot;&gt;&lt;/textarea&gt;&lt;/div&gt;`;
+ let on=id.match(/^(sp|ss|ks|kp)_/) ? `oninput=&quot;${FORMS[current].calc}()&quot;` : &#x27;&#x27;;
+ return `&lt;div class=&quot;field&quot;&gt;&lt;label&gt;${label}&lt;/label&gt;&lt;input id=&quot;${id}&quot; type=&quot;${type}&quot; value=&quot;${value}&quot; ${on}&gt;&lt;/div&gt;`;
+}
+let current=&#x27;purchase&#x27;;
+function render(){
+ const f=FORMS[current]; let body=`&lt;div class=&quot;panel active&quot; id=&quot;panel-${current}&quot;&gt;&lt;div class=&quot;layout&quot;&gt;&lt;div class=&quot;form&quot;&gt;
+ &lt;div class=&quot;toolbar&quot;&gt;&lt;div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;newCase()&quot;&gt;＋ New Case&lt;/button&gt;&lt;button class=&quot;btn&quot; onclick=&quot;openImport()&quot;&gt;⬆ Import Excel&lt;/button&gt;&lt;/div&gt;&lt;div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;exportExcel()&quot;&gt;⬇ Export Excel&lt;/button&gt;&lt;button class=&quot;btn&quot; onclick=&quot;window.print()&quot;&gt;🖨 Print / PDF&lt;/button&gt;&lt;button class=&quot;btn primary&quot; onclick=&quot;saveCase()&quot;&gt;💾 Save&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;docHead&quot;&gt;&lt;div class=&quot;logo&quot;&gt;HUA SENG HENG&lt;br&gt;&lt;small&gt;Singapore Pte. Ltd.&lt;/small&gt;&lt;/div&gt;&lt;h2&gt;${f.title}&lt;/h2&gt;&lt;/div&gt;
+ &lt;div class=&quot;section&quot;&gt;&lt;h3&gt;Header Information&lt;/h3&gt;&lt;div class=&quot;grid&quot;&gt;${f.fields.map(fieldHTML).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;
+ f.tables.forEach((t,ti)=&gt;{body+=`&lt;div class=&quot;section&quot;&gt;&lt;h3&gt;${t.h}&lt;/h3&gt;&lt;table&gt;&lt;tr&gt;${t.cols.map(c=&gt;`&lt;th&gt;${c}&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;`;
+ t.rows.forEach((r,ri)=&gt;{ if(Array.isArray(r)){let [d,sub,id]=r; body+=`&lt;tr&gt;&lt;td class=&quot;desc&quot;&gt;${d}&lt;div class=&quot;sub&quot;&gt;${sub}&lt;/div&gt;&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;{let isVal=id ? (id.match(/_oz$/) ? ci===1 : ci===0) : (ci===0); let rid=isVal?id:&#x27;&#x27;; let ro=id&amp;&amp;id.match(/(oz|usd|funds|premusd|95|bal|disc|adj)/)?&#x27;readonly&#x27;:&#x27;&#x27;; body+=`&lt;td&gt;&lt;input class=&quot;${ro}&quot; ${ro?&#x27;readonly&#x27;:&#x27;&#x27;} id=&quot;${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&quot; oninput=&quot;${FORMS[current].calc}()&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot;&gt;&lt;/td&gt;`}); body+=&#x27;&lt;/tr&gt;&#x27;; } else {body+=`&lt;tr&gt;&lt;td class=&quot;desc&quot;&gt;${r}&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;body+= c.toLowerCase().includes(&#x27;email&#x27;)||c.toLowerCase().includes(&#x27;docs&#x27;)?`&lt;td class=&quot;check&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;${f.prefix}_cb_${ti}_${ri}_${ci}&quot;&gt;&lt;/td&gt;`:`&lt;td&gt;&lt;input id=&quot;${f.prefix}_t${ti}_${ri}_${ci}&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot;&gt;&lt;/td&gt;`); body+=&#x27;&lt;/tr&gt;&#x27;;}});
+ body+=&#x27;&lt;/table&gt;&lt;/div&gt;&#x27;;});
+ body+=`&lt;/div&gt;&lt;aside class=&quot;side&quot;&gt;&lt;div class=&quot;summary&quot;&gt;&lt;h3&gt;Live Summary&lt;/h3&gt;&lt;p&gt;${f.title}&lt;/p&gt;&lt;div id=&quot;summaryRows&quot;&gt;&lt;/div&gt;&lt;div class=&quot;total&quot;&gt;Total / Main Value&lt;br&gt;&lt;b id=&quot;summaryTotal&quot;&gt;—&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;formula&quot;&gt;${f.formula.map(x=&gt;`&lt;div&gt;&lt;b&gt;Formula:&lt;/b&gt; ${x}&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/aside&gt;&lt;/div&gt;&lt;/div&gt;`;
+ document.getElementById(&#x27;app&#x27;).innerHTML=body; runCalc();
+}
+function showPanel(type){current=type;document.querySelectorAll(&#x27;.tab&#x27;).forEach((b,i)=&gt;b.classList.toggle(&#x27;active&#x27;,Object.keys(FORMS)[i]===type));render();}
+function num(id){let e=document.getElementById(id);return e?parseFloat(e.value)||0:0} function val(id,v){let e=document.getElementById(id);if(e)e.value=isFinite(v)?Number(v).toFixed(3):&#x27;&#x27;} function usd(id,v){let e=document.getElementById(id);if(e)e.value=isFinite(v)?Number(v).toFixed(2):&#x27;&#x27;} function money(v){return isFinite(v)?&#x27;$&#x27;+Number(v).toLocaleString(&#x27;en-US&#x27;,{minimumFractionDigits:2,maximumFractionDigits:2}):&#x27;—&#x27;} function oz(v){return isFinite(v)?Number(v).toFixed(3)+&#x27; oz&#x27;:&#x27;—&#x27;}
+function summary(rows,total){document.getElementById(&#x27;summaryRows&#x27;).innerHTML=rows.map(([a,b])=&gt;`&lt;div class=&quot;sumrow&quot;&gt;&lt;span&gt;${a}&lt;/span&gt;&lt;b&gt;${b}&lt;/b&gt;&lt;/div&gt;`).join(&#x27;&#x27;);document.getElementById(&#x27;summaryTotal&#x27;).textContent=total}
+function calcPurchase(){
+ let kg=num(&#x27;sp_qty&#x27;),
+     purity=num(&#x27;sp_purity&#x27;) || 0.992,
+     fineFactor=0.9999,
+     price=num(&#x27;sp_price&#x27;),
+     adv=(num(&#x27;sp_adv&#x27;)||95)/100,
+     disc=num(&#x27;sp_disc&#x27;),
+     final=num(&#x27;sp_final&#x27;);
 
+ // สูตรตามตัวอย่าง Gold Purchase:
+ // 100% Scrap gold received = Quantity Kg × 32.148 × Purity Factor ÷ 0.9999
+ // ตัวอย่างในเอกสาร: 23.05550 × 32.148 × 0.992 ÷ 0.9999 = 735.332 oz
+ let gross = kg * 32.148 * purity / fineFactor;
 
+ // 95% Loco Ldn received = 100% Scrap Oz × 0.95
+ let advOz = gross * adv;
 
-<div class="wrap">
-  <div class="hero">
-    <div><div class="eyebrow">Client Sells Checklist</div><div class="title">Scrap Gold Purchase Checklist</div><div class="sub">Matched to the paper checklist layout: document tracking, scrap collection, 95% advance, charges, refinery assay, balance credit, scrap adjustment and final funds withdrawal.</div></div>
-    <div><span class="pill">Calculation follows HSH paper checklist structure</span></div>
+ // 95% Funds paid = 95% Oz × BBL/XAU Price
+ let advanceUsd = advOz * price;
+
+ // Discount @ per troy oz = Quantity Kg × 32.148 × Discount per oz
+ // ตัวอย่าง: 23.05550 × 32.148 × 10 = 7,411.88 USD
+ let discountUsd = kg * 32.148 * disc;
+
+ // Balance 5% Loco Ldn received = Assay results − 95% Loco Ldn
+ let balanceOz = final ? final - advOz : NaN;
+ let balanceUsd = balanceOz * price;
+
+ // Scrap adjustment = 100% Scrap gold received − Assay results
+ let adjustmentOz = final ? gross - final : NaN;
+
+ val(&#x27;sp_100oz&#x27;,gross);
+ val(&#x27;sp_95oz&#x27;,advOz);
+ usd(&#x27;sp_95usd&#x27;,advanceUsd);
+ usd(&#x27;sp_discusd&#x27;,discountUsd);
+ val(&#x27;sp_finalcopy&#x27;,final);
+ val(&#x27;sp_baloz&#x27;,balanceOz);
+ val(&#x27;sp_adjoz&#x27;,adjustmentOz);
+ usd(&#x27;sp_balusd&#x27;,balanceUsd);
+
+ summary([
+   [&#x27;100% Scrap Gold Received&#x27;,oz(gross)],
+   [&#x27;95% Loco Ldn Received&#x27;,oz(advOz)],
+   [&#x27;95% Funds Paid&#x27;,money(advanceUsd)],
+   [&#x27;Discount USD&#x27;,money(discountUsd)],
+   [&#x27;Assay Results&#x27;,oz(final)],
+   [&#x27;Balance 5% Loco Ldn&#x27;,oz(balanceOz)],
+   [&#x27;Scrap Adjustment&#x27;,oz(adjustmentOz)]
+ ],money(balanceUsd))
+}
+function calcSales(){
+ let kg=num(&#x27;ss_qty&#x27;), purity=num(&#x27;ss_purity&#x27;) || 0.992, price=num(&#x27;ss_price&#x27;), adv=(num(&#x27;ss_adv&#x27;)||95)/100,
+     final=num(&#x27;ss_finalcopy&#x27;) || num(&#x27;ss_final&#x27;);
+ let gross = kg * 32.150747 * purity;
+ let advanceOz = gross * adv;
+ let locoReceived = advanceOz;
+ let advanceUsd = advanceOz * price;
+ let balanceOz = final ? final - locoReceived : NaN;
+ let balanceUsd = balanceOz * price;
+ val(&#x27;ss_del_oz&#x27;,advanceOz);
+ usd(&#x27;ss_fund_usd&#x27;,advanceUsd);
+ val(&#x27;ss_loco_del&#x27;,advanceOz);
+ val(&#x27;ss_loco_rcv&#x27;,locoReceived);
+ if(!num(&#x27;ss_finalcopy&#x27;) &amp;&amp; num(&#x27;ss_final&#x27;)) val(&#x27;ss_finalcopy&#x27;,num(&#x27;ss_final&#x27;));
+ val(&#x27;ss_bal_oz&#x27;,balanceOz);
+ usd(&#x27;ss_bal_usd&#x27;,balanceUsd);
+ val(&#x27;ss_loco_bal&#x27;,balanceOz);
+ summary([
+   [&#x27;Gross Oz&#x27;,oz(gross)],
+   [&#x27;95% Scrap Gold Delivered&#x27;,oz(advanceOz)],
+   [&#x27;95% Loco Ldn Received&#x27;,oz(locoReceived)],
+   [&#x27;Funds Received USD&#x27;,money(advanceUsd)],
+   [&#x27;Assay Results&#x27;,oz(final)],
+   [&#x27;5% Scrap Gold Delivered&#x27;,oz(balanceOz)]
+ ],money(balanceUsd))
+}
+function calcKiloSales(){
+ let kg=num(&#x27;ks_qty&#x27;)||0,
+     price=num(&#x27;ks_price&#x27;),
+     prem=num(&#x27;ks_prem&#x27;);
+
+ // Physical Gold – 1 Kilo Sales:
+ // Physical gold delivered (XAU) = Quantity Kg × 32.148
+ // Funds Received (USD) = Quantity Kg × 32.148 × XAU/USD Price
+ // Premium charged (USD) = Quantity Kg × 32.148 × Premium/Discount USD per Oz
+ let xauOz=kg*32.148;
+ let premusd=xauOz*prem;
+ let funds=xauOz*price;
+
+ val(&#x27;ks_oz&#x27;,xauOz);
+ usd(&#x27;ks_premusd&#x27;,premusd);
+ usd(&#x27;ks_funds&#x27;,funds);
+
+ summary([
+   [&#x27;Quantity&#x27;,kg.toFixed(3)+&#x27; kg&#x27;],
+   [&#x27;Delivered XAU&#x27;,oz(xauOz)],
+   [&#x27;Premium / Discount&#x27;,money(premusd)],
+   [&#x27;Funds Received&#x27;,money(funds)]
+ ],money(funds))
+}
+function calcKiloPurchase(){
+ let kg=num(&#x27;kp_qty&#x27;)||0,
+     price=num(&#x27;kp_price&#x27;),
+     prem=num(&#x27;kp_prem&#x27;);
+
+ // Physical Gold – 1 Kilo Purchase:
+ // 1. Physical gold received (XAU)
+ //    Dr HSHSG-Physical Allocated / Cr Supplier: LPs
+ //    Formula = Quantity Kg × 32.148
+ // 2. Funds Paid (USD)
+ //    Dr Supplier: LPs / Cr bank
+ //    Formula = Quantity Kg × 32.148 × XAU/USD Price
+ // 3. Premium charged (USD)
+ //    Discount: Dr Supplier LPs / Cr P&amp;L
+ //    Premium: Dr P&amp;L / Cr Supplier LPs
+ //    Formula = Quantity Kg × 32.148 × Premium/Discount USD per Oz
+ let xauOz=kg*32.148;
+ let premiumUsd=xauOz*prem;
+ let fundsPaid=xauOz*price;
+
+ val(&#x27;kp_oz&#x27;,xauOz);
+ usd(&#x27;kp_premusd&#x27;,premiumUsd);
+ usd(&#x27;kp_funds&#x27;,fundsPaid);
+
+ summary([
+   [&#x27;Quantity&#x27;,kg.toFixed(3)+&#x27; kg&#x27;],
+   [&#x27;Physical Gold Received&#x27;,oz(xauOz)],
+   [&#x27;Funds Paid&#x27;,money(fundsPaid)],
+   [&#x27;Premium / Discount&#x27;,money(premiumUsd)]
+ ],money(fundsPaid))
+}
+function runCalc(){({purchase:calcPurchase,sales:calcSales,&#x27;kilo-sales&#x27;:calcKiloSales,&#x27;kilo-purchase&#x27;:calcKiloPurchase}[current])()}
+function collect(){let panel=document.getElementById(&#x27;panel-&#x27;+current),rows=[{Section:&#x27;META&#x27;,Key:&#x27;_type&#x27;,Label:&#x27;Checklist Type&#x27;,Value:current},{Section:&#x27;META&#x27;,Key:&#x27;_saved&#x27;,Label:&#x27;Saved At&#x27;,Value:new Date().toISOString()}];panel.querySelectorAll(&#x27;input,textarea&#x27;).forEach((el,i)=&gt;{let label=el.closest(&#x27;.field&#x27;)?.querySelector(&#x27;label&#x27;)?.innerText || el.closest(&#x27;tr&#x27;)?.cells[0]?.innerText.replace(/\s+/g,&#x27; &#x27;) || el.id;rows.push({Section:el.closest(&#x27;.section&#x27;)?.querySelector(&#x27;h3&#x27;)?.innerText||&#x27;General&#x27;,Key:el.id||&#x27;field_&#x27;+i,Label:label,Value:el.type===&#x27;checkbox&#x27;?(el.checked?&#x27;TRUE&#x27;:&#x27;FALSE&#x27;):el.value});});return rows}
+function saveCase(){localStorage.setItem(&#x27;hshsg_&#x27;+current,JSON.stringify(collect()));toast(&#x27;Saved&#x27;)}
+function exportExcel(){saveCase();let rows=collect(),fn=&#x27;HSHSG_&#x27;+current+&#x27;_&#x27;+new Date().toISOString().slice(0,10)+&#x27;.xlsx&#x27;;if(window.XLSX){let wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);ws[&#x27;!cols&#x27;]=[{wch:28},{wch:28},{wch:70},{wch:28}];XLSX.utils.book_append_sheet(wb,ws,&#x27;Checklist Data&#x27;);XLSX.writeFile(wb,fn)}else{alert(&#x27;Excel library not loaded. Please connect internet once.&#x27;)} }
+function openImport(){document.getElementById(&#x27;importFile&#x27;).click()}
+function importExcel(e){let file=e.target.files[0];if(!file)return;let r=new FileReader();r.onload=ev=&gt;{let wb=XLSX.read(ev.target.result,{type:&#x27;array&#x27;}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:&#x27;&#x27;});let type=rows.find(x=&gt;x.Key===&#x27;_type&#x27;)?.Value||current;showPanel(type);setTimeout(()=&gt;{rows.forEach(x=&gt;{let el=document.getElementById(x.Key);if(!el)return;if(el.type===&#x27;checkbox&#x27;)el.checked=String(x.Value).toUpperCase()===&#x27;TRUE&#x27;;else el.value=x.Value});runCalc();toast(&#x27;Imported&#x27;)},100)};r.readAsArrayBuffer(file);e.target.value=&#x27;&#x27;}
+function newCase(){if(confirm(&#x27;Clear this form?&#x27;)){render();toast(&#x27;New case&#x27;)}}
+function toast(t){let el=document.getElementById(&#x27;toast&#x27;);el.textContent=t;el.style.display=&#x27;block&#x27;;setTimeout(()=&gt;el.style.display=&#x27;none&#x27;,1800)}
+
+/* ===== Transaction Management Extension ===== */
+let currentCaseId = null;
+const TX_KEY = &#x27;hshsg_transactions_v2&#x27;;
+let txPage = 1;
+function getTransactions(){try{return JSON.parse(localStorage.getItem(TX_KEY)||&#x27;[]&#x27;)}catch(e){return []}}
+function setTransactions(list){localStorage.setItem(TX_KEY,JSON.stringify(list))}
+function typeName(type){return ({purchase:&#x27;Scrap Gold Purchase&#x27;,sales:&#x27;Scrap Gold Sales&#x27;,&#x27;kilo-sales&#x27;:&#x27;Physical Gold – 1 Kilo Sales&#x27;,&#x27;kilo-purchase&#x27;:&#x27;Physical Gold – 1 Kilo Purchase&#x27;})[type]||type}
+function typeCode(type){return ({purchase:&#x27;SGP&#x27;,sales:&#x27;SGS&#x27;,&#x27;kilo-sales&#x27;:&#x27;KGS&#x27;,&#x27;kilo-purchase&#x27;:&#x27;KGP&#x27;})[type]||&#x27;TX&#x27;}
+function todayCompact(){let d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,&#x27;0&#x27;)+String(d.getDate()).padStart(2,&#x27;0&#x27;)}
+function generateCaseId(type){let p=typeCode(type)+&#x27;-&#x27;+todayCompact();let n=getTransactions().filter(x=&gt;String(x.caseId||&#x27;&#x27;).startsWith(p)).length+1;return p+&#x27;-&#x27;+String(n).padStart(3,&#x27;0&#x27;)}
+function getMeta(){
+ const map={purchase:{date:&#x27;sp_date&#x27;,customer:&#x27;sp_customer&#x27;,ref:&#x27;sp_ref&#x27;,qty:&#x27;sp_qty&#x27;},sales:{date:&#x27;ss_date&#x27;,customer:&#x27;ss_customer&#x27;,ref:&#x27;ss_ref&#x27;,qty:&#x27;ss_qty&#x27;},&#x27;kilo-sales&#x27;:{date:&#x27;ks_date&#x27;,customer:&#x27;ks_customer&#x27;,ref:&#x27;ks_ref&#x27;,qty:&#x27;ks_qty&#x27;},&#x27;kilo-purchase&#x27;:{date:&#x27;kp_date&#x27;,customer:&#x27;kp_counterparty&#x27;,ref:&#x27;kp_ref&#x27;,qty:&#x27;kp_qty&#x27;}}[current];
+ return {date:document.getElementById(map.date)?.value||new Date().toISOString().slice(0,10),customer:document.getElementById(map.customer)?.value||&#x27;-&#x27;,ref:document.getElementById(map.ref)?.value||currentCaseId||&#x27;&#x27;,qty:document.getElementById(map.qty)?.value||&#x27;&#x27;}
+}
+function completionStatus(rows){let e=rows.filter(r=&gt;!String(r.Key||&#x27;&#x27;).startsWith(&#x27;_&#x27;));let f=e.filter(r=&gt;String(r.Value||&#x27;&#x27;).trim()!==&#x27;&#x27;&amp;&amp;String(r.Value)!==&#x27;FALSE&#x27;).length;let ratio=e.length?f/e.length:0;return ratio&gt;=.7?&#x27;Completed&#x27;:ratio&gt;=.2?&#x27;In Progress&#x27;:&#x27;Draft&#x27;}
+const originalCollect = collect;
+collect = function(){let rows=originalCollect();if(!currentCaseId)currentCaseId=generateCaseId(current);rows.unshift({Section:&#x27;META&#x27;,Key:&#x27;_case_id&#x27;,Label:&#x27;Case ID&#x27;,Value:currentCaseId});return rows}
+saveCase = function(){
+ let rows=collect(), meta=getMeta(), list=getTransactions();
+ let record={caseId:currentCaseId,type:current,typeName:typeName(current),date:meta.date,customer:meta.customer,ref:meta.ref||currentCaseId,qty:meta.qty,status:completionStatus(rows),updatedAt:new Date().toISOString(),rows};
+ let i=list.findIndex(x=&gt;x.caseId===currentCaseId); if(i&gt;=0)list[i]=record; else list.unshift(record);
+ setTransactions(list); localStorage.setItem(&#x27;hshsg_&#x27;+current,JSON.stringify(rows)); renderTransactions(); toast(&#x27;Saved transaction&#x27;)
+}
+function loadTransaction(id){let rec=getTransactions().find(x=&gt;x.caseId===id); if(!rec)return; currentCaseId=rec.caseId; showPanel(rec.type); setTimeout(()=&gt;{(rec.rows||[]).forEach(x=&gt;{let el=document.getElementById(x.Key);if(!el)return;if(el.type===&#x27;checkbox&#x27;)el.checked=String(x.Value).toUpperCase()===&#x27;TRUE&#x27;;else el.value=x.Value});runCalc();toast(&#x27;Loaded &#x27;+rec.caseId)},80)}
+function deleteTransaction(id){if(!confirm(&#x27;Delete this transaction?&#x27;))return;setTransactions(getTransactions().filter(x=&gt;x.caseId!==id));if(currentCaseId===id)currentCaseId=null;renderTransactions();toast(&#x27;Deleted&#x27;)}
+newCase = function(){currentCaseId=null;render();toast(&#x27;New transaction&#x27;)}
+function renderTransactions(){
+ let q=(document.getElementById(&#x27;txSearch&#x27;)?.value||&#x27;&#x27;).toLowerCase(),
+     d=document.getElementById(&#x27;txDate&#x27;)?.value||&#x27;&#x27;,
+     t=document.getElementById(&#x27;txType&#x27;)?.value||&#x27;&#x27;,
+     s=document.getElementById(&#x27;txStatus&#x27;)?.value||&#x27;&#x27;;
+ let filtered=getTransactions().filter(x=&gt;{
+   let h=[x.customer,x.ref,x.caseId,x.typeName].join(&#x27; &#x27;).toLowerCase();
+   return(!q||h.includes(q))&amp;&amp;(!d||x.date===d)&amp;&amp;(!t||x.type===t)&amp;&amp;(!s||x.status===s)
+ });
+ let pageSize=parseInt(document.getElementById(&#x27;txPageSize&#x27;)?.value||10);
+ let totalPages=Math.max(1,Math.ceil(filtered.length/pageSize));
+ if(txPage&gt;totalPages) txPage=totalPages;
+ if(txPage&lt;1) txPage=1;
+ let list=filtered.slice((txPage-1)*pageSize,txPage*pageSize);
+ let body=document.getElementById(&#x27;txBody&#x27;); if(!body)return;
+ let count=document.getElementById(&#x27;txCount&#x27;);
+ if(count) count.textContent = filtered.length + &#x27; transactions&#x27;;
+ let pageInfo=document.getElementById(&#x27;txPageInfo&#x27;);
+ if(pageInfo) pageInfo.textContent = &#x27;Page &#x27; + txPage + &#x27; / &#x27; + totalPages;
+ body.innerHTML=list.length?list.map(x=&gt;`&lt;tr&gt;&lt;td&gt;${x.date||&#x27;-&#x27;}&lt;/td&gt;&lt;td&gt;${x.customer||&#x27;-&#x27;}&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;txpill&quot;&gt;${x.typeName||typeName(x.type)}&lt;/span&gt;&lt;/td&gt;&lt;td&gt;${x.ref||x.caseId}&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;txstatus ${String(x.status||&#x27;Draft&#x27;).replace(&#x27; &#x27;,&#x27;&#x27;)}&quot;&gt;${x.status||&#x27;Draft&#x27;}&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;btn&quot; onclick=&quot;loadTransaction(&#x27;${x.caseId}&#x27;)&quot;&gt;View&lt;/button&gt; &lt;button class=&quot;btn danger&quot; onclick=&quot;deleteTransaction(&#x27;${x.caseId}&#x27;)&quot;&gt;Delete&lt;/button&gt;&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;):&#x27;&lt;tr&gt;&lt;td colspan=&quot;6&quot; style=&quot;color:var(--muted);text-align:center&quot;&gt;No transactions yet&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+exportExcel = function(){
+ let list=getTransactions(); if(!list.length){saveCase();list=getTransactions()} if(!window.XLSX){alert(&#x27;Excel library not loaded. Please connect internet once.&#x27;);return}
+ let wb=XLSX.utils.book_new();
+ let dash=list.map(x=&gt;({&#x27;Case ID&#x27;:x.caseId,&#x27;Date&#x27;:x.date,&#x27;Customer / Counterparty&#x27;:x.customer,&#x27;Transaction Type&#x27;:x.typeName||typeName(x.type),&#x27;Ref No.&#x27;:x.ref,&#x27;Quantity&#x27;:x.qty,&#x27;Status&#x27;:x.status,&#x27;Updated At&#x27;:x.updatedAt}));
+ let ws=XLSX.utils.json_to_sheet(dash);ws[&#x27;!cols&#x27;]=[{wch:20},{wch:12},{wch:28},{wch:32},{wch:22},{wch:12},{wch:14},{wch:24}];XLSX.utils.book_append_sheet(wb,ws,&#x27;Dashboard&#x27;);
+ let all=[];list.forEach(x=&gt;(x.rows||[]).forEach(r=&gt;all.push({&#x27;Case ID&#x27;:x.caseId,&#x27;Date&#x27;:x.date,&#x27;Customer / Counterparty&#x27;:x.customer,&#x27;Transaction Type&#x27;:x.typeName||typeName(x.type),&#x27;Type Code&#x27;:x.type,&#x27;Ref No.&#x27;:x.ref,&#x27;Status&#x27;:x.status,&#x27;Section&#x27;:r.Section,&#x27;Key&#x27;:r.Key,&#x27;Field / Item&#x27;:r.Label,&#x27;Value&#x27;:r.Value})));
+ let wsAll=XLSX.utils.json_to_sheet(all);wsAll[&#x27;!cols&#x27;]=[{wch:20},{wch:12},{wch:28},{wch:32},{wch:14},{wch:22},{wch:14},{wch:30},{wch:25},{wch:70},{wch:24}];XLSX.utils.book_append_sheet(wb,wsAll,&#x27;All Form Data&#x27;);
+ [&#x27;purchase&#x27;,&#x27;sales&#x27;,&#x27;kilo-sales&#x27;,&#x27;kilo-purchase&#x27;].forEach(tp=&gt;{let rows=all.filter(r=&gt;r[&#x27;Type Code&#x27;]===tp);if(rows.length){let w=XLSX.utils.json_to_sheet(rows);w[&#x27;!cols&#x27;]=wsAll[&#x27;!cols&#x27;];XLSX.utils.book_append_sheet(wb,w,typeName(tp).slice(0,31))}});
+ XLSX.writeFile(wb,&#x27;HSHSG_Checklist_Transactions_&#x27;+new Date().toISOString().slice(0,10)+&#x27;.xlsx&#x27;)
+}
+importExcel = function(e){
+ let file=e.target.files[0];if(!file)return;let r=new FileReader();r.onload=ev=&gt;{let wb=XLSX.read(ev.target.result,{type:&#x27;array&#x27;}),sheet=wb.Sheets[&#x27;All Form Data&#x27;]||wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(sheet,{defval:&#x27;&#x27;});
+ if(rows.length&amp;&amp;rows[0][&#x27;Case ID&#x27;]){let g={};rows.forEach(r=&gt;{let id=r[&#x27;Case ID&#x27;];if(!g[id])g[id]={caseId:id,type:r[&#x27;Type Code&#x27;],typeName:r[&#x27;Transaction Type&#x27;],date:r[&#x27;Date&#x27;],customer:r[&#x27;Customer / Counterparty&#x27;],ref:r[&#x27;Ref No.&#x27;],status:r[&#x27;Status&#x27;],updatedAt:new Date().toISOString(),rows:[]};g[id].rows.push({Section:r[&#x27;Section&#x27;],Key:r[&#x27;Key&#x27;],Label:r[&#x27;Field / Item&#x27;],Value:r[&#x27;Value&#x27;]})});let list=getTransactions();Object.values(g).forEach(rec=&gt;{let i=list.findIndex(x=&gt;x.caseId===rec.caseId);if(i&gt;=0)list[i]=rec;else list.unshift(rec)});setTransactions(list);renderTransactions();toast(&#x27;Imported transactions&#x27;)}else toast(&#x27;Import format not recognized&#x27;)};r.readAsArrayBuffer(file);e.target.value=&#x27;&#x27;
+}
+render();
+renderTransactions();
+
+&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;" style="width:100%;height:calc(100vh - 145px);min-height:760px;border:0.5px solid rgba(184,134,11,0.35);border-radius:12px;background:#0f1115;display:block;position:relative;z-index:1"></iframe>
   </div>
-
-  <div class="layout">
-    <main class="screen-card">
-      <div class="form-head">
-        <div><div class="company">Hua Seng Heng Singapore Pte Ltd.</div><div class="addr">Paya Lebar Square, 60 Paya Lebar Road Unit #05-03, Singapore 409051</div></div>
-        <div><span class="status warn" id="topStatus">In progress</span></div>
-      </div>
-
-      <section class="block">
-        <div class="block-title">Header Information</div>
-        <div class="block-body grid">
-          <div class="field"><label class="label">Scrap Ref.</label><input value="SCR-2025-0018"></div>
-          <div class="field"><label class="label">Date</label><input type="date" value="2025-05-15"></div>
-          <div class="field"><label class="label">Customer / Agent</label><input value="James Anderson / Agent"></div>
-          <div class="field"><label class="label">Collection Date</label><input type="date" value="2025-05-16"></div>
-          <div class="field"><label class="label">Quantity / Est. Purity Value</label><input id="qtyPurity" type="number" step="0.00001" value="23.05550" oninput="syncFromHeader();calc()"></div>
-          <div class="field"><label class="label">Est. Purity %</label><input id="purityPct" type="number" step="0.0001" value="99.20" oninput="calc()"></div>
-          <div class="field"><label class="label">ETD Origin</label><input value="19/05/2025"></div>
-          <div class="field"><label class="label">ETA Destination</label><input value="20/05/2025"></div>
-          <div class="field"><label class="label">MAWB No.</label><input value="618-9876-4440"></div>
-          <div class="field"><label class="label">Flight details 1</label><input value="SQ 921  CGK – SIN"></div>
-          <div class="field"><label class="label">Flight details 2</label><input value="SQ 346  SIN – ZRH"></div>
-          <div class="field"><label class="label">Workflow status</label><select id="caseStatus"><option>Document Review</option><option>Scrap Gold Received</option><option>95% Advance Paid</option><option>Refinery Assay</option><option>Balance Settlement</option><option>Completed</option></select></div>
-        </div>
-        <div class="formula" style="margin-top:14px">Linked calculation starts here: changing <b>Quantity / Est. Purity Value</b> in Header will update Scrap gold collected, 95% advance, charges, balance credit, scrap adjustment, final payment and journal preview automatically.</div>
-      </section>
-
-      <section class="block" id="documents">
-        <div class="block-title">Documentation — Initial Set</div>
-        <div class="block-body">
-          <table class="doc">
-            <thead><tr><th style="width:34%">Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead>
-            <tbody>
-              <tr><td>Customer Invoice / Packing List</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr>
-              <tr><td>Vault confirmation / trust receipt</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr>
-              <tr><td>MAWB</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr>
-              <tr><td>HSH Invoice / Packing List / COC (if any)</td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td></tr>
-              <tr><td>HSH Gold receipt Note</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td></tr>
-              <tr><td>Customer funds withdrawal instruction</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Processing & Accounting Checklist</div>
-        <div class="block-body">
-          <table class="process">
-            <tbody>
-              <tr><th colspan="2">Scrap gold collected</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell">100% Scrap gold received<div class="subrule">(Dr Scrap HSH / Cr Scrap customer)</div></td>
-                <td class="inputcell"><input id="fineGoldOz" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-19"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td colspan="5" class="formula">Fine Gold Oz = Header Quantity / Est. Purity Value × 32.148 × 0.992 ÷ 0.9999</td></tr>
-              <tr><td class="muted">Quantity / Est. Purity Value</td><td class="inputcell"><input id="rowQty" type="number" step="0.00001" value="23.05550" oninput="syncFromRow();calc()"></td><td class="muted center">Factor</td><td class="inputcell"><input id="troyFactor" type="number" step="0.001" value="32.148" oninput="calc()"></td><td class="inputcell"><input id="vaultFactor" type="number" step="0.0001" value="0.992" oninput="calc()"></td></tr>
-              <tr><td class="muted">Gross Troy Oz</td><td colspan="4" class="calc" id="grossTroyOz">-</td></tr>
-              <tr><td class="muted">Fine gold factor</td><td class="inputcell"><input id="fineFactor" type="number" step="0.0001" value="0.9999" oninput="calc()"></td><td colspan="3" class="muted">All factors are editable by Admin for demo/configuration.</td></tr>
-
-              <tr><th colspan="2">Customer advance funds withdrawal</th><th class="center">USD</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell"><span id="advPctLabel">95%</span> Funds paid<div class="subrule">(Dr customer / Cr bank)</div></td>
-                <td class="inputcell"><input id="advanceUsd" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-19"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td class="muted">Advance %</td><td class="inputcell"><input id="advancePct" type="number" step="0.01" value="95" oninput="calc()"></td><td class="muted center">LBMA / XAUUSD Price</td><td class="inputcell"><input id="goldPrice" type="number" step="0.01" value="3330.20" oninput="calc()"></td><td class="formula">Advance USD = 95% Loco Ldn × Price</td></tr>
-
-              <tr><th colspan="2">Customer advance credit</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell"><span id="locoPctLabel">95%</span> Loco Ldn received<div class="subrule">(Dr Scrap Customer / Cr customer)</div></td>
-                <td class="inputcell"><input id="advanceOz" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-19"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td colspan="5" class="formula">95% Loco Ldn received = Fine Gold Oz × Advance %</td></tr>
-
-              <tr><th colspan="2">Customer charges</th><th class="center">USD</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell">Discount @ <input id="discountOz" class="mini" style="width:90px" type="number" step="0.01" value="10" oninput="calc()"> per troy oz<div class="subrule">(Dr customer / Cr P&L-Physical XAU)</div></td>
-                <td class="inputcell"><input id="chargesUsd" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-19"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td colspan="5" class="formula">Customer Charges = (Quantity / Est. Purity Value × 32.148) × Discount per troy oz</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Documentation — Premium / Discount Advice</div>
-        <div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>Premium / Discount – Debit / credit advice</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td></tr></tbody></table></div>
-      </section>
-
-      <section class="block" id="refinery">
-        <div class="block-title">Documentation — Refinery Assay Statement</div>
-        <div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>Refinery assay statement</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr></tbody></table></div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Final Assay Statement</div>
-        <div class="block-body">
-          <table class="process">
-            <tbody>
-              <tr><th colspan="2">Final Assay Statement</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr><td colspan="2" class="titlecell">Assay results</td><td class="inputcell"><input id="assayOz" type="number" step="0.001" value="" oninput="calc()"></td><td class="inputcell"><input type="date" value="2025-05-22"></td><td class="inputcell"><input value=""></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Customer Balance Credit</div>
-        <div class="block-body">
-          <table class="process">
-            <tbody>
-              <tr><th colspan="2">Customer balance credit</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell">Balance 5% Loco Ldn received<div class="subrule">(Dr Scrap customer / CR customer)</div></td>
-                <td class="inputcell"><input id="balanceOz" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-27"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr>
-                <td colspan="2" class="titlecell">Scrap adjustment<div class="subrule">(Cr Scrap HSH / Dr Scrap customer)</div></td>
-                <td class="inputcell"><input id="scrapAdjust" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-27"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td colspan="5" class="formula">Balance 5% Loco Ldn received = Final Assay Statement − 95% Loco Ldn received<br>Scrap adjustment = Fine Gold Oz − Final Assay Statement</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="block" id="bank">
-        <div class="block-title">Documentation — Customer Funds Withdrawal Instruction</div>
-        <div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>Customer funds withdrawal instruction</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td></tr></tbody></table></div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Customer Balance Funds Withdrawal</div>
-        <div class="block-body">
-          <table class="process">
-            <tbody>
-              <tr><th colspan="2">Customer balance funds withdrawal</th><th class="center">USD</th><th class="center">Date</th><th class="center">Done by</th></tr>
-              <tr>
-                <td colspan="2" class="titlecell"><input id="finalFundsPct" class="mini" style="width:80px" type="number" step="0.01" value="100" oninput="calc()">% Funds paid<div class="subrule">(Dr customer/Cr bank)</div></td>
-                <td class="inputcell"><input id="finalUsd" class="readonly" readonly></td>
-                <td class="inputcell"><input type="date" value="2025-05-27"></td>
-                <td class="inputcell"><input value=""></td>
-              </tr>
-              <tr><td colspan="5" class="formula">Customer Balance Funds Withdrawal = ((Balance 5% Loco Ldn received × LBMA/XAUUSD Price) − Customer Charges) × Funds paid %</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="block" id="journal">
-        <div class="block-title">Journal Preview</div>
-        <div class="block-body"><div class="journal" id="journalPreview"></div></div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Remarks</div>
-        <div class="block-body"><textarea id="remarks">Overnight storage fee / discount note can be added here.</textarea></div>
-      </section>
-
-      <section class="block">
-        <div class="block-title">Paper Layout Preview</div>
-        <div class="block-body"><div class="print-note">This preview keeps the same order as the original checklist so Admin can compare against the paper form before saving/exporting.</div></div>
-      </section>
-    </main>
-
-    <aside class="side">
-      <div class="side-head"><div class="side-title">Live Summary</div><div class="sub" style="font-size:12px">Auto-calculated from the checklist</div></div>
-      <div class="summary">
-        <div class="sumrow"><span>Gross Troy Oz</span><span id="sGross">-</span></div>
-        <div class="sumrow em"><span>Fine Gold Oz</span><span id="sFine">-</span></div>
-        <div class="sumrow"><span>95% Advance Credit</span><span id="sAdvOz">-</span></div>
-        <div class="sumrow"><span>Advance Funds USD</span><span id="sAdvUsd">-</span></div>
-        <div class="sumrow"><span>Customer Charges</span><span id="sCharges">-</span></div>
-        <div class="sumrow"><span>Final Assay</span><span id="sAssay">-</span></div>
-        <div class="sumrow"><span>Balance 5% Loco Ldn</span><span id="sBal">-</span></div>
-        <div class="sumrow"><span>Scrap Adjustment</span><span id="sAdj">-</span></div>
-        <div class="sumrow em"><span>Balance Funds Withdrawal</span><span id="sFinal">-</span></div>
-      </div>
-      <div class="workflow">
-        <div class="block-title" style="padding-left:0">Workflow</div>
-        <div class="step done"><div class="dot">1</div><div class="stxt"><b>Docs received</b><span>Initial documentation</span></div></div>
-        <div class="step done"><div class="dot">2</div><div class="stxt"><b>Scrap collected</b><span>100% scrap gold received</span></div></div>
-        <div class="step done"><div class="dot">3</div><div class="stxt"><b>95% advance</b><span>Funds + loco credit</span></div></div>
-        <div class="step active"><div class="dot">4</div><div class="stxt"><b>Refinery assay</b><span>Assay statement</span></div></div>
-        <div class="step"><div class="dot">5</div><div class="stxt"><b>Balance settlement</b><span>Balance + adjustment</span></div></div>
-        <div class="step"><div class="dot">6</div><div class="stxt"><b>Funds withdrawal</b><span>Final USD payment</span></div></div>
-      </div>
-      <div class="actions">
-        <button class="btn gold" onclick="save('Checklist saved')">Save Checklist</button>
-        <button class="btn" onclick="save('Document request generated')">Generate Missing Docs Request</button>
-        <button class="btn" onclick="save('Refinery request created')">Create Refinery Request</button>
-        <button class="btn" onclick="save('Bank transaction generated')">Generate Bank Transaction</button>
-        <button class="btn" onclick="save('Journal draft generated')">Generate Journal Draft</button>
-        <button class="btn" onclick="printNow()">Print / Export PDF</button>
-      </div>
-    </aside>
-  </div>
-</div>
-
-<div class="print-form" id="printForm">
-  <div class="pf-company">Hua Seng Heng Singapore Pte Ltd.</div>
-  <div class="pf-title">Scrap Gold Purchase</div>
-  <table class="pf-meta">
-    <tr>
-      <td style="width:18%">Scrap Ref.</td><td style="width:32%"><span class="pf-line" id="pfScrapRef"></span></td>
-      <td style="width:15%">Date</td><td style="width:35%"><span class="pf-line" id="pfDate"></span></td>
-    </tr>
-    <tr>
-      <td>Customer / Agent</td><td><span class="pf-line" id="pfCustomer"></span></td>
-      <td>Collection Date</td><td><span class="pf-line" id="pfCollection"></span></td>
-    </tr>
-    <tr>
-      <td>Quantity / Est. Purity</td><td><span class="pf-line"><span id="pfQty"></span> / <span id="pfPurity"></span>%</span></td>
-      <td>ETD Origin</td><td><span class="pf-line" id="pfEtd"></span></td>
-    </tr>
-    <tr>
-      <td>MAWB No.</td><td><span class="pf-line" id="pfMawb"></span></td>
-      <td>ETA Destination</td><td><span class="pf-line" id="pfEta"></span></td>
-    </tr>
-  </table>
-  <table class="pf-table">
-    <colgroup><col style="width:28%"><col style="width:11%"><col style="width:11%"><col style="width:13%"><col style="width:17%"><col style="width:20%"></colgroup>
-    <tr><th>Flight Details</th><td class="pf-center">SQ</td><td colspan="2" class="pf-center" id="pfFlight1"></td><td colspan="2"></td></tr>
-    <tr><td></td><td class="pf-center">SQ</td><td colspan="2" class="pf-center" id="pfFlight2"></td><td colspan="2"></td></tr>
-    <tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th></th><th>Docs received</th></tr>
-    <tr><td>Customer Invoice / Packing List</td><td></td><td></td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><td>Vault confirmation / trust receipt</td><td></td><td></td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><td>Mawb</td><td></td><td class="pf-center">☑</td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><td>HSH Invoice / Packing List / COC (if any)</td><td class="pf-center">☑</td><td class="pf-center">☑</td><td></td><td></td><td></td></tr>
-    <tr><td>HSH Gold receipt Note</td><td></td><td></td><td class="pf-center">☑</td><td></td><td></td></tr>
-    <tr><td>Customer funds withdrawal instruction</td><td></td><td></td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><th>Scrap gold collected</th><th colspan="2" class="pf-center">Oz</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">100% Scrap gold received<br><span class="pf-small">(Dr Scrap HSH / Cr Scrap customer)</span></td><td colspan="2" class="pf-center" id="pfFine"></td><td class="pf-center" id="pfDate1"></td><td colspan="2" id="pfBy1"></td></tr>
-    <tr><th>Customer advance funds withdrawal</th><th colspan="2" class="pf-center">USD</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">95% Funds paid<br><span class="pf-small">(Dr customer / Cr bank)</span></td><td colspan="2" class="pf-center" id="pfAdvUsd"></td><td class="pf-center" id="pfDate2"></td><td colspan="2" id="pfBy2"></td></tr>
-    <tr><th>Customer advance credit</th><th colspan="2" class="pf-center">Oz</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">95% Loco Ldn received<br><span class="pf-small">(Dr Scrap Customer / Cr customer)</span></td><td colspan="2" class="pf-center" id="pfAdvOz"></td><td class="pf-center" id="pfDate3"></td><td colspan="2" id="pfBy3"></td></tr>
-    <tr><th>Customer charges</th><th colspan="2" class="pf-center">USD</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">Discount @ <span id="pfDiscount"></span> per troy oz<br><span class="pf-small">(Dr customer / Cr P&amp;L-Physical XAU)</span></td><td colspan="2" class="pf-center" id="pfCharges"></td><td class="pf-center" id="pfDate4"></td><td colspan="2" id="pfBy4"></td></tr>
-    <tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th></th><th>Docs received</th></tr>
-    <tr><td>Premium / Discount – Debit / credit advice</td><td></td><td></td><td class="pf-center">☑</td><td></td><td></td></tr>
-    <tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th></th><th>Docs received</th></tr>
-    <tr><td>Refinery assay statement</td><td></td><td class="pf-center">☑</td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><th>Final Assay Statement</th><th colspan="2" class="pf-center">Oz</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">Assay results</td><td colspan="2" class="pf-center" id="pfAssay"></td><td class="pf-center" id="pfDate5"></td><td colspan="2" id="pfBy5"></td></tr>
-    <tr><th>Customer balance credit</th><th colspan="2" class="pf-center">Oz</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done/Checked by</th></tr>
-    <tr><td class="pf-center pf-bold">Balance 5% Loco Ldn received<br><span class="pf-small">(Dr Scrap customer / CR customer)</span></td><td colspan="2" class="pf-center" id="pfBal"></td><td class="pf-center" id="pfDate6"></td><td colspan="2" id="pfBy6"></td></tr>
-    <tr><td class="pf-center pf-bold">Scrap adjustment<br><span class="pf-small">(Cr Scrap HSH / Dr Scrap customer)</span></td><td colspan="2" class="pf-center" id="pfAdj"></td><td class="pf-center" id="pfDate7"></td><td colspan="2" id="pfBy7"></td></tr>
-    <tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th></th><th>Docs received</th></tr>
-    <tr><td>Customer funds withdrawal instruction</td><td></td><td></td><td class="pf-center">☑</td><td></td><td></td></tr>
-    <tr><th>Customer balance funds withdrawal</th><th colspan="2" class="pf-center">USD</th><th class="pf-center">Date</th><th colspan="2" class="pf-center">Done by</th></tr>
-    <tr><td class="pf-center pf-bold"><span id="pfFinalPct"></span>% Funds paid<br><span class="pf-small">(Dr customer/Cr bank)</span></td><td colspan="2" class="pf-center" id="pfFinalUsd"></td><td class="pf-center" id="pfDate8"></td><td colspan="2" id="pfBy8"></td></tr>
-    <tr><td class="pf-remarks" colspan="6">Remarks: <span id="pfRemarks"></span></td></tr>
-  </table>
-  <div style="text-align:center;font-size:9px;margin-top:16px;color:#477!important">Hua Seng Heng Singapore Pte Ltd.<br>Paya Lebar Square, 60 Paya Lebar Road Unit # 05-03 Singapore 409051</div>
-</div>
-
-<div class="toast" id="toast">Saved</div>
-<script>
-function el(id){return document.getElementById(id)}
-function raw(id){return (el(id)?.value||'').toString().trim()}
-function v(id){return parseFloat(raw(id).replace(/,/g,''))||0}
-function has(id){return raw(id) !== ''}
-function fmtOz(x){return (isFinite(x)?x:0).toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3})+' oz'}
-function fmtUsd(x){return '$'+(isFinite(x)?x:0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
-function dash(id){if(el(id)){ if(el(id).tagName==='INPUT') el(id).value=''; else el(id).textContent='-'; }}
-function setVal(id,val){if(el(id)){ if(el(id).tagName==='INPUT') el(id).value=val; else el(id).textContent=val; }}
-function copyVal(id,val){ if(el(id)) el(id).textContent = val || ''; }
-function niceDate(v){return v||''}
-function syncFromHeader(){ if(el('rowQty') && el('qtyPurity')) el('rowQty').value = el('qtyPurity').value; }
-function syncFromRow(){ if(el('rowQty') && el('qtyPurity')) el('qtyPurity').value = el('rowQty').value; }
-function calc(){
-  const qtyPresent = has('qtyPurity');
-  const assayPresent = has('assayOz');
-  const qty = qtyPresent ? v('qtyPurity') : 0;
-  if(el('rowQty') && el('qtyPurity')) el('rowQty').value = el('qtyPurity').value;
-  const troy = has('troyFactor') ? v('troyFactor') : 32.148;
-  const vault = has('vaultFactor') ? v('vaultFactor') : 0.992;
-  const fineFactor = has('fineFactor') ? v('fineFactor') : 0.9999;
-  const grossOz = qty * troy;
-  const fine = qty * troy * vault / fineFactor;
-  const advPct = (has('advancePct') ? v('advancePct') : 95) / 100;
-  const advOz = fine * advPct;
-  const price = has('goldPrice') ? v('goldPrice') : 0;
-  const advUsd = advOz * price;
-  const discount = has('discountOz') ? v('discountOz') : 0;
-  const charges = grossOz * discount;
-  const assay = assayPresent ? v('assayOz') : null;
-  const balance = assayPresent ? assay - advOz : null;
-  const adjustment = assayPresent ? fine - assay : null;
-  const finalPct = (has('finalFundsPct') ? v('finalFundsPct') : 100) / 100;
-  const finalUsd = assayPresent ? ((balance * price) - charges) * finalPct : null;
-
-  el('advPctLabel').textContent = (advPct * 100).toFixed(0) + '%';
-  el('locoPctLabel').textContent = (advPct * 100).toFixed(0) + '%';
-
-  if(!qtyPresent || qty <= 0){
-    ['fineGoldOz','grossTroyOz','advanceOz','advanceUsd','chargesUsd','balanceOz','scrapAdjust','finalUsd','sGross','sFine','sAdvOz','sAdvUsd','sCharges','sAssay','sBal','sAdj','sFinal'].forEach(dash);
-    el('journalPreview').innerHTML='';
-  } else {
-    setVal('fineGoldOz', fmtOz(fine));
-    setVal('grossTroyOz', fmtOz(grossOz));
-    setVal('advanceOz', fmtOz(advOz));
-    setVal('advanceUsd', fmtUsd(advUsd));
-    setVal('chargesUsd', fmtUsd(charges));
-    setVal('sGross', fmtOz(grossOz));
-    setVal('sFine', fmtOz(fine));
-    setVal('sAdvOz', fmtOz(advOz));
-    setVal('sAdvUsd', fmtUsd(advUsd));
-    setVal('sCharges', fmtUsd(charges));
-    if(assayPresent){
-      setVal('balanceOz', fmtOz(balance));
-      setVal('scrapAdjust', fmtOz(adjustment));
-      setVal('finalUsd', fmtUsd(finalUsd));
-      setVal('sAssay', fmtOz(assay));
-      setVal('sBal', fmtOz(balance));
-      setVal('sAdj', fmtOz(adjustment));
-      setVal('sFinal', fmtUsd(finalUsd));
-    } else {
-      ['balanceOz','scrapAdjust','finalUsd','sAssay','sBal','sAdj','sFinal'].forEach(dash);
-    }
-    el('journalPreview').innerHTML = `
-1) Scrap gold collected: Dr Scrap HSH / Cr Scrap Customer — ${fmtOz(fine)}<br>
-2) Customer advance funds withdrawal: Dr Customer / Cr Bank — ${fmtUsd(advUsd)}<br>
-3) Customer advance credit: Dr Scrap Customer / Cr Customer — ${fmtOz(advOz)}<br>
-4) Customer charges: Dr Customer / Cr P&L-Physical XAU — ${fmtUsd(charges)} (Gross Troy Oz ${fmtOz(grossOz)} × Discount)<br>
-${assayPresent ? `5) Balance 5% Loco Ldn received: Dr Scrap Customer / Cr Customer — ${fmtOz(balance)}<br>6) Scrap adjustment: Cr Scrap HSH / Dr Scrap Customer — ${fmtOz(adjustment)}<br>7) Customer balance funds withdrawal: Dr Customer / Cr Bank — ${fmtUsd(finalUsd)}` : '5) Final assay pending — balance, adjustment and final payment will calculate after assay input.'}
-    `;
-  }
-  updatePrintForm({qtyPresent, assayPresent, grossOz, fine, advOz, advUsd, charges, assay, balance, adjustment, finalUsd, finalPct, discount});
-}
-
-function getInputByLabel(labelText){
-  const fields=[...document.querySelectorAll('.field')];
-  for(const f of fields){
-    const lab=f.querySelector('label');
-    if(lab && lab.textContent.trim()===labelText){return f.querySelector('input,select,textarea')?.value || '';}
-  }
-  return '';
-}
-function inputDateInRow(inputId){
-  const row=el(inputId)?.closest('tr');
-  return row?.querySelector('input[type="date"]')?.value || '';
-}
-function byInRow(inputId){
-  const row=el(inputId)?.closest('tr');
-  const arr=[...row?.querySelectorAll('input')||[]];
-  return arr[arr.length-1]?.value || '';
-}
-function updatePrintForm(c){
-  copyVal('pfScrapRef', getInputByLabel('Scrap Ref.'));
-  copyVal('pfDate', getInputByLabel('Date'));
-  copyVal('pfCustomer', getInputByLabel('Customer / Agent'));
-  copyVal('pfCollection', getInputByLabel('Collection Date'));
-  copyVal('pfQty', raw('qtyPurity'));
-  copyVal('pfPurity', raw('purityPct'));
-  copyVal('pfEtd', getInputByLabel('ETD Origin'));
-  copyVal('pfEta', getInputByLabel('ETA Destination'));
-  copyVal('pfMawb', getInputByLabel('MAWB No.'));
-  copyVal('pfFlight1', getInputByLabel('Flight details 1').replace(/^SQ\s*/i,''));
-  copyVal('pfFlight2', getInputByLabel('Flight details 2').replace(/^SQ\s*/i,''));
-  const hasQty=c.qtyPresent && c.grossOz>0;
-  copyVal('pfFine', hasQty ? fmtOz(c.fine).replace(' oz','') : '');
-  copyVal('pfAdvUsd', hasQty ? fmtUsd(c.advUsd) : '');
-  copyVal('pfAdvOz', hasQty ? fmtOz(c.advOz).replace(' oz','') : '');
-  copyVal('pfDiscount', raw('discountOz'));
-  copyVal('pfCharges', hasQty ? fmtUsd(c.charges) : '');
-  copyVal('pfAssay', c.assayPresent ? fmtOz(c.assay).replace(' oz','') : '');
-  copyVal('pfBal', hasQty && c.assayPresent ? fmtOz(c.balance).replace(' oz','') : '');
-  copyVal('pfAdj', hasQty && c.assayPresent ? fmtOz(c.adjustment).replace(' oz','') : '');
-  copyVal('pfFinalUsd', hasQty && c.assayPresent ? fmtUsd(c.finalUsd) : '');
-  copyVal('pfFinalPct', raw('finalFundsPct'));
-  copyVal('pfRemarks', raw('remarks'));
-  [['pfDate1','fineGoldOz'],['pfDate2','advanceUsd'],['pfDate3','advanceOz'],['pfDate4','chargesUsd'],['pfDate5','assayOz'],['pfDate6','balanceOz'],['pfDate7','scrapAdjust'],['pfDate8','finalUsd']].forEach(([pid,iid])=>copyVal(pid,inputDateInRow(iid)));
-  [['pfBy1','fineGoldOz'],['pfBy2','advanceUsd'],['pfBy3','advanceOz'],['pfBy4','chargesUsd'],['pfBy5','assayOz'],['pfBy6','balanceOz'],['pfBy7','scrapAdjust'],['pfBy8','finalUsd']].forEach(([pid,iid])=>copyVal(pid,byInRow(iid)));
-}
-function printNow(){
-  calc();
-  setTimeout(()=>window.print(), 50);
-}
-window.addEventListener('beforeprint', calc);
-document.addEventListener('input', function(){
-  // Keep the print form synchronized with visible fields, including Done/Checked by names.
-  calc();
-});
-function save(msg){const t=el('toast');t.textContent=msg||'Saved';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-function go(id){el(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
-['qtyPurity','rowQty','troyFactor','vaultFactor','fineFactor','advancePct','goldPrice','discountOz','assayOz','finalFundsPct'].forEach(id=>{
-  const node=el(id);
-  if(node) node.addEventListener('input', calc);
-});
-calc();
-</script>
-
-</div>
-</div>
-
-</div>
-<div style="position:sticky;top:100px">
-  <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase;margin-bottom:8px">
-    Saved Cases
-  </div>
-  <div id="cl-list-purchase" style="max-height:480px;overflow-y:auto"></div>
-</div>
-</div>
-<div class="ops-card checklist-panel" id="checklistPanelSales" style="padding:14px;overflow:hidden;margin-bottom:18px;border-color:rgba(184,134,11,.25)">
-<div class="section-label">Scrap Gold Sales Checklist</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-  <button class="btn btn-gold btn-sm" onclick="clSaveCase('sales', clGetActive('sales'))">
-    💾 Save Case
-  </button>
-  <button class="btn btn-sm" onclick="clNewCase('sales')">
-    ➕ New Case
-  </button>
-  <span id="cl-status-sales" style="font-size:11px;color:#9A9488"></span>
-</div>
-<div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
-<div id="cl-form-sales">
-
-<div id="scrapSalesFrame-wrap" style="width:100%;border-radius:10px">
-<style>
-
-:root{--bg:#0b0b0b;--panel:#111;--panel2:#181818;--line:#303030;--gold:#b8860b;--text:#f3f0e8;--muted:#a69f91;--muted2:#716b60;--green:#74c69d;--amber:#ffb347;--blue:#5ba4f5;--paper:#fff;--ink:#000}
-*{box-sizing:border-box}body{margin:0;background:#0D0D0D;color:#F0EDE6;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:1.45}input,select,textarea,button{font-family:inherit}input,select,textarea{background:#181818;border:1px solid #2f2f2f;border-radius:7px;color:#F0EDE6;padding:8px 10px;outline:none}input:focus,textarea:focus,select:focus{border-color:rgba(184,134,11,.7)}
-.tabs .active,.btn.gold{background:#B8860B;border-color:#B8860B;color:#000}.btn.blue{background:#0d2040;border-color:rgba(91,164,245,.35);color:#5ba4f5}
-.wrap{max-width:1560px;margin:0 auto;padding:22px}.hero{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;gap:14px}.eyebrow{color:#B8860B;letter-spacing:.12em;text-transform:uppercase;font-size:11px}.title{font-family:Georgia,serif;font-size:34px;line-height:1.1}.sub{color:#a69f91;margin-top:6px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}.screen-card,.side{background:#111;border:1px solid #2f2f2f;border-radius:14px;overflow:hidden}.side{position:sticky;top:76px}.form-head{padding:17px 20px;background:linear-gradient(90deg,rgba(184,134,11,.18),rgba(184,134,11,.04));border-bottom:1px solid #2f2f2f}.company{font-weight:800;font-size:16px}.addr{font-size:12px;color:#a69f91;margin-top:2px}.block{border-bottom:1px solid #2f2f2f}.block-title{display:flex;gap:8px;align-items:center;color:#B8860B;text-transform:uppercase;letter-spacing:.08em;font-size:13px;font-weight:900;padding:15px 20px 9px}.block-title:before{content:'';width:8px;height:8px;background:#B8860B;border-radius:50%}.block-body{padding:0 20px 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:5px}.label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#716b60}.formula{font-family:Consolas,monospace;background:#050505;border:1px solid rgba(184,134,11,.35);border-radius:9px;color:#e4ca73;padding:10px 12px;margin-top:10px;line-height:1.65}.readonly{background:#050505!important;color:#B8860B!important;font-weight:900!important;border-color:rgba(184,134,11,.38)!important}.chk{width:18px;height:18px;accent-color:#B8860B}table{width:100%;border-collapse:collapse}.doc th,.doc td,.process th,.process td{border:1px solid #2f2f2f;padding:8px;vertical-align:middle}.doc th,.process th{background:#080808;color:#a69f91;font-size:11px;text-transform:uppercase;letter-spacing:.045em;text-align:left}.process .titlecell{font-weight:800;background:#0b0b0b}.subrule{font-size:11px;color:#a69f91;font-weight:400;margin-top:3px}.inputcell{padding:0!important}.inputcell input{border:0;border-radius:0;background:#141414;width:100%;height:40px}.center{text-align:center}.muted{color:#a69f91}.mini{width:90px!important;padding:7px!important}.sumrow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}.sumrow span:first-child{color:#a69f91}.sumrow span:last-child{font-weight:900;text-align:right}.sumrow.em span:last-child{color:#B8860B;font-size:16px}.side-head{padding:15px 17px;border-bottom:1px solid #2f2f2f;background:rgba(184,134,11,.08)}.summary{padding:14px 17px}.actions{display:grid;gap:8px;padding:14px 17px;border-top:1px solid #2f2f2f}.toast{position:fixed;right:20px;bottom:20px;background:#181818;border:1px solid rgba(184,134,11,.42);border-radius:10px;padding:12px 14px;display:none}.toast.show{display:block}.pill{display:inline-flex;border-radius:999px;padding:4px 10px;background:#0d2040;color:#5ba4f5;border:1px solid rgba(91,164,245,.25);font-size:11px;margin-top:8px}.link-note{background:#0d2040;border:1px solid rgba(91,164,245,.25);border-radius:10px;color:#5ba4f5;padding:10px 12px;margin-top:10px;font-size:12px}.warn-note{background:#3d2800;border:1px solid rgba(255,179,71,.25);border-radius:10px;color:#ffb347;padding:10px 12px;margin-top:10px;font-size:12px}
-.print-form{display:none}
-@media(max-width:1100px){.layout{grid-template-columns:1fr}.side{position:static}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.grid{grid-template-columns:1fr}.hero{display:block}}
-@media print{nav,.hero,.layout{display:none!important}.wrap{max-width:none;margin:0;padding:0}.print-form{display:block!important;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:10px;padding:8mm}.print-form *{box-sizing:border-box;color:#000!important}.pf-company{text-align:center;font-weight:bold;font-size:13px;margin-bottom:2px}.pf-title{text-align:center;font-weight:bold;font-size:12px;margin-bottom:8px}.pf-meta{width:100%;border-collapse:collapse;margin-bottom:6px}.pf-meta td{border:0;padding:2px 4px;height:18px;vertical-align:bottom}.pf-line{display:inline-block;min-width:170px;border-bottom:1px solid #000;height:14px;padding-left:4px}.pf-table{width:100%;border-collapse:collapse;table-layout:fixed}.pf-table th,.pf-table td{border:1px solid #000;padding:3px 4px;vertical-align:middle;height:22px;font-size:10px}.pf-table th{background:#d9d9d9!important;font-weight:normal;text-align:left}.pf-center{text-align:center}.pf-small{font-size:8px}.pf-bold{font-weight:bold}.pf-gray{background:#d9d9d9!important}@page{size:A4 portrait;margin:8mm}}
-
-</style>
-
-
-<div class="wrap">
-  <div class="hero"><div><div class="eyebrow">Client Sells / Refinery Flow</div><div class="title">Scrap Gold Sales Checklist</div><div class="sub">Connected to Scrap Gold Purchase Checklist. Customer sells scrap gold to us, then we send the scrap gold to refinery and settle advance / balance credit.</div></div><div><button class="btn blue" onclick="importFromPurchase()">Import from Scrap Gold Purchase</button><div class="pill">Form + live calculation + paper print</div></div></div>
-  <div class="layout">
-    <main class="screen-card">
-      <div class="form-head"><div class="company">Hua Seng Heng Singapore Pte Ltd.</div><div class="addr">Scrap Gold Sales — linked refinery checklist</div><div class="link-note">This sales checklist starts from the same quantity and assay data as Scrap Gold Purchase. Use Import to pull values from the Purchase checklist in this index file.</div></div>
-      <section class="block">
-        <div class="block-title">Header Information</div>
-        <div class="block-body grid">
-          <div class="field"><label class="label">Scrap Ref.</label><input id="scrapRef" value="HSH 1602"></div>
-          <div class="field"><label class="label">Date</label><input id="docDate" type="date" value="2026-06-15"></div>
-          <div class="field"><label class="label">Refinery / Customer</label><input id="refineryCustomer" value="Refinery / Customer"></div>
-          <div class="field"><label class="label">Source Purchase Ref.</label><input id="purchaseRef" value="SCR-2025-0018"></div>
-          <div class="field"><label class="label">Quantity / Est. Purity Value</label><input id="qty" type="number" step="0.00001" value="23.05550" oninput="calc()"></div>
-          <div class="field"><label class="label">Est. Purity %</label><input id="purityPct" type="number" step="0.0001" value="99.20" oninput="calc()"></div>
-          <div class="field"><label class="label">Troy Factor</label><input id="troyFactor" type="number" step="0.001" value="32.150747" oninput="calc()"></div>
-          <div class="field"><label class="label">Vault Factor</label><input id="vaultFactor" type="number" step="0.0001" value="0.992" oninput="calc()"></div>
-          <div class="field"><label class="label">Advance %</label><input id="advancePct" type="number" step="0.01" value="95" oninput="calc()"></div>
-          <div class="field"><label class="label">AM Fixing / XAUUSD Price</label><input id="goldPrice" type="number" step="0.01" value="3330.20" oninput="calc()"></div>
-          <div class="field"><label class="label">Final Assay Result Oz</label><input id="assayOz" type="number" step="0.001" value="733.684" oninput="calc()"></div>
-          <div class="field"><label class="label">Assay Difference / Charge Oz</label><input id="assayDiff" type="number" step="0.001" value="5.884" oninput="calc()"></div>
-        </div>
-        <div class="formula">Linked Formula: 95% scrap gold delivered = Quantity × 32.150747 × 0.992 × 0.95. 95% Loco Ldn received uses the same value. Balance 5% = Final Assay − 95% delivered. This mirrors the handwritten Scrap Gold Sales checklist.</div>
-      </section>
-
-      <section class="block" id="documents"><div class="block-title">Advance Credit via AM Fixing (Option 1)</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>HSH pre-alert refinery on shipment / AM fixing</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td></tr><tr><td>HSH Proforma Invoice / Funds withdrawal form</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Scrap Gold Arrived Refinery on Value Date</div><div class="block-body"><table class="process"><tbody><tr><th colspan="2">Scrap gold arrived refinery on value date</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr><tr><td colspan="2" class="titlecell"><span id="deliveredPctLabel">95%</span> scrap gold delivered<div class="subrule">(Dr refinery / Cr Scrap HSH)</div></td><td class="inputcell"><input id="advanceDeliveredOz" class="readonly" readonly></td><td class="inputcell"><input id="advanceDate" type="date" value="2025-05-27"></td><td class="inputcell"><input id="advanceBy" value=""></td></tr><tr><td colspan="5" class="formula">95% scrap gold delivered = Quantity × Troy Factor × Vault Factor × Advance %</td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Documentation — Refinery Transfer</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>MT103 from refinery</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr><tr><td>Precredit from refinery</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr></tbody></table></div></section>
-
-      <section class="block" id="bank"><div class="block-title">Refinery Transfer USD to HSH</div><div class="block-body"><table class="process"><tbody><tr><th colspan="2">Refinery transfer USD to HSH</th><th class="center">USD</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr><tr><td colspan="2" class="titlecell">Funds received<div class="subrule">(Dr bank / Cr eBTS)</div></td><td class="inputcell"><input id="advanceUsd" class="readonly" readonly></td><td class="inputcell"><input type="date" value="2025-05-27"></td><td class="inputcell"><input value=""></td></tr><tr><td colspan="5" class="formula">Funds received = 95% scrap gold delivered × AM Fixing / XAUUSD Price</td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Advance Credit via Loco Ldn (Option 2)</div><div class="block-body"><table class="process"><tbody><tr><th colspan="2">Advance credit via Loco Ldn</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr><tr><td colspan="2" class="titlecell"><span id="locoPctLabel">95%</span> scrap gold delivered<div class="subrule">(Dr refinery / Cr Scrap HSH)</div></td><td class="inputcell"><input id="advanceLocoOz" class="readonly" readonly></td><td class="inputcell"><input type="date" value="2025-05-27"></td><td class="inputcell"><input value=""></td></tr><tr><td colspan="2" class="titlecell"><span id="locoReceivedPctLabel">95%</span> Loco Ldn received<div class="subrule">(Dr eBTS / Cr Refinery)</div></td><td class="inputcell"><input id="locoReceivedOz" class="readonly" readonly></td><td class="inputcell"><input type="date" value="2025-05-27"></td><td class="inputcell"><input value=""></td></tr></tbody></table></div></section>
-
-      <section class="block" id="refinery"><div class="block-title">Final Assay Statement</div><div class="block-body"><table class="process"><tbody><tr><th colspan="2">Final Assay Statement</th><th class="center">Oz</th><th class="center">Assay difference / charge</th><th class="center">Date</th></tr><tr><td colspan="2" class="titlecell">Assay results</td><td class="inputcell"><input id="assayOzTable" type="number" step="0.001" oninput="document.getElementById('assayOz').value=this.value;calc()"></td><td class="inputcell"><input id="assayDiffTable" type="number" step="0.001" oninput="document.getElementById('assayDiff').value=this.value;calc()"></td><td class="inputcell"><input type="date" value="2025-05-22"></td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Balance Credit via AM Fixing / Loco Ldn</div><div class="block-body"><table class="process"><tbody><tr><th colspan="2">Balance credit</th><th class="center">Oz</th><th class="center">Date</th><th class="center">Done/Checked by</th></tr><tr><td colspan="2" class="titlecell">5% scrap gold delivered<div class="subrule">(Dr refinery / Cr Scrap HSH)</div></td><td class="inputcell"><input id="balanceDeliveredOz" class="readonly" readonly></td><td class="inputcell"><input type="date" value="2025-05-27"></td><td class="inputcell"><input value=""></td></tr><tr><td colspan="2" class="titlecell">5% Loco Ldn received<div class="subrule">(Dr eBTS / Cr Refinery)</div></td><td class="inputcell"><input id="balanceLocoOz" class="readonly" readonly></td><td class="inputcell"><input type="date" value="2025-05-27"></td><td class="inputcell"><input value=""></td></tr><tr><td colspan="5" class="formula">Balance 5% = Final Assay Result − 95% scrap gold delivered</td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Documentation — Final Credit</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr></thead><tbody><tr><td>eBTS Loco Ldn credited to our unallocated account</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr><tr><td>Assay result / Refinery charge</td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox"></td><td><input class="chk" type="checkbox" checked></td></tr></tbody></table></div></section>
-
-      <section class="block"><div class="block-title">Journal Preview</div><div class="block-body"><div class="formula" id="journalPreview"></div></div></section>
-    </main>
-    <aside class="side"><div class="side-head"><b>Live Summary</b><div style="color:#a69f91;font-size:12px">Sales checklist linked to purchase data</div></div><div class="summary"><div class="sumrow"><span>Gross Troy Oz</span><span id="sGross">-</span></div><div class="sumrow em"><span>95% Scrap Delivered</span><span id="sAdv">-</span></div><div class="sumrow"><span>Refinery Funds USD</span><span id="sAdvUsd">-</span></div><div class="sumrow"><span>Final Assay</span><span id="sAssay">-</span></div><div class="sumrow"><span>Assay Difference / Charge</span><span id="sDiff">-</span></div><div class="sumrow em"><span>Balance 5% Delivered</span><span id="sBal">-</span></div><div class="sumrow"><span>Balance USD Value</span><span id="sBalUsd">-</span></div></div><div class="actions"><button class="btn blue" onclick="importFromPurchase()">Import from Purchase Checklist</button><button class="btn gold" onclick="save('Checklist saved')">Save Sales Checklist</button><button class="btn" onclick="save('Refinery credit generated')">Generate Refinery Credit</button><button class="btn" onclick="save('Bank transaction generated')">Generate Bank Transaction</button><button class="btn" onclick="printNow()">Print / Export PDF</button></div></aside>
-  </div>
-
-  <div class="print-form" id="printForm">
-    <div class="pf-company">Hua Seng Heng Singapore Pte Ltd.</div><div class="pf-title">Scrap Gold Sales</div>
-    <table class="pf-meta"><tr><td>Scrap Ref. <span class="pf-line" id="pfScrapRef"></span></td><td>Date <span class="pf-line" id="pfDate"></span></td></tr><tr><td>Refinery / Customer <span class="pf-line" id="pfRefinery"></span></td><td>Quantity / Est. Purity <span class="pf-line" id="pfQty"></span> / %</td></tr></table>
-    <table class="pf-table"><tr><th colspan="2">Advance credit via AM fixing (Option 1)</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr><tr><td colspan="2">HSH pre-alert refinery on shipment/AM fixing</td><td></td><td class="pf-center">☑</td><td></td><td></td></tr><tr><td colspan="2">HSH Proforma Invoice / Funds withdrawal form</td><td></td><td class="pf-center">☑</td><td></td><td></td></tr>
-    <tr><th colspan="2">Scrap gold arrived refinery on value date</th><th>Oz</th><th>Date</th><th colspan="2">Done/Checked by</th></tr><tr><td colspan="2" class="pf-bold">95% scrap gold delivered<br><span class="pf-small">(Dr refinery/Cr Scrap HSH)</span></td><td class="pf-center" id="pfAdvanceDelivered"></td><td class="pf-center" id="pfAdvanceDate"></td><td colspan="2"></td></tr>
-    <tr><th colspan="2">Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr><tr><td colspan="2">MT103 from refinery / Precredit from refinery</td><td></td><td></td><td></td><td class="pf-center">☑</td></tr>
-    <tr><th colspan="2">Refinery transfer USD to HSH</th><th>USD</th><th>Date</th><th colspan="2">Done/Checked by</th></tr><tr><td colspan="2" class="pf-bold">Funds received<br><span class="pf-small">(Dr bank / Cr eBTS)</span></td><td class="pf-center" id="pfAdvanceUsd"></td><td></td><td colspan="2"></td></tr>
-    <tr><th colspan="2">Advance credit via Loco Ldn (Option 2)</th><th>Oz</th><th>Date</th><th colspan="2">Done/Checked by</th></tr><tr><td colspan="2" class="pf-bold">95% scrap gold delivered</td><td class="pf-center" id="pfLocoDelivered"></td><td></td><td colspan="2"></td></tr><tr><td colspan="2" class="pf-bold">95% Loco Ldn received</td><td class="pf-center" id="pfLocoReceived"></td><td></td><td colspan="2"></td></tr>
-    <tr><th colspan="2">Final Assay Statement</th><th>Oz</th><th>Assay Difference</th><th colspan="2">Date</th></tr><tr><td colspan="2" class="pf-bold">Assay results</td><td class="pf-center" id="pfAssay"></td><td class="pf-center" id="pfDiff"></td><td colspan="2"></td></tr>
-    <tr><th colspan="2">Balance credit via AM fixing / Loco Ldn</th><th>Oz</th><th>Date</th><th colspan="2">Done/Checked by</th></tr><tr><td colspan="2" class="pf-bold">5% scrap gold delivered</td><td class="pf-center" id="pfBalanceDelivered"></td><td></td><td colspan="2"></td></tr><tr><td colspan="2" class="pf-bold">5% Loco Ldn received</td><td class="pf-center" id="pfBalanceLoco"></td><td></td><td colspan="2"></td></tr><tr><th colspan="2">Documentation</th><th>Email vault</th><th>Email refinery</th><th>Email customer</th><th>Docs received</th></tr><tr><td colspan="2">eBTS Loco Ldn credited to our unallocated account</td><td></td><td></td><td></td><td class="pf-center">☑</td></tr></table>
-  </div>
-</div><div class="toast" id="toast">Saved</div>
-<script>
-function el(id){return document.getElementById(id)}
-function num(id){return parseFloat((el(id)?.value||'').toString().replace(/,/g,''))||0}
-function fmtOz(x){return isFinite(x)?x.toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3})+' oz':'-'}
-function fmtUsd(x){return isFinite(x)?'$'+x.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):'-'}
-function setVal(id,val){if(el(id))el(id).value=val}
-function setText(id,val){if(el(id))el(id).textContent=val}
-function importFromPurchase(){
- try{
-  const pd = document;
-  if(!pd){save('Purchase checklist not found');return;}
-  const get = (id)=>pd.getElementById(id)?.value||'';
-  const txt = (id)=>pd.getElementById(id)?.textContent||'';
-  setVal('qty', get('qtyPurity') || get('rowQty') || el('qty').value);
-  setVal('troyFactor', get('troyFactor') || el('troyFactor').value);
-  setVal('vaultFactor', get('vaultFactor') || el('vaultFactor').value);
-  setVal('advancePct', get('advancePct') || el('advancePct').value);
-  setVal('goldPrice', get('goldPrice') || el('goldPrice').value);
-  setVal('assayOz', get('assayOz') || el('assayOz').value);
-  setVal('assayOzTable', el('assayOz').value);
-  calc(); save('Imported from Scrap Gold Purchase Checklist');
- }catch(e){save('Unable to import from Purchase checklist');}
-}
-function calc(){
- const qty=num('qty'), troy=num('troyFactor')||32.150747, vault=num('vaultFactor')||0.992, advPct=(num('advancePct')||95)/100, price=num('goldPrice')||0;
- const gross=qty*troy;
- const advDelivered=gross*vault*advPct;
- const advUsd=advDelivered*price;
- const assay=num('assayOz');
- const diff=num('assayDiff');
- const balance=assay?assay-advDelivered:0;
- const balanceUsd=balance*price;
- setVal('assayOzTable', el('assayOz').value); setVal('assayDiffTable', el('assayDiff').value);
- setText('deliveredPctLabel',(advPct*100).toFixed(0)+'%'); setText('locoPctLabel',(advPct*100).toFixed(0)+'%'); setText('locoReceivedPctLabel',(advPct*100).toFixed(0)+'%');
- const map={advanceDeliveredOz:fmtOz(advDelivered),advanceLocoOz:fmtOz(advDelivered),locoReceivedOz:fmtOz(advDelivered),advanceUsd:fmtUsd(advUsd),balanceDeliveredOz:fmtOz(balance),balanceLocoOz:fmtOz(balance),sGross:fmtOz(gross),sAdv:fmtOz(advDelivered),sAdvUsd:fmtUsd(advUsd),sAssay:assay?fmtOz(assay):'-',sDiff:diff?fmtOz(diff):'-',sBal:assay?fmtOz(balance):'-',sBalUsd:assay?fmtUsd(balanceUsd):'-'};
- Object.entries(map).forEach(([id,val])=>{if(el(id)){if(el(id).tagName==='INPUT')el(id).value=val;else el(id).textContent=val;}});
- setText('journalPreview',`1) 95% scrap gold delivered: Dr refinery / Cr Scrap HSH — ${fmtOz(advDelivered)}\n2) 95% Loco Ldn received: Dr eBTS / Cr Refinery — ${fmtOz(advDelivered)}\n3) Refinery funds received: Dr bank / Cr eBTS — ${fmtUsd(advUsd)}\n4) Final assay: ${assay?fmtOz(assay):'-'}; balance 5%: ${assay?fmtOz(balance):'-'}; assay difference/charge: ${diff?fmtOz(diff):'-'}`);
-}
-function syncPrint(){calc(); const d=(id)=>el(id)?.value||''; const t=(id)=>el(id)?.value||el(id)?.textContent||''; setText('pfScrapRef',d('scrapRef'));setText('pfDate',d('docDate'));setText('pfRefinery',d('refineryCustomer'));setText('pfQty',`${d('qty')} / ${d('purityPct')}%`);setText('pfAdvanceDelivered',t('advanceDeliveredOz'));setText('pfAdvanceDate',d('advanceDate'));setText('pfAdvanceUsd',t('advanceUsd'));setText('pfLocoDelivered',t('advanceLocoOz'));setText('pfLocoReceived',t('locoReceivedOz'));setText('pfAssay',d('assayOz'));setText('pfDiff',d('assayDiff'));setText('pfBalanceDelivered',t('balanceDeliveredOz'));setText('pfBalanceLoco',t('balanceLocoOz'));}
-function printNow(){syncPrint(); setTimeout(()=>window.print(),80)}
-function go(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
-function save(msg){const t=el('toast');t.textContent=msg||'Saved';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-['qty','troyFactor','vaultFactor','advancePct','goldPrice','assayOz','assayDiff'].forEach(id=>el(id)?.addEventListener('input',calc));
-calc();
-</script>
-
-</div>
-</div>
-
-</div>
-<div style="position:sticky;top:100px">
-  <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase;margin-bottom:8px">
-    Saved Cases
-  </div>
-  <div id="cl-list-sales" style="max-height:480px;overflow-y:auto"></div>
-</div>
-</div>
-<div class="ops-card checklist-panel" id="checklistPanelClientBuys" style="padding:14px;margin-bottom:18px;border-color:rgba(184,134,11,.25)">
-<div class="section-label">Physical Gold - 1 Kilo Gold Bar - Sales</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-  <button class="btn btn-gold btn-sm" onclick="clSaveCase('clientBuys', clGetActive('clientBuys'))">
-    💾 Save Case
-  </button>
-  <button class="btn btn-sm" onclick="clNewCase('clientBuys')">
-    ➕ New Case
-  </button>
-  <span id="cl-status-clientBuys" style="font-size:11px;color:#9A9488"></span>
-</div>
-<div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
-<div id="cl-form-clientBuys">
-
-<div id="clientBuysFrame-wrap" style="width:100%;border-radius:10px">
-<style>
-
-*{box-sizing:border-box}
-body{margin:0;background:#0D0D0D;color:#F0EDE6;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:1.45}
-input,select,textarea,button{font-family:inherit}
-
-
-
-
-.btn{border:1px solid #2f2f2f;background:#181818;color:#F0EDE6;border-radius:7px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:12px}
-.btn.gold{background:#B8860B;border-color:#B8860B;color:#000;font-weight:700}
-.btn:hover{filter:brightness(1.12)}
-
-.wrap{max-width:1400px;margin:0 auto;padding:20px}
-.hero{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:16px}
-.eyebrow{color:#B8860B;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-.title{font-family:Georgia,serif;font-size:30px;line-height:1.05}
-.sub{color:#a69f91;margin-top:5px;font-size:12px}
-.pill{display:inline-flex;border-radius:999px;padding:4px 10px;background:rgba(91,164,245,.1);border:1px solid rgba(91,164,245,.25);color:#5ba4f5;font-size:11px}
-
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
-.card{background:#111;border:1px solid #2f2f2f;border-radius:12px;overflow:hidden}
-.form-head{padding:16px 20px;background:linear-gradient(90deg,rgba(184,134,11,.18),rgba(184,134,11,.04));border-bottom:1px solid #2f2f2f}
-.company{font-size:15px;font-weight:900;color:#F0EDE6}
-.addr{color:#a69f91;font-size:11px;margin-top:2px}
-
-.block{border-bottom:1px solid #2f2f2f}
-.block-title{display:flex;align-items:center;gap:7px;color:#B8860B;font-weight:800;letter-spacing:.07em;text-transform:uppercase;font-size:12px;padding:13px 20px 9px}
-.block-title:before{content:'';width:7px;height:7px;background:#B8860B;border-radius:50%;flex-shrink:0}
-.block-body{padding:0 20px 16px}
-
-/* Header grid — 2 columns matching paper form */
-.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
-.hgrid .span2{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:4px}
-.field-inline{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end}
-.label{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#716b60;font-weight:500}
-.unit-label{font-size:12px;color:#a69f91;padding-bottom:10px;white-space:nowrap}
-
-input,select,textarea{background:#181818;border:1px solid #2f2f2f;border-radius:6px;color:#F0EDE6;padding:8px 10px;font-size:13px;outline:none;width:100%}
-input:focus,textarea:focus{border-color:rgba(184,134,11,.6)}
-.readonly{background:#060606!important;color:#B8860B!important;font-weight:700;border-color:rgba(184,134,11,.2)!important}
-.chk{width:16px;height:16px;accent-color:#B8860B;cursor:pointer}
-
-/* Documentation tables */
-table{width:100%;border-collapse:collapse}
-.doc th,.doc td,.proc th,.proc td{border:1px solid #2f2f2f;padding:7px 9px;vertical-align:middle}
-.doc th,.proc th{background:#080808;color:#716b60;font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:left;font-weight:500}
-.proc .titlecell{background:#0d0d0d;color:#F0EDE6;font-weight:700;width:38%}
-.proc .titlecell .subrule{font-size:11px;color:#716b60;font-weight:400;margin-top:2px}
-.proc .inputcell{padding:0!important;width:18%}
-.proc .inputcell input{border:0;border-radius:0;background:#141414;width:100%;height:38px;padding:0 8px}
-.proc .datecell{width:16%}
-.proc .donecell{width:12%}
-td.center{text-align:center}
-
-.formula{font-family:Consolas,monospace;background:#050505;border:1px solid rgba(184,134,11,.3);border-radius:8px;color:#e4ca73;padding:10px 14px;margin-top:12px;line-height:1.7;font-size:12px}
-
-/* Side summary */
-.side{position:sticky;top:60px;background:#111;border:1px solid #2f2f2f;border-radius:12px;overflow:hidden}
-.side-head{padding:13px 16px;border-bottom:1px solid #2f2f2f;background:rgba(184,134,11,.08)}
-.side-title{font-weight:800;font-size:14px}
-.summary{padding:13px 16px}
-.sumrow{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.sumrow:last-child{border-bottom:none}
-.sumrow span:first-child{font-size:11px;color:#a69f91}
-.sumrow span:last-child{text-align:right;font-weight:700;font-size:13px}
-.sumrow.em span:last-child{color:#B8860B;font-size:15px}
-.actions{display:grid;gap:7px;padding:13px 16px;border-top:1px solid #2f2f2f}
-.journal{font-family:Consolas,monospace;background:#050505;border:1px solid #2f2f2f;border-radius:8px;padding:11px;line-height:1.8;color:#a69f91;font-size:11px}
-
-/* Print form */
-.print-form{display:none}
-@media(max-width:1000px){.layout{grid-template-columns:1fr}.side{position:static}.hgrid{grid-template-columns:1fr}}
-@media print{
-  body{background:#fff;color:#000}
-  .wrap,.layout,.hero,
-  .print-form{display:block!important;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:10px;padding:7mm}
-  .print-form *{color:#000!important;box-sizing:border-box}
-  .pf-company{text-align:center;font-weight:bold;font-size:13px;margin-bottom:2px}
-  .pf-title{text-align:center;font-weight:bold;font-size:12px;margin:2px 0 8px}
-  .pf-meta{width:100%;border-collapse:collapse;margin-bottom:6px}
-  .pf-meta td{border:0;padding:3px 4px;height:20px;vertical-align:bottom;width:50%}
-  .pf-line{display:inline-block;min-width:160px;border-bottom:1px solid #000;height:14px;padding-left:4px;vertical-align:bottom}
-  .pf-table{width:100%;border-collapse:collapse;table-layout:fixed}
-  .pf-table th,.pf-table td{border:1px solid #000;padding:3px 4px;vertical-align:middle;height:22px;font-size:10px}
-  .pf-table th{background:#d9d9d9!important;font-weight:500;text-align:left}
-  .pf-center{text-align:center}
-  .pf-small{font-size:8px;color:#444}
-  .pf-bold{font-weight:bold}
-  .pf-tall{height:40px!important;vertical-align:top!important}
-  .pf-remarks{height:36px;vertical-align:top!important}
-  @page{size:A4 portrait;margin:8mm}
-}
-
-</style>
-
-
-
-<div class="wrap">
-  <div class="hero">
-    <div>
-      <div class="eyebrow">Physical Gold - 1 Kilo Gold Bar - Sales</div>
-      <div class="title">Physical Gold &#8211; 1 Kilo Gold Bar &#8211; Sales</div>
-      <div class="sub">Customer buys physical 1 kg gold bars from HSH. Data entry, calculations and paper-style print follow the HSHSG template.</div>
-    </div>
-    <span class="pill">Input &#8594; Calculation &#8594; Print form</span>
-  </div>
-
-  <div class="layout">
-    <main class="card">
-      <div class="form-head">
-        <div class="company">Hua Seng Heng Singapore Pte Ltd.</div>
-        <div class="addr">Physical Gold &#8211; 1 Kilo Gold Bar &#8211; Sales</div>
-      </div>
-
-      <!-- ── HEADER INFORMATION ── -->
-      <section class="block">
-        <div class="block-title">Header Information</div>
-        <div class="block-body">
-          <div class="hgrid">
-            <div class="field"><label class="label">HSH Ref.</label><input id="hshRef" value="HSH 1602"></div>
-            <div class="field"><label class="label">Date</label><input id="formDate" type="date" value="2026-05-08"></div>
-            <div class="field"><label class="label">Customer Name</label><input id="customerName" placeholder="Customer / Agent"></div>
-            <div class="field"><label class="label">Pur Ref No. / Counterparty</label><input id="counterparty" placeholder="PUR-REF-001"></div>
-            <!-- Quantity with Kg unit inline -->
-            <div class="field">
-              <label class="label">Quantity</label>
-              <div class="field-inline">
-                <input id="qtyKg" type="number" step="0.001" value="175" oninput="calc()">
-                <span class="unit-label">Kg</span>
-              </div>
-            </div>
-            <!-- Premium / Discount with USD Per Oz inline -->
-            <div class="field">
-              <label class="label">Premium / Discount</label>
-              <div class="field-inline">
-                <div style="display:flex;align-items:center;gap:5px">
-                  <span style="font-size:12px;color:#a69f91;white-space:nowrap">USD</span>
-                  <input id="premiumPerOz" type="number" step="0.01" value="4.40" oninput="calc()" style="flex:1">
-                  <span style="font-size:12px;color:#a69f91;white-space:nowrap">Per Oz</span>
-                </div>
-              </div>
-            </div>
-            <div class="field"><label class="label">Brand</label><input id="brand" placeholder="e.g. PAMP"></div>
-            <div class="field"><label class="label">Gold Price (USD / Oz)</label><input id="goldPrice" type="number" step="0.01" value="4400.00" oninput="calc()"></div>
-          </div>
-          <div class="formula">
-            Physical Gold Delivered (Oz) = Quantity Kg &times; 32.148<br>
-            Premium Charged (USD) = Oz &times; Premium/Discount per Oz<br>
-            Funds Received (USD) = (Oz &times; Gold Price) + Premium Charged
-          </div>
-        </div>
-      </section>
-
-      <!-- ── DOCUMENTATION — INITIAL SET ── -->
-      <section class="block">
-        <div class="block-title">Documentation</div>
-        <div class="block-body">
-          <table class="doc">
-            <thead><tr><th>Documentation</th><th style="text-align:center">Email vault</th><th style="text-align:center">Email customer</th><th style="text-align:center">Docs Received</th><th>Done by</th></tr></thead>
-            <tbody>
-              <tr><td>Customer MT / release instruction letter</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr>
-              <tr><td>HSH Release instruction letter</td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr>
-              <tr><td>HSH Invoice / Packing List</td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr>
-              <tr><td>HSH Bar List / Delivery order <em style="font-size:11px">(if necessary)</em></td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── PROCESSING & ACCOUNTING ── -->
-      <section class="block">
-        <div class="block-title">Processing &amp; Accounting Checklist</div>
-        <div class="block-body">
-          <table class="proc">
-            <thead><tr><th>Description</th><th>USD</th><th>Oz</th><th>Date</th><th>Done by</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="titlecell">Account Balances as at (USD)<div class="subrule">(Customer margin) (Dr Bank/Cr Customer)</div></td>
-                <td class="inputcell"><input id="accountBalance" type="number" step="0.01" value="0" oninput="calc()"></td>
-                <td></td>
-                <td class="datecell"><input type="date"></td>
-                <td class="donecell"><input></td>
-              </tr>
-              <tr>
-                <td class="titlecell">Funds Received (USD)<div class="subrule">(Dr bank/Cr customer)</div></td>
-                <td class="inputcell"><input id="fundsReceived" class="readonly" readonly></td>
-                <td></td>
-                <td class="datecell"><input id="fundsDate" type="date" value="2026-05-21"></td>
-                <td class="donecell"><input id="fundsDone"></td>
-              </tr>
-              <tr>
-                <td class="titlecell">Physical gold delivered (XAU)<div class="subrule">(Dr customer/Cr HSHSG &#8211; Physical Allocated)</div></td>
-                <td></td>
-                <td class="inputcell"><input id="deliveredOz" class="readonly" readonly></td>
-                <td class="datecell"><input id="deliveredDate" type="date" value="2026-05-21"></td>
-                <td class="donecell"><input id="deliveredDone"></td>
-              </tr>
-              <tr>
-                <td class="titlecell">Premium charged (USD)<div class="subrule">(Dr customer/Cr P&amp;L Physical XAU)</div></td>
-                <td class="inputcell"><input id="premiumUsd" class="readonly" readonly></td>
-                <td></td>
-                <td class="datecell"><input id="premiumDate" type="date" value="2026-05-21"></td>
-                <td class="donecell"><input id="premiumDone"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── DOCUMENTATION — COMPLETION SET ── -->
-      <section class="block">
-        <div class="block-title">Documentation &#8212; Completion Set</div>
-        <div class="block-body">
-          <table class="doc">
-            <thead><tr><th>Documentation</th><th style="text-align:center">Email vault</th><th style="text-align:center">Email customer</th><th style="text-align:center">Docs Received</th><th>Done by</th></tr></thead>
-            <tbody>
-              <tr><td>Customer SOA, margin control</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr>
-              <tr><td>HSH &#8211; Debit/Credit advice</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr>
-              <tr><td>Vault permit : MC / OO / RM No. <em style="font-size:11px">(if necessary)</em></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr>
-              <tr><td>Customer acknowledgement / POD from vault</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── REMARKS ── -->
-      <section class="block">
-        <div class="block-title">Remarks</div>
-        <div class="block-body">
-          <textarea id="remarks" rows="3" placeholder="Notes, OT charges, deductions from margin, etc."></textarea>
-        </div>
-      </section>
-
-      <!-- ── JOURNAL PREVIEW ── -->
-      <section class="block" style="border-bottom:none">
-        <div class="block-title">Journal Preview</div>
-        <div class="block-body">
-          <div id="journalPreview" class="journal"></div>
-        </div>
-      </section>
-    </main>
-
-    <!-- ── SIDE SUMMARY ── -->
-    <aside class="side">
-      <div class="side-head">
-        <div class="side-title">Live Summary</div>
-        <div class="sub" style="font-size:11px;margin-top:3px">Auto-calculated</div>
-      </div>
-      <div class="summary">
-        <div class="sumrow"><span>Quantity (Kg)</span><span id="sQty">&#8212;</span></div>
-        <div class="sumrow em"><span>Physical Gold Delivered</span><span id="sOz">&#8212;</span></div>
-        <div class="sumrow"><span>Gold Price / Oz</span><span id="sPrice">&#8212;</span></div>
-        <div class="sumrow"><span>Gold Value (USD)</span><span id="sGoldValue">&#8212;</span></div>
-        <div class="sumrow"><span>Premium / Discount</span><span id="sPremium">&#8212;</span></div>
-        <div class="sumrow em"><span>Total Funds Received</span><span id="sFunds">&#8212;</span></div>
-        <div class="sumrow"><span>Account Balance</span><span id="sBalance">&#8212;</span></div>
-      </div>
-      <div class="actions">
-        <button class="btn gold" onclick="save('Checklist saved &#10003;')">Save Checklist</button>
-        <button class="btn" onclick="save('Documents generated')">Generate Documents</button>
-        <button class="btn" onclick="save('Journal draft generated')">Generate Journal Draft</button>
-        <button class="btn" onclick="printNow()">Print / Export PDF</button>
-      </div>
-    </aside>
-  </div>
-</div>
-
-<!-- ── PRINT FORM (paper layout matching uploaded template) ── -->
-<div class="print-form" id="printForm">
-  <div class="pf-company">Hua Seng Heng Singapore Pte Ltd.</div>
-  <div class="pf-title">Physical Gold &#8211; 1 Kilo Gold Bar &#8211; Sales</div>
-  <table class="pf-meta">
-    <tr>
-      <td>HSH Ref: <span class="pf-line" id="pfHshRef"></span></td>
-      <td style="text-align:right">Date <span class="pf-line" id="pfDate"></span></td>
-    </tr>
-    <tr>
-      <td>Customer Name <span class="pf-line" id="pfCustomer"></span></td>
-      <td>Pur Ref No./Counterparty <span class="pf-line" id="pfCounterparty"></span></td>
-    </tr>
-    <tr>
-      <td>Quantity <span class="pf-line" id="pfQty"></span> Kg</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>Premium / Discount &nbsp; USD <span class="pf-line" id="pfPremiumPerOz"></span> Per Oz</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>Brand <span class="pf-line" id="pfBrand"></span></td>
-      <td></td>
-    </tr>
-  </table>
-
-  <table class="pf-table" style="margin-bottom:6px">
-    <tr><th>Documentation</th><th style="width:80px;text-align:center">Email vault</th><th style="width:90px;text-align:center">Email customer</th><th style="width:80px;text-align:center">Docs Received</th><th style="width:70px">Done by</th></tr>
-    <tr><td>Customer MT / release instruction letter</td><td></td><td></td><td class="pf-center">&#9745;</td><td></td></tr>
-    <tr><td>HSH Release instruction letter</td><td class="pf-center">&#9745;</td><td></td><td></td><td></td></tr>
-    <tr><td>HSH Invoice / Packing List</td><td class="pf-center">&#9745;</td><td></td><td></td><td></td></tr>
-    <tr><td>HSH Bar List / Delivery order (if necessary)</td><td class="pf-center">&#9745;</td><td></td><td></td><td></td></tr>
-  </table>
-
-  <table class="pf-table" style="margin-bottom:6px">
-    <tr><th>Description</th><th style="width:22%">USD</th><th style="width:22%">Oz</th><th style="width:18%">Date</th><th style="width:14%">Done by</th></tr>
-    <tr>
-      <td class="pf-bold">Account Balances as at (USD)<br><span class="pf-small">(Customer margin) (Dr Bank/Cr Customer)</span></td>
-      <td class="pf-center pf-tall" id="pfAccount"></td><td></td><td></td><td></td>
-    </tr>
-    <tr>
-      <td class="pf-bold">Funds Received (USD)<br><span class="pf-small">(Dr bank/Cr customer)</span></td>
-      <td class="pf-center pf-tall" id="pfFunds"></td><td></td>
-      <td id="pfFundsDate"></td><td id="pfFundsDone"></td>
-    </tr>
-    <tr>
-      <td class="pf-bold">Physical gold delivered (XAU)<br><span class="pf-small">(Dr customer/Cr HSHSG - Physical Allocated)</span></td>
-      <td></td><td class="pf-center pf-tall" id="pfDeliveredOz"></td>
-      <td id="pfDeliveredDate"></td><td id="pfDeliveredDone"></td>
-    </tr>
-    <tr>
-      <td class="pf-bold">Premium charged (USD)<br><span class="pf-small">(Dr customer/Cr P&amp;L Physical XAU)</span></td>
-      <td class="pf-center pf-tall" id="pfPremiumUsd"></td><td></td>
-      <td id="pfPremiumDate"></td><td id="pfPremiumDone"></td>
-    </tr>
-  </table>
-
-  <table class="pf-table">
-    <tr><th>Documentation</th><th style="width:80px;text-align:center">Email vault</th><th style="width:90px;text-align:center">Email customer</th><th style="width:80px;text-align:center">Docs Received</th><th style="width:70px">Done by</th></tr>
-    <tr><td>Customer SOA, margin control</td><td></td><td></td><td class="pf-center">&#9745;</td><td></td></tr>
-    <tr><td>HSH &#8211; Debit/Credit advice</td><td></td><td class="pf-center">&#9745;</td><td></td><td></td></tr>
-    <tr><td>Vault permit : MC / OO / RM No. (if necessary)</td><td></td><td></td><td class="pf-center">&#9745;</td><td></td></tr>
-    <tr><td>Customer acknowledgement / POD from vault</td><td></td><td></td><td class="pf-center">&#9745;</td><td></td></tr>
-    <tr><td colspan="5" class="pf-remarks">Remarks: <span id="pfRemarks"></span></td></tr>
-  </table>
-</div>
-
-<script>
-function el(id){return document.getElementById(id)}
-function num(id){var e=el(id);return e?parseFloat((e.value||'').replace(/,/g,''))||0:0}
-function money(x){return '$'+(isFinite(x)?x:0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
-function oz(x){return (isFinite(x)?x:0).toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3})+' oz'}
-
-function calc(){
-  var qty   = num('qtyKg');
-  var price = num('goldPrice');
-  var prem  = num('premiumPerOz');
-  var bal   = num('accountBalance');
-  var factor = 32.148;
-  var ozVal     = qty * factor;
-  var goldValue = ozVal * price;
-  var premUsd   = ozVal * prem;
-  var funds     = goldValue + premUsd;
-
-  // Update calculated readonly fields
-  if(el('deliveredOz'))   el('deliveredOz').value   = ozVal ? oz(ozVal) : '';
-  if(el('premiumUsd'))    el('premiumUsd').value     = premUsd ? money(premUsd) : '';
-  if(el('fundsReceived')) el('fundsReceived').value  = funds ? money(funds) : '';
-
-  // Side summary
-  function set(id,v){var e=el(id);if(e)e.textContent=v}
-  set('sQty',       qty   ? qty.toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3})+' Kg' : '—');
-  set('sOz',        qty   ? oz(ozVal) : '—');
-  set('sPrice',     price ? money(price) : '—');
-  set('sGoldValue', qty&&price ? money(goldValue) : '—');
-  set('sPremium',   qty   ? money(premUsd) : '—');
-  set('sFunds',     qty&&price ? money(funds) : '—');
-  set('sBalance',   money(bal));
-
-  // Journal preview
-  if(el('journalPreview')) el('journalPreview').innerHTML =
-    '1) Funds Received: Dr Bank / Cr Customer &nbsp;&mdash;&nbsp; '+money(funds)+'<br>'+
-    '2) Physical gold delivered: Dr Customer / Cr HSHSG Physical Allocated &nbsp;&mdash;&nbsp; '+oz(ozVal)+'<br>'+
-    '3) Premium charged: Dr Customer / Cr P&amp;L Physical XAU &nbsp;&mdash;&nbsp; '+money(premUsd);
-
-  syncPrint();
-}
-
-function syncPrint(){
-  var map = {
-    pfHshRef:'hshRef', pfDate:'formDate', pfCustomer:'customerName',
-    pfCounterparty:'counterparty', pfQty:'qtyKg', pfPremiumPerOz:'premiumPerOz',
-    pfBrand:'brand', pfAccount:'accountBalance',
-    pfFundsDate:'fundsDate', pfFundsDone:'fundsDone',
-    pfDeliveredDate:'deliveredDate', pfDeliveredDone:'deliveredDone',
-    pfPremiumDate:'premiumDate', pfPremiumDone:'premiumDone',
-    pfRemarks:'remarks'
-  };
-  Object.keys(map).forEach(function(p){
-    var src=el(map[p]), dst=el(p);
-    if(src&&dst) dst.textContent=src.value||'';
-  });
-  if(el('pfFunds')       && el('fundsReceived')) el('pfFunds').textContent       = el('fundsReceived').value;
-  if(el('pfDeliveredOz') && el('deliveredOz'))   el('pfDeliveredOz').textContent = el('deliveredOz').value;
-  if(el('pfPremiumUsd')  && el('premiumUsd'))     el('pfPremiumUsd').textContent  = el('premiumUsd').value;
-}
-
-function printNow(){calc();setTimeout(function(){window.print();},100)}
-function save(msg){if(window.showToast){showToast(msg);}else{alert(msg);}}
-
-// Attach listeners
-['hshRef','formDate','customerName','counterparty','qtyKg','goldPrice',
- 'premiumPerOz','brand','fundsDate','fundsDone','deliveredDate','deliveredDone',
- 'premiumDate','premiumDone','accountBalance','remarks'].forEach(function(id){
-  var e=el(id); if(e) e.addEventListener('input', calc);
-});
-calc();
-</script>
-
-</div>
-</div>
-
-</div>
-<div style="position:sticky;top:100px">
-  <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase;margin-bottom:8px">
-    Saved Cases
-  </div>
-  <div id="cl-list-clientBuys" style="max-height:480px;overflow-y:auto"></div>
-</div>
-</div>
-<div class="ops-card checklist-panel" id="checklistPanelPhysicalPurchase" style="padding:14px;margin-bottom:18px;border-color:rgba(184,134,11,.25)">
-<div class="section-label">Physical Gold - 1 Kilo Gold Bar - Purchase</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-  <button class="btn btn-gold btn-sm" onclick="clSaveCase('physicalPurchase', clGetActive('physicalPurchase'))">
-    💾 Save Case
-  </button>
-  <button class="btn btn-sm" onclick="clNewCase('physicalPurchase')">
-    ➕ New Case
-  </button>
-  <span id="cl-status-physicalPurchase" style="font-size:11px;color:#9A9488"></span>
-</div>
-<div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
-<div id="cl-form-physicalPurchase">
-
-<div id="physicalPurchaseFrame-wrap" style="width:100%;border-radius:10px">
-<style>
-
-*{box-sizing:border-box}body{margin:0;background:#0D0D0D;color:#F0EDE6;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:1.45}input,select,textarea,button{font-family:inherit}
-.btn{border:1px solid #2f2f2f;background:#181818;color:#F0EDE6;border-radius:7px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:12px}.btn.gold{background:#B8860B;border-color:#B8860B;color:#000;font-weight:700}.wrap{max-width:1400px;margin:0 auto;padding:20px}.hero{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:16px}.eyebrow{color:#B8860B;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.title{font-family:Georgia,serif;font-size:30px;line-height:1.05}.sub{color:#a69f91;margin-top:5px;font-size:12px}.pill{display:inline-flex;border-radius:999px;padding:4px 10px;background:rgba(91,164,245,.1);border:1px solid rgba(91,164,245,.25);color:#5ba4f5;font-size:11px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}.card{background:#111;border:1px solid #2f2f2f;border-radius:12px;overflow:hidden}.form-head{padding:16px 20px;background:linear-gradient(90deg,rgba(184,134,11,.18),rgba(184,134,11,.04));border-bottom:1px solid #2f2f2f}.company{font-size:15px;font-weight:900}.addr{color:#a69f91;font-size:11px;margin-top:2px}.block{border-bottom:1px solid #2f2f2f}.block-title{display:flex;align-items:center;gap:7px;color:#B8860B;font-weight:800;letter-spacing:.07em;text-transform:uppercase;font-size:12px;padding:13px 20px 9px}.block-title:before{content:'';width:7px;height:7px;background:#B8860B;border-radius:50%;flex-shrink:0}.block-body{padding:0 20px 16px}.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}.field{display:flex;flex-direction:column;gap:4px}.field-inline{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end}.label{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#716b60;font-weight:500}.unit-label{font-size:12px;color:#a69f91;padding-bottom:10px;white-space:nowrap}input,select,textarea{background:#181818;border:1px solid #2f2f2f;border-radius:6px;color:#F0EDE6;padding:8px 10px;font-size:13px;outline:none;width:100%}input:focus,textarea:focus{border-color:rgba(184,134,11,.6)}.readonly{background:#060606!important;color:#B8860B!important;font-weight:700;border-color:rgba(184,134,11,.2)!important}.chk{width:16px;height:16px;accent-color:#B8860B;cursor:pointer}table{width:100%;border-collapse:collapse}.doc th,.doc td,.proc th,.proc td{border:1px solid #2f2f2f;padding:7px 9px;vertical-align:middle}.doc th,.proc th{background:#080808;color:#716b60;font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:left;font-weight:500}.proc .titlecell{background:#0d0d0d;color:#F0EDE6;font-weight:700;width:38%}.proc .titlecell .subrule{font-size:11px;color:#716b60;font-weight:400;margin-top:2px}.proc .inputcell{padding:0!important;width:18%}.proc .inputcell input{border:0;border-radius:0;background:#141414;width:100%;height:38px;padding:0 8px}.proc .datecell{width:16%}.proc .donecell{width:12%}td.center{text-align:center}.formula{font-family:Consolas,monospace;background:#050505;border:1px solid rgba(184,134,11,.3);border-radius:8px;color:#e4ca73;padding:10px 14px;margin-top:12px;line-height:1.7;font-size:12px}.side{position:sticky;top:60px;background:#111;border:1px solid #2f2f2f;border-radius:12px;overflow:hidden}.side-head{padding:13px 16px;border-bottom:1px solid #2f2f2f;background:rgba(184,134,11,.08)}.side-title{font-weight:800;font-size:14px}.summary{padding:13px 16px}.sumrow{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}.sumrow span:first-child{font-size:11px;color:#a69f91}.sumrow span:last-child{text-align:right;font-weight:700;font-size:13px}.sumrow.em span:last-child{color:#B8860B;font-size:15px}.actions{display:grid;gap:7px;padding:13px 16px;border-top:1px solid #2f2f2f}.journal{font-family:Consolas,monospace;background:#050505;border:1px solid #2f2f2f;border-radius:8px;padding:11px;line-height:1.8;color:#a69f91;font-size:11px}.print-form{display:none}@media(max-width:1000px){.layout{grid-template-columns:1fr}.side{position:static}.hgrid{grid-template-columns:1fr}}@media print{body{background:#fff;color:#000}.wrap,.layout,.hero,.print-form{display:block!important;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:10px;padding:7mm}.print-form *{color:#000!important;box-sizing:border-box}.pf-title{text-align:center;font-weight:bold;font-size:12px;margin:2px 0 8px}.pf-meta{width:100%;border-collapse:collapse;margin-bottom:6px}.pf-meta td{border:0;padding:3px 4px;height:20px;vertical-align:bottom}.pf-line{display:inline-block;min-width:170px;border-bottom:1px solid #000;height:14px;padding-left:4px;vertical-align:bottom}.pf-table{width:100%;border-collapse:collapse;table-layout:fixed}.pf-table th,.pf-table td{border:1px solid #000;padding:3px 4px;vertical-align:middle;height:22px;font-size:10px}.pf-table th{background:#d9d9d9!important;font-weight:500;text-align:left}.pf-center{text-align:center}.pf-small{font-size:8px;color:#444}.pf-bold{font-weight:bold}.pf-tall{height:44px!important;vertical-align:top!important}.pf-remarks{height:34px;vertical-align:top!important}@page{size:A4 portrait;margin:8mm}}
-
-</style>
-
-
-<div class="wrap"><div class="hero"><div><div class="eyebrow">Physical Gold - 1 Kilo Gold Bar - Purchase</div><div class="title">Physical Gold – 1 Kilo Gold Bar – Purchase</div><div class="sub">HSH purchases physical 1 kg gold bars from LPs / counterparty. Form follows the HSHSG purchase checklist.</div></div><span class="pill">Input → Calculation → Print form</span></div>
-<div class="layout"><main class="card"><div class="form-head"><div class="company">Hua Seng Heng Singapore Pte Ltd.</div><div class="addr">Physical Gold – 1 Kilo Gold Bar – Purchase</div></div>
-<section class="block"><div class="block-title">Header Information</div><div class="block-body"><div class="hgrid"><div class="field"><label class="label">HSH Ref.</label><input id="hshRef" placeholder="HSH Ref."></div><div class="field"><label class="label">Date</label><input id="formDate" type="date"></div><div class="field"><label class="label">Counterparty</label><input id="counterparty" placeholder="LP / Counterparty"></div><div class="field"><label class="label">Sales Ref No. / Client Name</label><input id="salesRefClient" placeholder="Sales ref / Client name"></div><div class="field"><label class="label">Quantity</label><div class="field-inline"><input id="qtyKg" type="number" step="0.001" value="175" oninput="calc()"><span class="unit-label">Kg</span></div></div><div class="field"><label class="label">Premium / Discount</label><div style="display:flex;align-items:center;gap:6px"><span style="color:#a69f91">USD</span><input id="premiumPerOz" type="number" step="0.01" value="2.00" oninput="calc()"><span style="color:#a69f91;white-space:nowrap">Per Oz</span></div></div><div class="field"><label class="label">Brand</label><input id="brand" placeholder="e.g. PAMP"></div><div class="field"><label class="label">Gold Price (USD / Oz)</label><input id="goldPrice" type="number" step="0.01" value="4541.00" oninput="calc()"></div></div><div class="formula">Physical Gold Received (Oz) = Quantity Kg × 32.148<br>Premium Charged (USD) = Physical Gold Oz × Premium/Discount per Oz<br>Funds Paid (USD) = (Physical Gold Oz × Gold Price) + Premium Charged</div></div></section>
-<section class="block"><div class="block-title">Documentation</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th style="text-align:center">Email vault</th><th style="text-align:center">Email customer</th><th style="text-align:center">Docs Received</th><th>Done by</th></tr></thead><tbody><tr><td>Vault confirmation mail / transfer note</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr><tr><td>Customer Invoice/Packing List/Bar List</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr><tr><td>Customer funds withdrawal instruction</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr></tbody></table></div></section>
-<section class="block"><div class="block-title">Processing & Accounting Checklist</div><div class="block-body"><table class="proc"><thead><tr><th>Description</th><th>USD</th><th>Oz</th><th>Date</th><th>Done by</th></tr></thead><tbody><tr><td class="titlecell">Physical gold received (XAU)<div class="subrule">(Dr HSHSG- Physical Allocated/Cr Supplier: LPs)</div></td><td></td><td class="inputcell"><input id="receivedOz" class="readonly" readonly></td><td class="datecell"><input id="receivedDate" type="date"></td><td class="donecell"><input id="receivedDone"></td></tr><tr><td class="titlecell">Funds Paid (USD)<div class="subrule">(Dr Supplier: LPs /Cr bank)</div></td><td class="inputcell"><input id="fundsPaid" class="readonly" readonly></td><td></td><td class="datecell"><input id="fundsDate" type="date"></td><td class="donecell"><input id="fundsDone"></td></tr><tr><td class="titlecell">Premium charged (USD)<div class="subrule">Discount: (Dr Supplier: LPs /Cr P&amp;L Physical XAU)<br>Premium: (Dr P&amp;L Physical XAU /Cr Supplier: LPs)</div></td><td class="inputcell"><input id="premiumUsd" class="readonly" readonly></td><td></td><td class="datecell"><input id="premiumDate" type="date"></td><td class="donecell"><input id="premiumDone"></td></tr></tbody></table></div></section>
-<section class="block"><div class="block-title">Documentation — Completion Set</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th style="text-align:center">Email vault</th><th style="text-align:center">Email customer</th><th style="text-align:center">Docs Received</th><th>Done by</th></tr></thead><tbody><tr><td>Customer SOA, margin control</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr><tr><td>Premium/Discount – Debit/Credit advice</td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr></tbody></table></div></section>
-<section class="block"><div class="block-title">For Export (Optional)</div><div class="block-body"><table class="doc"><thead><tr><th>Documentation</th><th style="text-align:center">Email vault</th><th style="text-align:center">Email customer</th><th style="text-align:center">Docs Received</th><th>Done by</th></tr></thead><tbody><tr><td>Export Invoice/Packing List/Bar List</td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td><input></td></tr><tr><td>Export MAWB</td><td class="center"><input class="chk" type="checkbox" checked></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr><tr><td>Destination vault confirmation<br><span style="font-size:11px;color:#716b60">(Dr Dest vault/Cr vault)</span></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox"></td><td class="center"><input class="chk" type="checkbox" checked></td><td><input></td></tr></tbody></table><div class="field" style="margin-top:10px"><label class="label">Remarks</label><textarea id="remarks" rows="3"></textarea></div></div></section>
-</main><aside class="side"><div class="side-head"><div class="side-title">Live Summary</div><div style="font-size:11px;color:#a69f91">Auto-calculated from purchase checklist</div></div><div class="summary"><div class="sumrow"><span>Quantity</span><span id="sumQty">-</span></div><div class="sumrow"><span>Physical Gold Received</span><span id="sumOz">-</span></div><div class="sumrow"><span>Gold Value</span><span id="sumGoldValue">-</span></div><div class="sumrow"><span>Premium / Discount</span><span id="sumPremium">-</span></div><div class="sumrow em"><span>Funds Paid</span><span id="sumFunds">-</span></div></div><div class="actions"><button class="btn gold" onclick="calc()">Recalculate</button><button class="btn" onclick="printNow()">Print Checklist</button><div class="journal" id="journalPreview">Journal preview will appear after calculation.</div></div></aside></div></div>
-<div class="print-form" id="printForm"><div class="pf-title">Physical Gold - 1 Kilo gold bar – Purchase</div><table class="pf-meta"><tr><td>HSH Ref: <span class="pf-line" id="pfHshRef"></span></td><td>Date : <span class="pf-line" id="pfDate"></span></td></tr><tr><td>Counterparty <span class="pf-line" id="pfCounterparty"></span></td><td></td></tr><tr><td>Sales Ref No./Client name <span class="pf-line" id="pfSalesRef"></span></td><td></td></tr><tr><td>Quantity <span class="pf-line" id="pfQty"></span> Kg</td><td></td></tr><tr><td>Premium / Discount USD <span class="pf-line" id="pfPremiumPerOz"></span> Per Oz</td><td></td></tr><tr><td>Brand <span class="pf-line" id="pfBrand"></span></td><td></td></tr></table><table class="pf-table"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email customer</th><th>Docs Received</th><th>Done by</th></tr></thead><tbody><tr><td>Vault confirmation mail / transfer note</td><td></td><td></td><td class="pf-center">☑</td><td></td></tr><tr><td>Customer Invoice/Packing List/Bar List</td><td></td><td></td><td class="pf-center">☑</td><td></td></tr><tr><td>Customer funds withdrawal instruction</td><td></td><td></td><td class="pf-center">☑</td><td></td></tr></tbody></table><table class="pf-table"><thead><tr><th>Description</th><th>USD</th><th>Oz</th><th>Date</th><th>Done by</th></tr></thead><tbody><tr><td class="pf-bold pf-tall">Physical gold received (XAU)<br><span class="pf-small">(Dr HSHSG- Physical Allocated/Cr Supplier: LPs)</span></td><td></td><td id="pfReceivedOz"></td><td id="pfReceivedDate"></td><td id="pfReceivedDone"></td></tr><tr><td class="pf-bold pf-tall">Funds Paid (USD)<br><span class="pf-small">(Dr Supplier: LPs /Cr bank)</span></td><td id="pfFundsPaid"></td><td></td><td id="pfFundsDate"></td><td id="pfFundsDone"></td></tr><tr><td class="pf-bold pf-tall">Premium charged (USD)<br><span class="pf-small">Discount: (Dr Supplier: LPs /Cr P&amp;L Physical XAU)<br>Premium: (Dr P&amp;L Physical XAU /Cr Supplier: LPs)</span></td><td id="pfPremiumUsd"></td><td></td><td id="pfPremiumDate"></td><td id="pfPremiumDone"></td></tr></tbody></table><table class="pf-table"><thead><tr><th>Documentation</th><th>Email vault</th><th>Email customer</th><th>Docs Received</th><th>Done by</th></tr></thead><tbody><tr><td>Customer SOA, margin control</td><td></td><td></td><td></td><td class="pf-center">☑</td></tr><tr><td>Premium/Discount – Debit/Credit advice</td><td></td><td class="pf-center">☑</td><td></td><td></td></tr><tr><th>For export (optional)</th><th>Email vault</th><th>Email customer</th><th>Docs Received</th><th>Done by</th></tr><tr><td>Export Invoice/Packing List/Bar List</td><td class="pf-center">☑</td><td></td><td></td><td></td></tr><tr><td>Export MAWB</td><td class="pf-center">☑</td><td></td><td class="pf-center">☑</td><td></td></tr><tr><td>Destination vault confirmation<br><span class="pf-small">(Dr Dest vault/Cr vault)</span></td><td></td><td></td><td class="pf-center">☑</td><td></td></tr><tr><td colspan="5" class="pf-remarks">Remarks <span id="pfRemarks"></span></td></tr></tbody></table></div>
-<script>
-const $=id=>document.getElementById(id);const n=id=>{const v=parseFloat($(id)?.value||0);return isNaN(v)?0:v};function money(v){return '$'+Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}function oz(v){return Number(v||0).toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3})+' oz'}function val(id){return $(id)?.value||''}
-function calc(){const qty=n('qtyKg'),price=n('goldPrice'),prem=n('premiumPerOz');const received=qty*32.148;const premium=received*prem;const funds=received*price+premium;if($('receivedOz'))$('receivedOz').value=qty?oz(received):'';if($('premiumUsd'))$('premiumUsd').value=qty?money(premium):'';if($('fundsPaid'))$('fundsPaid').value=qty?money(funds):'';$('sumQty').textContent=qty?qty.toLocaleString()+' Kg':'-';$('sumOz').textContent=qty?oz(received):'-';$('sumGoldValue').textContent=qty?money(received*price):'-';$('sumPremium').textContent=qty?money(premium):'-';$('sumFunds').textContent=qty?money(funds):'-';$('journalPreview').innerHTML=qty?`Physical gold received: Dr HSHSG Physical Allocated / Cr Supplier LPs — ${oz(received)}<br>Funds paid: Dr Supplier LPs / Cr Bank — ${money(funds)}<br>Premium charged: ${prem>=0?'Dr P&L Physical XAU / Cr Supplier LPs':'Dr Supplier LPs / Cr P&L Physical XAU'} — ${money(Math.abs(premium))}`:'Journal preview will appear after calculation.';syncPrint(received,premium,funds)}
-function syncPrint(received,premium,funds){[['pfHshRef','hshRef'],['pfDate','formDate'],['pfCounterparty','counterparty'],['pfSalesRef','salesRefClient'],['pfQty','qtyKg'],['pfPremiumPerOz','premiumPerOz'],['pfBrand','brand'],['pfReceivedDate','receivedDate'],['pfReceivedDone','receivedDone'],['pfFundsDate','fundsDate'],['pfFundsDone','fundsDone'],['pfPremiumDate','premiumDate'],['pfPremiumDone','premiumDone'],['pfRemarks','remarks']].forEach(([a,b])=>{if($(a))$(a).textContent=val(b)});if($('pfReceivedOz'))$('pfReceivedOz').textContent=received?oz(received):'';if($('pfFundsPaid'))$('pfFundsPaid').textContent=funds?money(funds):'';if($('pfPremiumUsd'))$('pfPremiumUsd').textContent=premium?money(premium):''}
-function printNow(){calc();window.print()}['qtyKg','goldPrice','premiumPerOz','hshRef','formDate','counterparty','salesRefClient','brand','receivedDate','receivedDone','fundsDate','fundsDone','premiumDate','premiumDone','remarks'].forEach(id=>$(id)?.addEventListener('input',calc));calc();
-</script>
-</div>
-</div>
 </div>
 <!-- ===================== FREIGHT FORWARDER ===================== -->
 </div>
@@ -5278,5 +4549,22 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
+
+<script id="kj-nav-safety-fix">
+(function(){
+  function safeSetGroup(groupKey){
+    if(typeof window.setGroup === 'function' && window.setGroup !== safeSetGroup){ try{return window.setGroup(groupKey);}catch(e){} }
+    var first={client:'dashboard',onboarding:'registration',trading:'blotter',operations:'supplier',finance:'bank',admin:'workflow'}[groupKey];
+    if(first && typeof window.showPage === 'function') window.showPage(first);
+  }
+  window.addEventListener('DOMContentLoaded',function(){
+    ['client','onboarding','trading','operations','finance','admin'].forEach(function(g){
+      var el=document.getElementById('grp-'+g);
+      if(el){ el.style.pointerEvents='auto'; el.style.position='relative'; el.style.zIndex='1005'; el.addEventListener('click',function(ev){ev.preventDefault(); safeSetGroup(g);}, true); }
+    });
+    var nav=document.querySelector('body > nav'); if(nav){nav.style.pointerEvents='auto';nav.style.zIndex='2000';}
+  });
+})();
+</script>
 </body>
 </html>
