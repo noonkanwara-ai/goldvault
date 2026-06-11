@@ -560,6 +560,47 @@
                 "isTransparent": true
               }
               </script>
+<script>
+/* Capture real-time price from TradingView widget via postMessage */
+(function(){
+  var _tvLast = 0;
+  window.addEventListener('message', function(e) {
+    try {
+      if(!e.data) return;
+      var msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+      var price = null, ch = null, chp = null, open = null;
+      if(msg && msg.name === 'quote' && Array.isArray(msg.data)) {
+        msg.data.forEach(function(it) {
+          var k=it.n, v=parseFloat(it.v);
+          if(k==='lp'||k==='last_price') price=v;
+          else if(k==='ch') ch=v;
+          else if(k==='chp') chp=v;
+          else if(k==='open_price'||k==='prev_close_price'){if(!open)open=v;}
+        });
+      }
+      if(!price && msg && msg.type==='QUOTES' && msg.data) {
+        var d=msg.data;
+        price=parseFloat(d.lp||d.last_price||0)||null;
+        ch=parseFloat(d.ch)||null; chp=parseFloat(d.chp)||null;
+        open=parseFloat(d.open_price||d.prev_close_price||0)||null;
+      }
+      if(price && isFinite(price) && price > 500 && price !== _tvLast) {
+        _tvLast = price;
+        if(typeof applyMarketPrice === 'function') {
+          applyMarketPrice({
+            price: price,
+            open: open || (window.GV_MARKET_PRICE && window.GV_MARKET_PRICE.open) || price,
+            prevClose: open || price,
+            change: ch || 0, changePct: chp || 0,
+            source: 'Live: TradingView OANDA:XAUUSD'
+          });
+        }
+      }
+    } catch(err) {}
+  });
+})();
+</script>
+
 </div>
 </div>
 </div>
@@ -703,9 +744,10 @@
 <!-- Size -->
 <div style="display:flex;flex-direction:column;gap:5px">
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Bar Size</label>
-<select id="ph-size" onchange="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
-<option selected="" value="1000">1 kg — minimum trade size</option>
-</select>
+<div style="position:relative">
+<input id="ph-size" type="number" min="1" step="0.001" value="1" oninput="calcPhysical()" placeholder="kg" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;padding:9px 36px 9px 11px;font-size:14px;font-weight:600;color:#B8860B;font-family:'Inter',sans-serif;outline:none;width:100%">
+<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:12px;color:#9A9488;pointer-events:none">kg</span>
+</div>
 <div style="font-size:10px;color:#B8860B;margin-top:4px">Minimum order starts at 1 kg. Increase Quantity for unlimited kg.</div>
 </div>
 <!-- Qty -->
@@ -2777,13 +2819,13 @@ function calcOrder() {
 // ── Central Live Market Price API ─────────────────────────
 // All internal screens use ONE shared price store: window.GV_MARKET_PRICE.
 // TradingView is kept only as an external chart/reference widget; system calculations do not read iframe values.
-let currentPrice = 0;
+let currentPrice = 3329.40;
 window.currentPrice = currentPrice;
 window.GV_MARKET_PRICE = {
   symbol: 'XAU/USD',
-  price: 0,
-  open: 0,
-  prevClose: 0,
+  price: 3329.40,
+  open: 3329.40,
+  prevClose: 3329.40,
   change: 0,
   changePct: 0,
   source: 'Loading live API...',
@@ -2791,7 +2833,7 @@ window.GV_MARKET_PRICE = {
   status: 'loading'
 };
 
-const openPrice = 0;
+const openPrice = 3329.40;
 const priceHistory = [];
 
 function parseNum(v){
@@ -2991,7 +3033,7 @@ async function refreshMarketPrice(){
     var data = await getLiveGoldPrice();
     applyMarketPrice(data);
     var st=document.getElementById('live-api-status');
-    if(st){ st.textContent='Live API connected'; st.className='badge badge-success'; }
+    if(st){ st.textContent=data.source||'Live'; st.className='badge badge-success'; }
   } catch(e) {
     var st=document.getElementById('live-api-status');
     if(st){ st.textContent='Live API unavailable'; st.className='badge badge-warning'; }
@@ -3066,7 +3108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initChart();
   calcOrder();
   refreshMarketPrice();
-  setInterval(refreshMarketPrice, 15000);
+  setInterval(refreshMarketPrice, 8000);
 });
 </script>
 <!-- TRADE BLOTTER -->
@@ -3432,7 +3474,8 @@ function fmtWeight(g){
 function calcPhysical() {
   // Physical trading starts at 1 kg; quantity has no maximum limit.
   if(!document.getElementById('ph-size')) return;
-  var w   = Math.max(1000, parseFloat(gv('ph-size',1000)) || 1000);
+  var kg  = Math.max(1, parseFloat(gv('ph-size',1)) || 1);
+  var w = kg * 1000;
   var qty = Math.max(1, parseInt(gv('ph-qty',1),10) || 1);
   var cur = gv('ph-cur','USD');
   var pt  = gv('ph-ptype','market');
