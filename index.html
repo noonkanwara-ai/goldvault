@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>GoldVault Pro — TradingView Synced Executive Dashboard</title>
+<title>International Trading — TradingView Synced Executive Dashboard</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
 
@@ -386,6 +386,8 @@
 </style>
 <style id="kj-layout-and-scrap-form-fix">
   body > nav{display:block !important;height:82px !important;padding:0 !important;align-items:initial !important;justify-content:initial !important;overflow:hidden !important;}
+  body > nav.pre-login{display:none !important;height:0 !important;}
+  .app.pre-login{display:none !important;}
   body > nav > div:first-child{width:100% !important;}
   #nav-tabs-row{width:100% !important;max-width:100% !important;overflow-x:auto !important;overflow-y:hidden !important;white-space:nowrap !important;scrollbar-width:thin;}
   #nav-tabs-row .grouped-nav-tab{flex:0 0 auto !important;}
@@ -425,16 +427,124 @@
   .page{display:none !important;}
   .page.active{display:block !important;}
   .app > .page.active{min-height:calc(100vh - 82px);}
+  #page-checklist.active{min-height:0 !important;}
   #nav-tabs-row{position:relative;z-index:101;}
 </style></head>
 <body>
+
+<!-- ════════════════════ LOGIN SCREEN ════════════════════ -->
+<div id="login-screen" style="position:fixed;inset:0;z-index:1000;background:#0D0D0D;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif">
+  <div style="width:100%;max-width:400px;padding:40px 36px;background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
+      <div style="width:34px;height:34px;border:1.5px solid #B8860B;border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg height="16" style="fill:#B8860B" viewBox="0 0 16 16" width="16"><polygon points="8,1 15,5 15,11 8,15 1,11 1,5"></polygon></svg>
+      </div>
+      <span style="font-size:20px;font-weight:500;color:#F0EDE6;letter-spacing:-.02em">International <span style="color:#B8860B">Trading</span></span>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#5C5850;margin-bottom:32px">LBMA Certified Gold Trading Platform</div>
+
+    <!-- Email/Username -->
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+      <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Email / Username</label>
+      <input id="login-email" type="text" placeholder="you@example.com" autocomplete="username"
+        style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 13px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none"/>
+    </div>
+
+    <!-- Password -->
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+      <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()"
+        style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 13px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none"/>
+    </div>
+
+    <!-- Role select -->
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:26px">
+      <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Login as</label>
+      <div style="display:flex;gap:0;background:#111;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:3px">
+        <button id="role-client" type="button" onclick="setLoginRole('client')"
+          style="flex:1;padding:9px 0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:.5px solid rgba(255,255,255,0.1);background:#1C1C1C;color:#F0EDE6;font-family:'Inter',sans-serif">
+          👤 Client
+        </button>
+        <button id="role-admin" type="button" onclick="setLoginRole('admin')"
+          style="flex:1;padding:9px 0;border-radius:7px;font-size:13px;font-weight:400;cursor:pointer;border:none;background:transparent;color:#9A9488;font-family:'Inter',sans-serif;margin-left:2px">
+          🛠 Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div id="login-error" style="display:none;font-size:12px;color:#FF6B6B;background:rgba(180,50,50,0.1);border:.5px solid rgba(255,107,107,0.25);border-radius:7px;padding:9px 12px;margin-bottom:16px;text-align:center"></div>
+
+    <!-- Login button -->
+    <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:8px;border:none;background:#B8860B;color:#0D0D0D;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:14px">
+      Sign In
+    </button>
+
+    <!-- Demo hint -->
+    <div style="text-align:center;font-size:11px;color:#5C5850;line-height:1.6">
+      Demo access — enter any email &amp; password<br/>
+      Select <strong style="color:#9A9488">Client</strong> or <strong style="color:#9A9488">Admin</strong> to preview each role
+    </div>
+
+  </div>
+</div>
+
+<script>
+var loginRole = 'client';
+function setLoginRole(role){
+  loginRole = role;
+  var c = document.getElementById('role-client');
+  var a = document.getElementById('role-admin');
+  if(role==='client'){
+    c.style.background='#1C1C1C'; c.style.color='#F0EDE6'; c.style.border='.5px solid rgba(255,255,255,0.1)'; c.style.fontWeight='600';
+    a.style.background='transparent'; a.style.color='#9A9488'; a.style.border='none'; a.style.fontWeight='400';
+  } else {
+    a.style.background='#1C1C1C'; a.style.color='#F0EDE6'; a.style.border='.5px solid rgba(255,255,255,0.1)'; a.style.fontWeight='600';
+    c.style.background='transparent'; c.style.color='#9A9488'; c.style.border='none'; c.style.fontWeight='400';
+  }
+}
+function doLogin(){
+  var email = document.getElementById('login-email').value.trim();
+  var pass  = document.getElementById('login-password').value.trim();
+  var err   = document.getElementById('login-error');
+  if(!email || !pass){
+    err.textContent = 'Please enter both email and password.';
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  var screen = document.getElementById('login-screen');
+  screen.style.transition = 'opacity .3s ease';
+  screen.style.opacity = '0';
+  setTimeout(function(){
+    screen.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    var nav = document.getElementById('main-nav');
+    var app = document.getElementById('main-app');
+    if(nav) nav.classList.remove('pre-login');
+    if(app) app.classList.remove('pre-login');
+    // If admin, jump to Operations/Admin group; otherwise stay on dashboard
+    if(loginRole === 'admin' && typeof setGroup === 'function'){
+      try { setGroup('admin'); } catch(e){}
+    }
+    if(typeof showToast === 'function'){
+      showToast(loginRole === 'admin' ? 'Signed in as Admin' : 'Signed in as Client');
+    }
+  }, 300);
+}
+// Prevent scroll behind login screen
+document.body.style.overflow = 'hidden';
+</script>
 <div id="file-protocol-warning" style="display:none;position:fixed;top:82px;left:0;right:0;z-index:500;background:#1A0A00;border-bottom:1.5px solid #B8860B;padding:10px 20px;text-align:center">
   <span style="color:#FFB347;font-size:12px">⚠️ เปิดจาก file:// → ราคาเป็น Simulation &nbsp;|&nbsp; เพื่อราคาจริง: Terminal → <code style="background:#2A1500;padding:1px 6px;border-radius:3px;color:#F5E6B0">cd /path/to/folder && python3 -m http.server 8080</code> แล้วเปิด <a href="http://localhost:8080" style="color:#B8860B">localhost:8080</a></span>
   <button onclick="this.parentNode.style.display='none'" style="margin-left:10px;background:none;border:1px solid #B8860B;color:#B8860B;border-radius:3px;padding:1px 8px;cursor:pointer;font-size:11px">✕</button>
 </div>
 <script>if(location.protocol==='file:')document.getElementById('file-protocol-warning').style.display='block';</script>
 <!-- NAV -->
-<nav style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,13,13,0.96);backdrop-filter:blur(16px);border-bottom:.5px solid rgba(255,255,255,0.08);font-family:'Inter',sans-serif">
+<nav id="main-nav" class="pre-login" style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,13,13,0.96);backdrop-filter:blur(16px);border-bottom:.5px solid rgba(255,255,255,0.08);font-family:'Inter',sans-serif">
 <!-- Row 1: Logo + Group labels + User -->
 <div style="display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:44px;border-bottom:.5px solid rgba(255,255,255,0.05)">
 <!-- Logo -->
@@ -442,7 +552,7 @@
 <div style="width:26px;height:26px;border:1.5px solid #B8860B;border-radius:6px;display:flex;align-items:center;justify-content:center">
 <svg height="12" style="fill:#B8860B" viewbox="0 0 16 16" width="12"><polygon points="8,1 15,5 15,11 8,15 1,11 1,5"></polygon></svg>
 </div>
-<span style="font-size:14px;font-weight:500;color:#F0EDE6;letter-spacing:-.02em">Gold<span style="color:#B8860B">Vault</span> Pro</span>
+<span style="font-size:14px;font-weight:500;color:#F0EDE6;letter-spacing:-.02em">International <span style="color:#B8860B">Trading</span></span>
 <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(184,134,11,0.12);color:#B8860B;border:.5px solid rgba(184,134,11,0.35);letter-spacing:.04em">LBMA</span>
 </div>
 <!-- Group labels (click to highlight group) -->
@@ -470,7 +580,7 @@
 <!-- Populated by JS -->
 </div>
 </nav>
-<div class="app" style="padding-top:82px">
+<div class="app pre-login" id="main-app" style="padding-top:82px">
 <!-- ===================== DASHBOARD ===================== -->
 <div class="page active" id="page-dashboard">
 <div class="page-hero" style="max-width:1520px;padding-top:34px">
@@ -665,10 +775,49 @@
 <div style="font-size:12px;color:#9A9488;margin-top:3px">Jun 9, 2025</div>
 </div>
 </div>
-<!-- ── Trade Type Tabs ── -->
-<div style="display:flex;gap:0;background:#111;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:4px;margin-bottom:18px;width:fit-content">
-<button id="tt-physical" onclick="setTradeType('physical')" style="padding:8px 20px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#1C1C1C;color:#F0EDE6;font-family:'Inter',sans-serif;border:.5px solid rgba(255,255,255,0.1)">🏭 Physical Gold</button>
-<button id="tt-spot" onclick="setTradeType('spot')" style="padding:8px 20px;border-radius:7px;font-size:13px;font-weight:400;cursor:pointer;border:none;background:transparent;color:#9A9488;font-family:'Inter',sans-serif;margin-left:3px">📈 XAU/XAG Spot</button>
+<!-- ── Client Type + Trade Type Tabs ── -->
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap">
+
+  <!-- Client Type Selector -->
+  <div style="display:flex;flex-direction:column;gap:5px">
+    <div style="font-size:10px;color:#5C5850;text-transform:uppercase;letter-spacing:.08em">Client Type</div>
+    <div style="display:flex;gap:0;background:#111;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:3px">
+      <button id="ct-retail" onclick="setClientType('retail')"
+        style="padding:7px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#1C1C1C;color:#F0EDE6;font-family:'Inter',sans-serif;border:.5px solid rgba(255,255,255,0.1);white-space:nowrap">
+        🏅 Client Physical
+      </button>
+      <button id="ct-institutional" onclick="setClientType('institutional')"
+        style="padding:7px 18px;border-radius:7px;font-size:12px;font-weight:400;cursor:pointer;border:none;background:transparent;color:#9A9488;font-family:'Inter',sans-serif;margin-left:2px;white-space:nowrap">
+        📈 Client Trading
+      </button>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div style="width:1px;height:36px;background:rgba(255,255,255,0.08);margin-top:18px"></div>
+
+  <!-- Trade Type (Physical / Spot) -->
+  <div style="display:flex;flex-direction:column;gap:5px">
+    <div style="font-size:10px;color:#5C5850;text-transform:uppercase;letter-spacing:.08em">Trade Type</div>
+    <div style="display:flex;gap:0;background:#111;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:3px">
+      <button id="tt-physical" onclick="setTradeType('physical')"
+        style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#1C1C1C;color:#F0EDE6;font-family:'Inter',sans-serif;border:.5px solid rgba(255,255,255,0.1);white-space:nowrap">
+        🏭 Physical Gold
+      </button>
+      <button id="tt-spot" onclick="setTradeType('spot')"
+        style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:400;cursor:pointer;border:none;background:transparent;color:#9A9488;font-family:'Inter',sans-serif;margin-left:2px;white-space:nowrap">
+        📈 XAU/XAG Spot
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Type badge (shows selected) -->
+<div id="client-type-badge" style="display:inline-flex;align-items:center;gap:6px;background:#1A1A1A;border:.5px solid rgba(184,134,11,0.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#B8860B;margin-bottom:14px">
+  <span id="ct-badge-icon">🏅</span>
+  <span id="ct-badge-label">Client Physical</span>
+  <span style="color:#5C5850">·</span>
+  <span id="ct-badge-note" style="color:#5C5850">Physical gold · Delivery / Vault storage</span>
 </div>
 <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px">
 <!-- ══════ LEFT: Order Form ══════ -->
@@ -694,19 +843,24 @@
 <!-- Brand -->
 <div style="display:flex;flex-direction:column;gap:5px">
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Brand (LBMA)</label>
-<select id="ph-brand" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
-<option>PAMP Suisse — Fortuna Bar</option>
-<option>Valcambi Suisse Bar</option>
-<option>Argor-Heraeus Cast Bar</option>
+<select id="ph-brand" onchange="toggleCustomBrand()" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
+<option value="PAMP Suisse — Fortuna Bar">PAMP Suisse — Fortuna Bar</option>
+<option value="Valcambi Suisse Bar">Valcambi Suisse Bar</option>
+<option value="Argor-Heraeus Cast Bar">Argor-Heraeus Cast Bar</option>
+<option value="Royal Canadian Mint">Royal Canadian Mint</option>
+<option value="Perth Mint">Perth Mint</option>
+<option value="other">✏️ Other (type manually)</option>
 </select>
+<input id="ph-brand-custom" placeholder="Type brand name..." oninput="calcPhysical()" style="display:none;background:#1C1C1C;border:.5px solid rgba(184,134,11,0.45);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none;margin-top:5px"/>
 </div>
-<!-- Size -->
+<!-- Bar Size -->
 <div style="display:flex;flex-direction:column;gap:5px">
-<label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Bar Size</label>
-<select id="ph-size" onchange="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
-<option selected="" value="1000">1 kg — minimum trade size</option>
-</select>
-<div style="font-size:10px;color:#B8860B;margin-top:4px">Minimum order starts at 1 kg. Increase Quantity for unlimited kg.</div>
+<label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Bar Size (kg)</label>
+<div style="position:relative">
+<input id="ph-size" type="number" min="1" step="0.1" value="1" oninput="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.45);border-radius:7px;padding:9px 40px 9px 11px;font-size:13px;color:#B8860B;font-family:'Inter',sans-serif;outline:none;font-weight:500;width:100%"/>
+<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;color:#5C5850;pointer-events:none">kg</span>
+</div>
+<div style="font-size:10px;color:#B8860B;margin-top:4px">Min 1 kg · e.g. 1, 2.5, 10 kg</div>
 </div>
 <!-- Qty -->
 <div style="display:flex;flex-direction:column;gap:5px">
@@ -743,11 +897,15 @@
 </select>
 </div>
 </div>
-<!-- Fixed price input (hidden by default) -->
-<div id="fixed-price-row" style="display:none;margin-bottom:14px">
+<!-- Price override row — shown for both Market and Fixed -->
+<div id="fixed-price-row" style="display:block;margin-bottom:14px">
 <div style="display:flex;flex-direction:column;gap:5px">
-<label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Fixed Price (USD/oz)</label>
-<input id="ph-fixed" oninput="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.3);border-radius:7px;padding:9px 11px;font-size:13px;color:#B8860B;font-family:'Inter',sans-serif;outline:none;font-weight:500" type="number" value="4168.535"/>
+<label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em" id="ph-fixed-label">Override Price (USD/oz) <span style="color:#3C3830;font-weight:400;text-transform:none;letter-spacing:0">— leave blank to use live</span></label>
+<div style="position:relative">
+<input id="ph-fixed" oninput="calcPhysical()" placeholder="e.g. 4168.50 — optional for market, required for fixed" style="background:#1C1C1C;border:.5px solid rgba(184,134,11,0.3);border-radius:7px;padding:9px 60px 9px 11px;font-size:13px;color:#B8860B;font-family:'Inter',sans-serif;outline:none;font-weight:500;width:100%" type="number"/>
+<span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;color:#5C5850;pointer-events:none">USD/oz</span>
+</div>
+<div id="ph-fixed-hint" style="font-size:10px;color:#5C5850;margin-top:3px">Using live market price. Enter a value to override.</div>
 </div>
 </div>
 <!-- Notes -->
@@ -989,7 +1147,7 @@
 <div id="dtl-wire" style="display:block">
 <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase;margin-bottom:10px">Wire Transfer Details</div>
 <div style="background:#111;border:.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px">
-<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:#9A9488">Beneficiary</span><span style="color:#F0EDE6;font-weight:500">GoldVault Pro Co., Ltd.</span></div>
+<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:#9A9488">Beneficiary</span><span style="color:#F0EDE6;font-weight:500">International Trading Co., Ltd.</span></div>
 <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:#9A9488">Bank</span><span style="color:#F0EDE6;font-weight:500">Bangkok Bank PCL</span></div>
 <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:#9A9488">SWIFT Code</span><span style="color:#F0EDE6;font-weight:500;font-family:monospace">BKKBTHBK</span></div>
 <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:#9A9488">Account No.</span><span style="color:#F0EDE6;font-weight:500;font-family:monospace">123-4-56789-0</span></div>
@@ -1058,7 +1216,7 @@
 <!-- Invoice header -->
 <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:.5px solid rgba(255,255,255,0.07);margin-bottom:16px">
 <div>
-<div style="font-size:18px;font-weight:600;color:#B8860B;margin-bottom:3px">GoldVault Pro</div>
+<div style="font-size:18px;font-weight:600;color:#B8860B;margin-bottom:3px">International Trading</div>
 <div style="font-size:11px;color:#5C5850">Bangkok, Thailand · LBMA Certified</div>
 </div>
 <div style="text-align:right">
@@ -1958,7 +2116,7 @@ render();
 renderTransactions();
 
 &lt;/script&gt;
-&lt;/body&gt;&lt;/html&gt;" style="width:100%;height:calc(100vh - 145px);min-height:760px;border:0.5px solid rgba(184,134,11,0.35);border-radius:12px;background:#0f1115;display:block;position:relative;z-index:1"></iframe>
+&lt;/body&gt;&lt;/html&gt;" style="width:100%;height:calc(100vh - 280px);min-height:480px;border:0.5px solid rgba(184,134,11,0.35);border-radius:12px;background:#0f1115;display:block;position:relative;z-index:1"></iframe>
   </div>
 </div>
 <!-- ===================== FREIGHT FORWARDER ===================== -->
@@ -2621,6 +2779,37 @@ var tradeType = 'physical';
 var FX2 = {USD:1, GBP:0.79, EUR:0.92, SGD:1.35, THB:36.05};
 var SYM2 = {USD:'$', GBP:'£', EUR:'€', SGD:'S$', THB:'฿'};
 
+var clientType = 'retail';
+var CT_CONFIG = {
+  retail:        { icon:'🏅', label:'Client Physical',  note:'Physical gold · Delivery / Vault storage' },
+  institutional: { icon:'📈', label:'Client Trading',   note:'XAU/XAG Spot · T+2 Settlement · Margin required' }
+};
+
+function setClientType(type) {
+  clientType = type;
+  var ids  = ['ct-retail','ct-institutional'];
+  var keys = ['retail','institutional'];
+  ids.forEach(function(id, i) {
+    var btn = document.getElementById(id);
+    if(!btn) return;
+    var active = keys[i] === type;
+    btn.style.background = active ? '#1C1C1C' : 'transparent';
+    btn.style.color      = active ? '#F0EDE6' : '#9A9488';
+    btn.style.border     = active ? '.5px solid rgba(255,255,255,0.1)' : 'none';
+    btn.style.fontWeight = active ? '600' : '400';
+  });
+  var cfg  = CT_CONFIG[type] || CT_CONFIG.retail;
+  var icon = document.getElementById('ct-badge-icon');
+  var lbl  = document.getElementById('ct-badge-label');
+  var note = document.getElementById('ct-badge-note');
+  if(icon) icon.textContent = cfg.icon;
+  if(lbl)  lbl.textContent  = cfg.label;
+  if(note) note.textContent = cfg.note;
+  // Auto-switch Trade Type to match
+  if(type === 'retail') setTradeType('physical');
+  else setTradeType('spot');
+}
+
 function setTradeType(t) {
   tradeType = t;
   var phBtn  = document.getElementById('tt-physical');
@@ -2629,12 +2818,13 @@ function setTradeType(t) {
   var spForm = document.getElementById('form-spot');
   if(!phBtn) return;
   if(t==='physical') {
-    phBtn.style.background='#1C1C1C'; phBtn.style.color='#F0EDE6'; phBtn.style.border='.5px solid rgba(255,255,255,0.1)';
-    spBtn.style.background='transparent'; spBtn.style.color='#9A9488'; spBtn.style.border='none';
+    phBtn.style.background='#1C1C1C'; phBtn.style.color='#F0EDE6'; phBtn.style.border='.5px solid rgba(255,255,255,0.1)'; phBtn.style.fontWeight='600';
+    spBtn.style.background='transparent'; spBtn.style.color='#9A9488'; spBtn.style.border='none'; spBtn.style.fontWeight='400';
     phForm.style.display='block'; spForm.style.display='none';
+    calcPhysical();
   } else {
-    spBtn.style.background='#1C1C1C'; spBtn.style.color='#F0EDE6'; spBtn.style.border='.5px solid rgba(255,255,255,0.1)';
-    phBtn.style.background='transparent'; phBtn.style.color='#9A9488'; phBtn.style.border='none';
+    spBtn.style.background='#1C1C1C'; spBtn.style.color='#F0EDE6'; spBtn.style.border='.5px solid rgba(255,255,255,0.1)'; spBtn.style.fontWeight='600';
+    phBtn.style.background='transparent'; phBtn.style.color='#9A9488'; phBtn.style.border='none'; phBtn.style.fontWeight='400';
     phForm.style.display='none'; spForm.style.display='block';
     calcSpot();
   }
@@ -2677,11 +2867,20 @@ function setSpotSide(side) {
 }
 
 function toggleFixedPrice() {
-  var sel = document.getElementById('ph-ptype');
-  var row = document.getElementById('fixed-price-row');
-  if(!sel||!row) return;
-  row.style.display = sel.value==='fixed' ? 'block' : 'none';
+  // Row is always visible — just update label/hint and recalc
   calcPhysical();
+}
+
+function toggleCustomBrand() {
+  var sel = document.getElementById('ph-brand');
+  var customInput = document.getElementById('ph-brand-custom');
+  if(!sel || !customInput) return;
+  if(sel.value === 'other') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
 }
 
 function toggleSpotFixed() {
@@ -2701,26 +2900,48 @@ function fmtWeight(g){
   return g.toLocaleString('en-US') + 'g';
 }
 function calcPhysical() {
-  // Physical trading starts at 1 kg; quantity has no maximum limit.
   if(!document.getElementById('ph-size')) return;
-  var w   = Math.max(1000, parseFloat(gv('ph-size',1000)) || 1000);
+  // Bar size is now kg directly (number input)
+  var kg  = Math.max(0.001, parseFloat(document.getElementById('ph-size').value) || 1);
   var qty = Math.max(1, parseInt(gv('ph-qty',1),10) || 1);
   var cur = gv('ph-cur','USD');
   var pt  = gv('ph-ptype','market');
   var dashboardPrice = Number(window.currentPrice || currentPrice || 4168.535);
-  var price = pt==='fixed'
-    ? (parseFloat(gv('ph-fixed', dashboardPrice)) || dashboardPrice)
-    : dashboardPrice;
+  // If user typed a value in ph-fixed, use it regardless of price type
+  var fixedInput = document.getElementById('ph-fixed');
+  var overridePrice = fixedInput && fixedInput.value !== '' ? parseFloat(fixedInput.value) : null;
+  var price = (pt==='fixed' && overridePrice) ? overridePrice
+            : (overridePrice ? overridePrice : dashboardPrice);
   var rate = FX2[cur]||1;
-  var goldVal = (w*qty/31.1035)*price*rate;
-  var prem    = goldVal*0.025;
-  var tot     = goldVal+prem;
+  var totalKg = kg * qty;
+  var oz = totalKg * 32.1507; // 1 kg = 32.1507 troy oz
+  var goldVal = oz * price * rate;
+  var prem    = goldVal * 0.025;
+  var tot     = goldVal + prem;
   var sym     = SYM2[cur]||'$';
-  sv('ph-s-w',    fmtWeight(w*qty));
-  sv('ph-s-ptype', pt==='fixed'?'Fixed $'+Number(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3})+' / oz':'Market (Dashboard Live)');
+  var priceLabel = overridePrice
+    ? (pt==='fixed'?'Fixed':'Override')+' $'+Number(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3})+' / oz'
+    : 'Market (Live) $'+Number(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' / oz';
+  sv('ph-s-w',    totalKg.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:3})+' kg ('+oz.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' oz)');
+  sv('ph-s-ptype', priceLabel);
   sv('ph-s-gold', fmtMoney(sym,goldVal));
   sv('ph-s-prem', fmtMoney(sym,prem));
   sv('ph-s-total', fmtMoney(sym,tot)+' '+cur);
+  // Update hint
+  var hint = document.getElementById('ph-fixed-hint');
+  if(hint) hint.textContent = overridePrice
+    ? '✓ Using overridden price: $'+Number(overridePrice).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3})+' / oz'
+    : 'Using live market price: $'+Number(dashboardPrice).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' / oz. Enter a value to override.';
+  var label = document.getElementById('ph-fixed-label');
+  if(label) {
+    if(pt==='fixed') {
+      label.innerHTML = 'Fixed Price (USD/oz) <span style="color:#B8860B;font-weight:500">— required</span>';
+      if(fixedInput) { fixedInput.style.borderColor='rgba(184,134,11,0.7)'; fixedInput.placeholder='Enter fixed price per oz'; }
+    } else {
+      label.innerHTML = 'Override Price (USD/oz) <span style="color:#3C3830;font-weight:400;text-transform:none;letter-spacing:0">— leave blank to use live</span>';
+      if(fixedInput) { fixedInput.style.borderColor='rgba(184,134,11,0.3)'; fixedInput.placeholder='e.g. 4168.50 — optional for market, required for fixed'; }
+    }
+  }
 }
 
 function calcSpot() {
@@ -3825,7 +4046,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="form-group"><label class="form-label">Account ID</label><input style="font-family:monospace" value="GV-00182"/></div>
 <div class="form-group"><label class="form-label">Account status</label><select><option>Active</option><option>Suspended</option><option>Pending</option><option>Closed</option></select></div>
 <div class="form-group"><label class="form-label">Account type</label><select><option>Individual — Standard</option><option>Individual — Premium</option><option>Corporate</option><option>Institutional</option></select></div>
-<div class="form-group"><label class="form-label">Trading platform</label><select><option>GoldVault WebApp</option><option>MT4 / MT5</option><option>API Direct</option></select></div>
+<div class="form-group"><label class="form-label">Trading platform</label><select><option>International Trading WebApp</option><option>MT4 / MT5</option><option>API Direct</option></select></div>
 <div class="form-group"><label class="form-label">Base currency</label><select><option>USD</option><option>GBP</option><option>EUR</option><option>SGD</option></select></div>
 <div class="form-group"><label class="form-label">Leverage ratio</label><select><option>1:1 (No leverage)</option><option>1:2</option><option>1:5</option><option>1:10</option></select></div>
 </div>
@@ -3888,9 +4109,9 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
 <div class="section-title" style="margin:0">June 2025</div>
 <div style="display:flex;gap:8px;align-items:center">
-<button class="btn btn-sm" onclick="showToast('Previous month')">‹</button>
-<span style="font-size:13px;font-weight:500">Jun 2025</span>
-<button class="btn btn-sm" onclick="showToast('Next month')">›</button>
+<button class="btn btn-sm" onclick="calNavigate(-1)">‹</button>
+<span id="cal-month-label" style="font-size:13px;font-weight:500">Jun 2025</span>
+<button class="btn btn-sm" onclick="calNavigate(1)">›</button>
 </div>
 </div>
 <div class="cal-grid" style="margin-bottom:6px">
@@ -4233,22 +4454,38 @@ window.addEventListener('DOMContentLoaded',()=>{
 </style>
 <script id="calendar-real-date-fix-script">
 (function(){
+  var calState = {year:2025, month:5}; // June 2025, zero-based month
+
+  var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Sample events keyed by 'YYYY-M-D' (month zero-based)
+  var CAL_EVENTS={
+    '2025-5-10':{cls:'roll-day today',label:'Today · Rollover'},
+    '2025-5-11':{cls:'settle-day',label:'Settlement'},
+    '2025-5-12':{cls:'delivery-day roll-day',label:'Delivery · Rollover'},
+    '2025-5-13':{cls:'roll-day',label:'Rollover'},
+    '2025-5-23':{cls:'holiday-day',label:'Holiday'},
+    '2025-5-24':{cls:'settle-day',label:'Settlement'}
+  };
+
+  function calNavigate(delta){
+    calState.month += delta;
+    if(calState.month > 11){ calState.month = 0; calState.year++; }
+    if(calState.month < 0){ calState.month = 11; calState.year--; }
+    renderRealCalendar();
+  }
+  window.calNavigate = calNavigate;
+
   function renderRealCalendar(){
     var g=document.getElementById('cal-grid');
     if(!g) return;
     g.innerHTML='';
-    var year=2025, month=5; // June 2025, zero-based month
+    var year=calState.year, month=calState.month;
+    var label=document.getElementById('cal-month-label');
+    if(label) label.textContent = MONTH_NAMES[month] + ' ' + year;
     var daysInMonth=new Date(year, month+1, 0).getDate();
     var first=new Date(year, month, 1);
     var mondayOffset=(first.getDay()+6)%7; // JS 0=Sun -> Mon grid
-    var events={
-      10:{cls:'roll-day today',label:'Today · Rollover'},
-      11:{cls:'settle-day',label:'Settlement'},
-      12:{cls:'delivery-day roll-day',label:'Delivery · Rollover'},
-      13:{cls:'roll-day',label:'Rollover'},
-      23:{cls:'holiday-day',label:'Holiday'},
-      24:{cls:'settle-day',label:'Settlement'}
-    };
+    var todayKey = (function(){ var t=new Date(); return t.getFullYear()+'-'+t.getMonth()+'-'+t.getDate(); })();
     for(var i=0;i<mondayOffset;i++){
       var blank=document.createElement('div');
       blank.className='cal-day blank';
@@ -4257,10 +4494,14 @@ window.addEventListener('DOMContentLoaded',()=>{
     for(var d=1; d<=daysInMonth; d++){
       var el=document.createElement('div');
       var dow=(mondayOffset+d-1)%7;
-      var ev=events[d];
-      el.className='cal-day' + (dow>=5?' weekend':'') + (ev?' '+ev.cls:'');
+      var key=year+'-'+month+'-'+d;
+      var ev=CAL_EVENTS[key];
+      var isToday = (key===todayKey);
+      var cls='cal-day' + (dow>=5?' weekend':'') + (ev?' '+ev.cls:'') + (isToday && !(ev&&/today/.test(ev.cls))?' today':'');
+      el.className=cls;
       el.innerHTML='<span>'+d+'</span>' + (ev?'<span class="cal-event-label">'+ev.label+'</span>':'');
-      el.onclick=(function(day, label){return function(){ if(typeof showToast==='function') showToast((label?label+' · ':'')+day+' Jun 2025'); };})(d, ev&&ev.label);
+      var monthLabelStr = MONTH_NAMES[month]+' '+year;
+      el.onclick=(function(day, label2, monthStr){return function(){ if(typeof showToast==='function') showToast((label2?label2+' · ':'')+day+' '+monthStr); };})(d, ev&&ev.label, monthLabelStr);
       g.appendChild(el);
     }
   }
