@@ -1206,6 +1206,8 @@ document.body.style.overflow = 'hidden';
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Price Type</label>
 <select id="ph-ptype" onchange="toggleFixedPrice()" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
 <option value="market">Market Price (Live)</option>
+<option value="lbma_am">LBMA AM Fix</option>
+<option value="lbma_pm">LBMA PM Fix</option>
 <option value="fixed">Fixed Price</option>
 <option value="lbma_am">LBMA AM Fix</option>
 <option value="lbma_pm">LBMA PM Fix</option>
@@ -2540,6 +2542,9 @@ document.body.style.overflow = 'hidden';
   function escA(s){ return (window.escapeAttr||function(x){return x;})(s); }
   function priceKg(r){ var w=parseFloat(r.rfs_weight)||0, v=parseFloat(r.rfs_valuecif)||0; return w>0 ? (v/w).toFixed(2) : '0.00'; }
   function fmtD(s){ if(window.rfsFmtDate) return window.rfsFmtDate(s); if(!s) return '—'; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return s; var mons=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']; return m[3]+'/'+mons[parseInt(m[2],10)-1]+'/'+m[1]; }
+  function fmtN(n){ var v=parseFloat(n)||0; return v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtDots(d){ if(!d) return '—'; var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dt=new Date(d); if(isNaN(dt.getTime())) return d; return (dt.getDate()<10?'0':'')+dt.getDate()+'.'+MONTHS[dt.getMonth()]+'.'+dt.getFullYear(); }
+
   function recStatus(r){
     if(r.printed && r.printed.length) return 'Printed';
     if(!r.rfs_mawb || !r.rfs_shipdate) return 'Pending Logistics';
@@ -2557,13 +2562,64 @@ document.body.style.overflow = 'hidden';
     soc:['SOC Letter','Statement to the refinery on the sale of recycled semi-finished gold']
   };
   var REF_DOC_EXTRA_FIELDS = {
-    invoice:[['attnPerson','Attn (Person in Refinery)'],['companyId','Company Identification No.'],['vatNo','VAT Transferral Procedure No.'],['countryOrigin','Country of Origin'],['flightNo','Flight No.'],['flightRoute','Flight Route (e.g. ZRH to BKK)'],['flightDate','Flight Date'],['arrivalTime','Time of Arrival']],
-    packing:[['attnPerson','Attn (Person in Refinery)'],['companyId','Company Identification No.'],['vatNo','VAT Transferral Procedure No.']],
-    debit:[['customerName','Customer Name'],['customerAddress','Customer Address'],['debitDescription','Debit Description'],['debitAmount','Debit Amount (USD)'],['discountPerOz','Discount / Premium per Oz (USD)']],
-    receipt:[['customerName','Customer Name'],['forwarderName','Forwarder Name']],
-    confirmation:[['customerName','Customer Name'],['customerAddress','Customer Address']],
-    po:[['customerName','Customer Name'],['customerAddress','Customer Address'],['designReference','Design Reference'],['lengthCm','Length (cm)'],['widthCm','Width (cm)'],['thicknessMm','Thickness (mm)']],
-    soc:[]
+    /* Invoice — fields that CANNOT be auto-filled from rfs_ form */
+    invoice:[
+      ['attnPerson','Attn (Person in Refinery)'],
+      ['companyId','Company Identification No.'],
+      ['vatNo','VAT Transferral Procedure No.'],
+      ['countryOrigin','Country of Origin'],
+      /* Flight 1 */
+      ['flightNo','Flight 1 No.'],
+      ['flightRoute','Flight 1 Route (e.g. ZRH to BKK)'],
+      ['flightDate','Flight 1 Date'],
+      ['arrivalTime','Flight 1 Time of Arrival'],
+      /* Flight 2 */
+      ['flight2No','Flight 2 No.'],
+      ['flight2Route','Flight 2 Route (e.g. BKK to SIN)'],
+      ['flight2Date','Flight 2 Date'],
+      ['flight2Arrival','Flight 2 Time of Arrival']
+    ],
+    /* Packing List */
+    packing:[
+      ['attnPerson','Attn (Person in Refinery)'],
+      ['companyId','Company Identification No.'],
+      ['vatNo','VAT Transferral Procedure No.'],
+      ['goldForm','Gold Form (e.g. grain, bar)']
+    ],
+    /* Debit Advice — customerName auto-links from rfs_destination, keep for override */
+    debit:[
+      ['customerName','Customer Name (override)'],
+      ['customerAddress','Customer Address'],
+      ['debitDescription','Debit Description'],
+      ['debitAmount','Debit Amount (USD)'],
+      ['discountPerOz','Discount / Premium per Oz (USD)']
+    ],
+    /* Gold Receipt Note — forwarderName only; rest auto from rfs_ */
+    receipt:[
+      ['customerName','Customer Name (override)'],
+      ['forwarderName','Forwarder Name'],
+      ['goodsDescription','Description of Goods'],
+      ['collectionDate','Collection Date (override)']
+    ],
+    /* Purchase Confirmation — customerName/address; rest auto */
+    confirmation:[
+      ['customerName','Customer Name (override)'],
+      ['customerAddress','Customer Address']
+    ],
+    /* Purchase Order */
+    po:[
+      ['customerName','Customer Name (override)'],
+      ['customerAddress','Customer Address'],
+      ['designReference','Design Reference'],
+      ['lengthCm','Length (cm)'],
+      ['widthCm','Width (cm)'],
+      ['thicknessMm','Thickness (mm)']
+    ],
+    /* SOC — originCountry is the main manual field */
+    soc:[
+      ['originCountry','Gold Origin Country (e.g. Thailand)'],
+      ['goldForm','Gold Form (e.g. grain, bar)']
+    ]
   };
 
   function letterhead(title){
@@ -2575,138 +2631,385 @@ document.body.style.overflow = 'hidden';
 
   function refInvoiceDoc(r){
     var ex=r.extra||{};
-    return '<section class="paper">'+letterhead('INVOICE')+
-      '<div class="body-pad">'+
-      '<div class="grid">'+
-        '<div class="box"><div class="label">Refinery</div><div class="val">'+esc(r.rfs_refineryname)+'<br>'+esc(r.rfs_address)+'<br>Attn: '+esc(ex.attnPerson)+'</div></div>'+
-        '<div class="box"><div class="label">For Account Of</div><div class="val">Hua Seng Heng Singapore Pte Ltd<br>Company ID: '+esc(ex.companyId)+'<br>VAT No.: '+esc(ex.vatNo)+'<br>Custom Tariff: '+esc(r.rfs_tariff)+'</div></div>'+
+    var kg=parseFloat(r.rfs_weight)||0;
+    var priceKg=parseFloat(r.rfs_pricekg||ex.pricePerKg)||0;
+    var valueCIF=parseFloat(r.rfs_valuecif||ex.valueCIF||(priceKg*kg))||0;
+    var totalVal=valueCIF;
+    var shipDate=fmtD(r.rfs_shipdate_raw||r.rfs_shipdate||r.rfs_collectiondate_raw||r.rfs_collectiondate);
+    return '<section class="paper"><div class="bizform">'+
+      '<div style="font-size:11px;line-height:2;margin-bottom:8px">'+
+        '<b>INVOICE</b><br>'+
+        'Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate)+'<br>'+
+        'Our ref: &nbsp;&nbsp;'+esc(r.rfs_ourref)+
       '</div>'+
-      '<table><thead><tr><th>Description of Goods</th><th>Purity</th><th>Gross Packed Weight</th><th>Price / kg</th><th>Value (CIF)</th></tr></thead>'+
-      '<tbody><tr><td>'+esc(r.rfs_boxes)+' boxes said to contain net weight '+esc(r.rfs_weight)+' kilos of Scrap Gold ('+esc(r.rfs_type)+') for refining</td><td>'+esc(r.rfs_purity)+'</td><td>'+esc(r.rfs_grossweight)+' kg</td><td>$'+esc(priceKg(r))+'</td><td>$'+esc(r.rfs_valuecif)+'</td></tr></tbody></table>'+
-      '<div class="totalwrap"><div class="totalbox"><div class="tlabel">Total Value (CIF)</div><div class="tval">$'+esc(r.rfs_valuecif)+'</div></div></div>'+
-      '<div class="note">Country of Origin: '+esc(ex.countryOrigin)+'<br>Shipment Date: '+esc(fmtD(r.rfs_shipdate))+' &middot; MAWB: '+esc(r.rfs_mawb)+'<br>Flight: '+esc(ex.flightNo)+' ('+esc(ex.flightRoute)+') '+esc(ex.flightDate)+' &middot; Arrival '+esc(ex.arrivalTime)+'</div>'+
-      '<div class="sign"><div>Authorised Signature</div><div>For Hua Seng Heng Singapore Pte. Ltd.</div></div>'+
-      '</div>'+footer()+'</section>';
+      '<div style="margin:10px 0;font-size:10.5px;line-height:1.8">'+
+        '<b>'+esc(r.rfs_refineryname)+'</b><br>'+
+        esc(r.rfs_address)+'<br><br>'+
+        'Attn: '+esc(ex.attnPerson||'Name of Person in Refinery')+'<br>'+
+        'Company Identification Nr: '+esc(ex.companyId||'—')+'<br>'+
+        'Vat transferral procedure Nr: '+esc(ex.vatNo||'—')+'<br>'+
+        'Custom tariff: No. '+esc(r.rfs_tariff||'—')+'<br><br>'+
+        'For account of <b>Hua Seng Heng Singapore Pte Ltd</b>'+
+      '</div>'+
+      '<div style="margin:10px 0;font-size:10.5px">'+
+        '<b>Description of goods</b><br>'+
+        esc(r.rfs_boxes||'XXX')+' boxes said to contain Net weight '+esc(r.rfs_weight||'XXX')+
+        ' kilos of Scrap Gold in '+esc(r.rfs_type||ex.goldForm||'XXX')+' form for refining'+
+      '</div>'+
+      '<table class="bizform-table" style="margin:10px 0">'+
+        '<tr><td style="width:200px">Price per kg</td><td>:</td><td style="text-align:right">'+fmtN(priceKg)+'</td></tr>'+
+        '<tr><td>Value (CIF)</td><td>:</td><td style="text-align:right">'+fmtN(valueCIF)+'</td></tr>'+
+        '<tr><td>Purity</td><td>:</td><td>Said to contain '+esc(r.rfs_purity||ex.purity||'xxx%')+'</td></tr>'+
+        '<tr><td>Gross packed weight</td><td>:</td><td>'+esc(r.rfs_weight||'0')+' kg</td></tr>'+
+        '<tr><td>Country of Origin</td><td>:</td><td>'+esc(ex.countryOfOrigin||'XXX')+'</td></tr>'+
+      '</table>'+
+      '<div style="font-size:10.5px;margin:10px 0">'+
+        '<b>Total value &nbsp;&nbsp;&nbsp;&nbsp;'+fmtN(totalVal)+'&nbsp;&nbsp;&nbsp;&nbsp;CIF '+esc(r.rfs_destination||ex.cifCountry||'Country')+'</b>'+
+      '</div>'+
+      '<div style="font-size:10.5px;line-height:1.9;margin-top:10px">'+
+        'Shipment Date: &nbsp;&nbsp;&nbsp;&nbsp;'+shipDate+'<br>'+
+        'MAWB #: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_mawb||'XXX')+'<br>'+
+      '</div>'+
+      '<table class="bizform-table" style="margin-top:6px">'+
+        '<thead><tr><th>Flight</th><th>Route</th><th>Date</th><th>Time of Arrival</th></tr></thead>'+
+        '<tbody>'+
+          '<tr>'+
+            '<td>'+esc(ex.flightNo||'Flight No.')+'</td>'+
+            '<td>'+esc(ex.flightRoute||'XXX to XXX')+'</td>'+
+            '<td>'+esc(ex.flightDate||'')+'</td>'+
+            '<td>'+esc(ex.arrivalTime||'')+'</td>'+
+          '</tr>'+
+          '<tr>'+
+            '<td>'+esc(ex.flight2No||'Flight No.')+'</td>'+
+            '<td>'+esc(ex.flight2Route||'XXX to XXX')+'</td>'+
+            '<td>'+esc(ex.flight2Date||'')+'</td>'+
+            '<td>'+esc(ex.flight2Arrival||'')+'</td>'+
+          '</tr>'+
+        '</tbody>'+
+      '</table>'+
+      '<div class="bizform-sign">Authorised Signatures<br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div>'+
+    '</div></section>';
   }
 
   function refPackingDoc(r){
     var ex=r.extra||{};
-    var n=parseInt(r.rfs_boxes)||0, rows='';
-    for(var i=1;i<=n;i++){ rows+='<tr><td style="text-align:center">'+i+'</td><td>Box '+i+' of '+n+'</td><td></td><td></td><td></td></tr>'; }
+    var n=parseInt(r.rfs_boxes)||0;
+    var boxData=ex.boxData||[];
+    var rows='';
+    for(var i=1;i<=n;i++){
+      var b=boxData[i-1]||{};
+      rows+='<tr>'+
+        '<td style="text-align:center">'+i+'</td>'+
+        '<td>'+esc(b.boxNo||(i+' of '+n))+'</td>'+
+        '<td>'+esc(b.orangeBagSeal||'')+'</td>'+
+        '<td>'+esc(b.blueBagSeal||'')+'</td>'+
+        '<td style="text-align:right">'+esc(b.netWeight||'')+'</td>'+
+      '</tr>';
+    }
     if(!n) rows='<tr><td colspan="5" style="text-align:center;color:#999">No boxes recorded</td></tr>';
-    return '<section class="paper">'+letterhead('PACKING LIST')+
-      '<div class="body-pad">'+
-      '<div class="grid">'+
-        '<div class="box"><div class="label">Refinery</div><div class="val">'+esc(r.rfs_refineryname)+'<br>Attn: '+esc(ex.attnPerson)+'</div></div>'+
-        '<div class="box"><div class="label">Reference</div><div class="val">Our Ref: '+esc(r.rfs_ourref)+'<br>Company ID: '+esc(ex.companyId)+' &middot; VAT No.: '+esc(ex.vatNo)+'</div></div>'+
+    return '<section class="paper"><div class="bizform">'+
+      '<div style="font-size:11px;line-height:2;margin-bottom:8px">'+
+        '<b>Packing List</b><br>'+
+        'Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate)+'<br>'+
+        'Our ref: &nbsp;&nbsp;'+esc(r.rfs_ourref)+
       '</div>'+
-      '<div class="note" style="margin-top:0;margin-bottom:10px;font-size:11px;color:#333">'+esc(r.rfs_boxes)+' boxes said to contain net weight '+esc(r.rfs_weight)+' kilos of Scrap Gold ('+esc(r.rfs_type)+') for refining</div>'+
-      '<table><thead><tr><th>No</th><th>Box Number</th><th>Bag / Seal No.</th><th>Net Weight (g)</th><th>Remarks</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-      '<div class="totalwrap"><div class="totalbox"><div class="tlabel">Total Gross Weight</div><div class="tval">'+esc(r.rfs_grossweight)+' kg</div></div></div>'+
-      '<div class="sign"><div>Authorised Signature</div><div>For Hua Seng Heng Singapore Pte. Ltd.</div></div>'+
-      '</div>'+footer()+'</section>';
+      '<div style="margin:10px 0;font-size:10.5px;line-height:1.8">'+
+        '<b>'+esc(r.rfs_refineryname)+'</b><br><br>'+
+        'Attn: '+esc(ex.attnPerson||'Name of Person in Refinery')+'<br>'+
+        'Company Identification Nr: '+esc(ex.companyId||'—')+'<br>'+
+        'Vat transferral procedure Nr: '+esc(ex.vatNo||'—')+'<br>'+
+        'Custom tariff: No. '+esc(r.rfs_tariff||'—')+'<br>'+
+        'For account of <b>Hua Seng Heng Singapore Pte Ltd</b>'+
+      '</div>'+
+      '<div style="font-size:10.5px;margin-bottom:8px">'+
+        '<b>Description of goods</b><br>'+
+        esc(r.rfs_boxes||'XXX')+' boxes said to contain Net weight '+esc(r.rfs_weight||'XXX')+
+        ' kilos of Scrap Gold in '+esc(r.rfs_type||ex.goldForm||'XXX')+' form for refining'+
+      '</div>'+
+      '<table class="bizform-table">'+
+        '<thead><tr>'+
+          '<th>No</th><th>Box Number</th>'+
+          '<th>Orange Bag Blue Seal</th>'+
+          '<th>Blue Bag Red Seal</th>'+
+          '<th>Net Weight (Grams)</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+        '<tfoot><tr>'+
+          '<td colspan="4" style="text-align:right;font-weight:700">Total Gross Weight (kg)</td>'+
+          '<td style="text-align:right;font-weight:700">'+esc(r.rfs_weight||'0')+'</td>'+
+        '</tr></tfoot>'+
+      '</table>'+
+      '<div class="bizform-sign">Authorised Signatures<br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div>'+
+    '</div></section>';
   }
 
   function refDebitAdviceDoc(r){
     var ex=r.extra||{};
-    return '<section class="paper">'+letterhead('DEBIT ADVICE')+
-      '<div class="letter-body">'+
-      '<div class="kvrow"><div class="k">Transaction Date</div><div>'+esc(fmtD(r.rfs_collectiondate))+'</div></div>'+
-      '<div class="kvrow"><div class="k">Customer</div><div>'+esc(ex.customerName)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Address</div><div>'+esc(ex.customerAddress)+'</div></div>'+
-      '<p>The following has been debited from your USD account:</p>'+
-      '<table><thead><tr><th>Description</th><th>Amount (USD)</th></tr></thead>'+
-      '<tbody><tr><td>'+esc(ex.debitDescription||('Discount on '+(r.rfs_weight||'')+' kg of gold bars @ '+(r.rfs_discountoz||ex.discountPerOz||'0')+' per Oz'))+'</td><td>$'+esc(ex.debitAmount||'0')+'</td></tr></tbody></table>'+
-      '<div class="totalwrap"><div class="totalbox"><div class="tlabel">Total</div><div class="tval">$'+esc(ex.debitAmount||'0')+'</div></div></div>'+
-      '<p>Shipment ref: '+esc(r.rfs_ourref)+'</p>'+
-      '<div class="sign2"><div class="line">Authorised Signature<br>For Hua Seng Heng Singapore Pte. Ltd.</div><div></div></div>'+
-      '</div>'+footer()+'</section>';
+    var discOz=parseFloat(ex.discountPerOz||r.rfs_discountoz||0);
+    var kg=parseFloat(r.rfs_weight||0);
+    var totalDebit=parseFloat(ex.debitAmount||0)||(kg*32.148*discOz);
+    return '<section class="paper"><div class="bizform">'+
+      '<div style="font-size:10.5px;line-height:2;margin:0 0 14px">'+
+        'Transaction Date : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate)+'<br>'+
+        'Value Date : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate)+
+      '</div>'+
+      '<div style="font-size:10.5px;margin-bottom:14px">'+
+        '<b>'+esc(ex.customerName||r.rfs_destination||'Customer Name')+'</b><br>'+
+        esc(ex.customerAddress||'')+
+      '</div>'+
+      '<div class="bizform-title" style="text-align:left;font-size:14px">Debit Advice</div>'+
+      '<p style="font-size:10.5px">The following has been debited from your USD account:</p>'+
+      '<table class="bizform-table">'+
+        '<thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead>'+
+        '<tbody>'+
+          '<tr>'+
+            '<td>Discount on &nbsp;&nbsp;'+esc(r.rfs_weight||'0')+' kg of gold bars<br>@ '+discOz.toFixed(2)+' Per Oz</td>'+
+            '<td style="text-align:right">'+fmtN(totalDebit)+'</td>'+
+          '</tr>'+
+        '</tbody>'+
+      '</table>'+
+      '<div style="font-size:10.5px;margin:10px 0;line-height:1.9">'+
+        'Shipment ref: &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_ourref)+'<br>'+
+        'Shipment ref: &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_ourref)+
+      '</div>'+
+      '<div style="font-size:11px;font-weight:700;text-align:right;margin:8px 0">Total &nbsp;&nbsp;&nbsp;'+fmtN(totalDebit)+'</div>'+
+      '<div class="bizform-sign">Authorised Signatures<br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div>'+
+    '</div></section>';
   }
 
   function refGoldReceiptDoc(r){
     var ex=r.extra||{};
-    return '<section class="paper">'+letterhead('GOLD RECEIPT NOTE')+
-      '<div class="letter-body">'+
-      '<div class="kvrow"><div class="k">To</div><div>'+esc(ex.customerName)+'</div></div>'+
-      '<p>We confirm the collection of the following:</p>'+
-      '<div class="kvrow"><div class="k">Collection Date</div><div>'+esc(fmtD(r.rfs_collectiondate))+'</div></div>'+
-      '<div class="kvrow"><div class="k">Our Ref</div><div>'+esc(r.rfs_ourref)+'</div></div>'+
-      '<div class="kvrow"><div class="k">No. of Boxes</div><div>'+esc(r.rfs_boxes)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Net Weight (KG)</div><div>'+esc(r.rfs_weight)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Purity / Type</div><div>'+esc(r.rfs_purity)+', '+esc(r.rfs_type)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Forwarder</div><div>'+esc(ex.forwarderName)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Final Destination</div><div>'+esc(r.rfs_destination)+'</div></div>'+
-      '<p>Thank you for the business.</p>'+
-      '<div class="sign2"><div class="line">Authorised Signature<br>For Hua Seng Heng Singapore Pte. Ltd.</div><div></div></div>'+
-      '</div>'+footer()+'</section>';
+    var kg=parseFloat(r.rfs_weight||0);
+    var priceKg=parseFloat(r.rfs_pricekg||ex.pricePerKg||0);
+    var totalAmt=kg*priceKg;
+    return '<section class="paper"><div class="bizform">'+
+      '<div class="bizform-title">Gold Receipt Note</div>'+
+      '<div style="font-size:10.5px;line-height:2;margin-bottom:14px">'+
+        'Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate)+'<br>'+
+        'To: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(ex.customerName||'Customer Name')+
+      '</div>'+
+      '<p style="font-size:10.5px">We confirm the collection of the following:</p>'+
+      '<div style="font-size:10.5px;line-height:2.1">'+
+        'Collection Date: &nbsp;&nbsp;&nbsp;&nbsp;'+fmtDots(ex.collectionDate||r.rfs_collectiondate)+'<br>'+
+        'Our ref: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_ourref)+'<br>'+
+        'No of boxes: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_boxes||'—')+'<br>'+
+        'Net Weight (KG): &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_weight||'—')+'<br>'+
+        'Purity: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_purity||ex.purity||'XXX%')+', '+esc(r.rfs_type||ex.goldForm||'Type of Gold')+'<br>'+
+        'Forwarder: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(ex.forwarderName||'Name of Forwarder')+'<br>'+
+        'Description of goods: &nbsp;'+esc(ex.goodsDescription||r.rfs_type||'—')+'<br>'+
+        'Final Destination: &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_refineryname||r.rfs_destination||ex.destination||'Country')+
+      '</div>'+
+      '<p style="font-size:10.5px;margin-top:16px">Thank you for the business</p>'+
+      '<div class="bizform-sign">Authorised Signatures<br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div>'+
+    '</div></section>'+
+    /* Purchase Confirmation Letter on same page — matches Excel Gold Receipt Note (1) sheet */
+    '<section class="paper"><div class="letter-body">'+
+      '<div style="text-align:center;font-weight:700;font-size:15px;color:#00456F;margin-bottom:18px">PURCHASE CONFIRMATION LETTER</div>'+
+      '<div style="font-size:11px;margin-bottom:14px">'+
+        'To : '+esc(ex.customerName||'Customer Name')+'<br>'+
+        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(ex.customerAddress||'Customer Address')+
+      '</div>'+
+      '<div style="font-size:11px;margin-bottom:14px">'+
+        'This letter is a confirmation of our recent phone conversation where we agreed to purchase the following:'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:2.2">'+
+        '<div class="kvrow"><span class="k">Our reference</span>'+esc(r.rfs_ourref)+'</div>'+
+        '<div class="kvrow"><span class="k">Quantity (kg)</span>'+esc(r.rfs_weight)+'</div>'+
+        '<div class="kvrow"><span class="k">Form</span>'+esc(ex.goldForm||r.rfs_type||'Type of gold')+'</div>'+
+        '<div class="kvrow"><span class="k">Price per kg</span>'+fmtN(priceKg)+'</div>'+
+        '<div class="kvrow"><span class="k">Total Amount</span>'+fmtN(totalAmt)+'</div>'+
+        '<div class="kvrow"><span class="k">Shipment Date</span>'+fmtDots(r.rfs_shipmentdate||r.rfs_collectiondate)+'</div>'+
+        '<div class="kvrow"><span class="k">Destination</span>'+esc(r.rfs_refineryname||'Name of refinery')+'&nbsp;&nbsp;&nbsp;&nbsp;'+esc(ex.destCountry||'Country')+'</div>'+
+      '</div>'+
+      '<div style="font-size:11px;margin-top:14px;line-height:1.8">'+
+        'The total amount stated above include insurance, freight and all expenses that comes with this shipment.<br><br>'+
+        'This shipment will be send to the above destination on behalf of Hua Seng Heng Singapore Pte Ltd.<br><br>'+
+        'By signing this letter we agreed to transfer the total amount stated to your bank account and you agreed to ship the goods by the agreed schedule.'+
+      '</div>'+
+      '<div class="sign2">'+
+        '<div><div class="line">Date &nbsp;&nbsp;&nbsp;'+fmtDots(ex.signDate||r.rfs_collectiondate)+'<br><br>For Hua Seng Heng Singapore Pte Ltd<br><br>Name : ___________________</div></div>'+
+        '<div><div class="line">Date &nbsp;&nbsp;&nbsp;'+fmtDots(ex.signDate||r.rfs_collectiondate)+'<br><br>For '+esc(ex.customerName||'Name of customer')+'<br><br>Name : ___________________</div></div>'+
+      '</div>'+
+    '</div></section>';
   }
 
   function refConfirmationDoc(r){
     var ex=r.extra||{};
-    return '<section class="paper">'+letterhead('PURCHASE CONFIRMATION LETTER')+
-      '<div class="letter-body">'+
-      '<div class="kvrow"><div class="k">To</div><div>'+esc(ex.customerName)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Address</div><div>'+esc(ex.customerAddress)+'</div></div>'+
-      '<p>This letter is a confirmation of our recent conversation where we agreed to purchase the following:</p>'+
-      '<div class="kvrow"><div class="k">Our Reference</div><div>'+esc(r.rfs_ourref)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Purchase Order No.</div><div>'+esc(r.rfs_pono)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Quantity (kg)</div><div>'+esc(r.rfs_weight)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Number of Pieces</div><div>'+esc(r.rfs_pieces)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Form</div><div>'+esc(r.rfs_type)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Price per kg</div><div>$'+esc(priceKg(r))+'</div></div>'+
-      '<div class="kvrow"><div class="k">Total Amount</div><div>$'+esc(r.rfs_valuecif)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Shipment Date</div><div>'+esc(fmtD(r.rfs_shipdate))+'</div></div>'+
-      '<div class="kvrow"><div class="k">Destination</div><div>'+esc(r.rfs_refineryname)+', '+esc(r.rfs_destination)+'</div></div>'+
-      '<p>The total amount stated above includes insurance, freight and all expenses that come with this shipment. This shipment will be sent to the above destination on behalf of Hua Seng Heng Singapore Pte Ltd.</p>'+
-      '<p>By signing this letter we agree to transfer the total amount stated to your bank account and you agree to ship the goods by the agreed schedule.</p>'+
-      '<div class="sign2"><div class="line">Date '+esc(todayISO())+'<br>For Hua Seng Heng Singapore Pte Ltd</div><div class="line">Date<br>For '+esc(ex.customerName||'Customer')+'</div></div>'+
-      '</div>'+footer()+'</section>';
+    var kg=parseFloat(r.rfs_weight||0);
+    var priceKg=parseFloat(r.rfs_pricekg||ex.pricePerKg||0);
+    var totalAmt=kg*priceKg;
+    var custName=ex.customerName||r.rfs_destination||'Customer Name';
+    var custAddr=ex.customerAddress||'Customer Address';
+    var poNo=r.rfs_pono||'—';
+    return '<section class="paper"><div class="letter-body">'+
+      '<div style="text-align:center;font-weight:700;font-size:15px;color:#00456F;margin-bottom:18px">PURCHASE CONFIRMATION LETTER</div>'+
+      '<div style="font-size:11px;margin-bottom:14px">'+
+        'To : <b>'+esc(custName)+'</b><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(custAddr)+
+      '</div>'+
+      '<p style="font-size:11px">This letter is a confirmation of our recent phone conversation where we agreed to purchase the following:</p>'+
+      '<div style="font-size:11px;line-height:2.2">'+
+        '<div class="kvrow"><span class="k">Our Reference</span>'+esc(r.rfs_ourref||'—')+'</div>'+
+        (poNo!=='—'?'<div class="kvrow"><span class="k">Purchase Order No.</span>PO - '+esc(poNo)+'</div>':'')+
+        '<div class="kvrow"><span class="k">Quantity (kg)</span>'+esc(r.rfs_weight||'—')+'</div>'+
+        '<div class="kvrow"><span class="k">Form</span>'+esc(r.rfs_type||ex.goldForm||'Type of gold')+'</div>'+
+        '<div class="kvrow"><span class="k">Price per kg</span>'+fmtN(priceKg)+'</div>'+
+        '<div class="kvrow"><span class="k">Total Amount</span>'+fmtN(totalAmt)+'</div>'+
+        '<div class="kvrow"><span class="k">Shipment Date</span>'+fmtDots(r.rfs_shipdate_raw||r.rfs_shipdate||r.rfs_collectiondate_raw||r.rfs_collectiondate)+'</div>'+
+        '<div class="kvrow"><span class="k">Destination</span>'+esc(r.rfs_refineryname||'Name of refinery')+'&nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_destination||ex.destCountry||'Country')+'</div>'+
+      '</div>'+
+      '<div style="font-size:11px;margin-top:14px;line-height:1.8">'+
+        'The total amount stated above include insurance, freight and all expenses that comes with this shipment.<br><br>'+
+        'This shipment will be send to the above destination on behalf of Hua Seng Heng Singapore Pte Ltd.<br><br>'+
+        'By signing this letter we agreed to transfer the total amount stated to your bank account and you agreed to ship the goods by the agreed schedule.'+
+      '</div>'+
+      '<div class="sign2">'+
+        '<div><div class="line">Date &nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate_raw||r.rfs_collectiondate)+'<br><br>For Hua Seng Heng Singapore Pte Ltd<br><br>Name : ___________________</div></div>'+
+        '<div><div class="line">Date &nbsp;&nbsp;&nbsp;'+fmtDots(r.rfs_collectiondate_raw||r.rfs_collectiondate)+'<br><br>For '+esc(custName)+'<br><br>Name : ___________________</div></div>'+
+      '</div>'+
+    '</div></section>';
   }
 
   function refPurchaseOrderDoc(r){
     var ex=r.extra||{};
-    return '<section class="paper">'+letterhead('PURCHASE ORDER')+
-      '<div class="letter-body">'+
-      '<div class="kvrow"><div class="k">Purchase Order No.</div><div>'+esc(r.rfs_pono)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Date</div><div>'+esc(fmtD(r.rfs_podate))+'</div></div>'+
-      '<div class="kvrow"><div class="k">To</div><div>'+esc(ex.customerName)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Address</div><div>'+esc(ex.customerAddress)+'</div></div>'+
-      '<p>We are interested in ordering the following from you, based on the specifications stated below:</p>'+
-      '<table><thead><tr><th>Product</th><th>Design Ref.</th><th>Purity</th><th>Length (cm)</th><th>Width (cm)</th><th>Weight (g)</th><th>Thickness (mm)</th><th>Qty (Pcs)</th></tr></thead>'+
-      '<tbody><tr><td>'+esc(r.rfs_type)+'</td><td>'+esc(ex.designReference)+'</td><td>'+esc(r.rfs_purity)+'</td><td>'+esc(ex.lengthCm)+'</td><td>'+esc(ex.widthCm)+'</td><td>'+esc(r.rfs_weight)+'</td><td>'+esc(ex.thicknessMm)+'</td><td>'+esc(r.rfs_pieces)+'</td></tr></tbody></table>'+
-      '<p>By signing this purchase order, you confirm you are able and committed to fulfil this order.</p>'+
-      '<div class="sign2"><div class="line">For Hua Seng Heng Singapore Pte Ltd</div><div class="line">Agreed by: '+esc(ex.customerName||'Customer')+'</div></div>'+
-      '</div>'+footer()+'</section>';
+    var custName=ex.customerName||r.rfs_destination||'Customer Name';
+    var custAddr=ex.customerAddress||'Customer Address';
+    var poNo=r.rfs_pono||'—';
+    var poDate=fmtDots(r.rfs_podate_raw||r.rfs_podate||r.rfs_collectiondate_raw||r.rfs_collectiondate);
+    return '<section class="paper"><div class="letter-body">'+
+      '<div style="text-align:center;font-weight:700;font-size:15px;color:#00456F;margin-bottom:10px">PURCHASE ORDER</div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:14px">'+
+        '<div></div>'+
+        '<div style="text-align:right">'+
+          'Purchase Order No.: &nbsp;<b>PO - '+esc(poNo)+'</b><br>'+
+          'Date: &nbsp;'+poDate+
+        '</div>'+
+      '</div>'+
+      '<div style="font-size:11px;margin-bottom:14px">'+
+        'To : <b>'+esc(custName)+'</b><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+esc(custAddr)+
+      '</div>'+
+      '<p style="font-size:11px">We are interested in ordering the following from you, based on the specifications stated below:</p>'+
+      '<table class="bizform-table">'+
+        '<thead><tr>'+
+          '<th>Product Name</th><th>Design Ref.</th>'+
+          '<th>Gold Purity</th><th>Length (cm)</th><th>Width (cm)</th>'+
+          '<th>Weight (g)</th><th>Thickness (mm)</th><th>Qty (Pcs)</th>'+
+        '</tr></thead>'+
+        '<tbody>'+
+          '<tr>'+
+            '<td>GOLD '+esc(r.rfs_type||'Type')+'</td>'+
+            '<td>'+esc(ex.designReference||'Picture')+'</td>'+
+            '<td>'+esc(r.rfs_purity||ex.purity||'K')+'</td>'+
+            '<td>'+esc(ex.lengthCm||'')+'</td>'+
+            '<td>'+esc(ex.widthCm||'')+'</td>'+
+            '<td>'+esc(r.rfs_weight||'')+'</td>'+
+            '<td>'+esc(ex.thicknessMm||'')+'</td>'+
+            '<td>'+esc(r.rfs_pieces||r.rfs_boxes||'')+'</td>'+
+          '</tr>'+
+        '</tbody>'+
+      '</table>'+
+      '<div style="font-size:11px;margin-top:20px;line-height:1.8">'+
+        'By signing this purchase order, you are confirming to be able and committed to fulfil this order.'+
+      '</div>'+
+      '<div class="sign2">'+
+        '<div><div class="line">For Hua Seng Heng Singapore Pte Ltd<br><br>Name : ___________________</div></div>'+
+        '<div><div class="line">Agreed by<br>'+esc(custName)+'<br><br>Name : ___________________</div></div>'+
+      '</div>'+
+    '</div></section>';
   }
 
   function refSOCDoc(r){
-    return '<section class="paper">'+letterhead('SOC LETTER')+
-      '<div class="letter-body">'+
-      '<div class="kvrow"><div class="k">Our Ref</div><div>'+esc(r.rfs_ourref)+'</div></div>'+
-      '<div class="kvrow"><div class="k">MAWB</div><div>'+esc(r.rfs_mawb)+'</div></div>'+
-      '<div class="kvrow"><div class="k">Refinery</div><div>'+esc(r.rfs_refineryname)+', '+esc(r.rfs_address)+'</div></div>'+
-      '<p>Dear Sir/Madam,</p>'+
-      '<p><b>Re: Sale of Recycled Semi-finished Gold ('+esc(r.rfs_type)+')</b></p>'+
-      '<p>With reference to ('+esc(r.rfs_type)+') delivered to ('+esc(r.rfs_refineryname)+') refinery, the material is sold to Hua Seng Heng Singapore Pte Ltd and exported as recycled semi-finished gold. The material is then shipped via air freight to Hua Seng Heng\'s designated refinery.</p>'+
-      '<p>Yours faithfully,<br>For and on behalf of<br>Hua Seng Heng Singapore Pte Ltd</p>'+
-      '</div>'+footer()+'</section>';
+    var ex=r.extra||{};
+    var refNo=esc(r.rfs_ourref||'—');
+    var mawb=esc(r.rfs_mawb||'XXX');
+    var refinery=esc(r.rfs_refineryname||'Refinery Name');
+    var refineryAddr=esc(r.rfs_address||'Refinery Address');
+    var typeGold=esc(ex.goldForm||r.rfs_type||'Type of Gold');
+    var date=fmtDots(r.rfs_collectiondate);
+    var originCountry=esc(ex.originCountry||r.rfs_destination||'XXX');
+    /* SOC Part 1 — Sales letter */
+    var soc1='<section class="paper"><div class="letter-body">'+
+      '<div style="font-size:10.5px;line-height:2;margin-bottom:14px">'+
+        'Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+date+'<br>'+
+        'Our ref: &nbsp;&nbsp;&nbsp;'+refNo+'<br>'+
+        'MAWB: &nbsp;&nbsp;&nbsp;&nbsp;'+mawb+
+      '</div>'+
+      '<div style="margin-bottom:14px"><b>'+refinery+'</b><br>'+refineryAddr+'</div>'+
+      '<div>Dear Sir/Madam</div>'+
+      '<div style="margin-top:10px"><b>Re: Sales of Recycled Semi-finished Gold ('+typeGold+')</b></div>'+
+      '<div style="margin-top:10px;line-height:1.9">'+
+        'With reference to ('+typeGold+') delivered to ('+refinery+') refinery, Material is sold to<br>'+
+        'Hua Seng Heng Singapore Pte Ltd and exported as recycled semi-finished gold ('+typeGold+'). Material<br>'+
+        'is then shipped via air freight to Hua Seng Heng&#39;s designated refinery.'+
+      '</div>'+
+      '<div style="margin-top:20px">Yours faithfully,<br>For and on behalf of<br>Hua Seng Heng Singapore Pte Ltd</div>'+
+      '<div class="sign2"><div><div class="line">Authorised Signatures<br><br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div></div><div></div></div>'+
+    '</div></section>';
+    /* SOC Part 2 — Statement of Conformance of Recycled Gold Origin (same sheet in Excel) */
+    var soc2='<section class="paper"><div class="letter-body">'+
+      '<div style="font-size:10.5px;line-height:2;margin-bottom:14px">'+
+        'Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+date+'<br>'+
+        'Our ref: &nbsp;&nbsp;&nbsp;'+refNo+'<br>'+
+        'MAWB: &nbsp;&nbsp;&nbsp;&nbsp;'+mawb+
+      '</div>'+
+      '<div style="margin-bottom:14px"><b>'+refinery+'</b><br>'+refineryAddr+'</div>'+
+      '<div style="text-align:center;font-weight:700;font-size:13px;color:#00456F;margin:14px 0">STATEMENT OF CONFORMANCE OF RECYCLED GOLD ORIGIN</div>'+
+      '<div style="line-height:1.9">Yours faithfully,<br>For and on behalf of</div>'+
+      '<div class="sign2"><div><div class="line">Authorised Signatures<br><br>Hua Seng Heng Singapore Pte. Ltd.<br>11 Keng Cheow Street<br>#04-10 The Riverside Piazza, Singapore 059608</div></div><div></div></div>'+
+    '</div></section>';
+    /* SOC (2) — Full Statement of Conformance of Recycled Gold */
+    var soc3='<section class="paper"><div class="letter-body">'+
+      '<div style="text-align:right;font-size:10.5px;margin-bottom:16px">'+
+        'TO: <b>'+refinery+'</b><br>'+refineryAddr+'<br><br>'+
+        'Singapore, &nbsp;&nbsp;&nbsp;&nbsp;'+date+
+      '</div>'+
+      '<div style="text-align:center;font-weight:700;font-size:14px;color:#00456F;margin:16px 0">STATEMENT OF CONFORMANCE OF RECYCLED GOLD</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:10px">'+
+        'Hua Seng Heng Singapore Pte Ltd confirms that, based on our KYC due diligence practices, our recycled '+
+        'gold does not originate from illegal sources and is in conformance with:'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin:0 0 12px 18px">'+
+        '&#8226; The current versions of the OECD Due Diligence Guidance for Responsible Supply Chains of Minerals from Conflict-Affected and High-Risk Areas, the Supplement on Gold and the LBMA&#39;s Responsible Gold Guidance.<br>'+
+        '&#8226; The EU, UK, UN, US and Swiss sanctions against legal entities and individuals.<br>'+
+        '&#8226; The Dodd-Frank Act&#39;s Section 1502 on conflict minerals requirements.'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:10px">Our gold originates from the following countries: <b>'+originCountry+'</b></div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:8px">Hua Seng Heng Singapore Pte Ltd confirms herein that the gold sent to '+refinery+' has not been:</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin:0 0 12px 18px">'+
+        '&#8226; Sourced, mined, refined, re-melted, or manufactured in Venezuela after November 1st, 2017.<br>'+
+        '&#8226; Sourced, mined, refined, re-melted, or manufactured in Africa.<br>'+
+        '&#8226; Sourced, mined, refined, re-melted, or manufactured in the Russian Federation after March 6th, 2022.<br>'+
+        '&#8226; Exported from the Russian Federation after August 3rd, 2022.'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:10px">'+
+        'Hua Seng Heng Singapore Pte Ltd confirms herein that, to the best of its knowledge, the gold sent to '+
+        refinery+' did not provide any direct or indirect benefits to entities or individuals related to the Russian '+
+        'Federation under Swiss or International Sanctions (EU, UK, UN, US).'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:10px">'+
+        'Related supporting documents will be provided upon '+refinery+'&#39;s request.'+
+      '</div>'+
+      '<div style="font-size:11px;line-height:1.9;margin-bottom:20px">'+
+        'Hua Seng Heng Singapore Pte Ltd also confirms to keep records of all customers&#39; data according to the local AML laws.'+
+      '</div>'+
+      '<div class="sign2"><div><div class="line">Name<br>Director<br>Hua Seng Heng Singapore Pte Ltd</div></div><div></div></div>'+
+    '</div></section>';
+    return soc1+soc2+soc3;
   }
 
-  function buildRefDocHTML(r,kind){
-    if(kind && kind.indexOf('custom_')===0){
-      var cid=kind.slice(7);
-      var cdoc=(r.customDocs||[]).find(function(d){return d.id===cid;});
-      return cdoc ? refCustomDoc(r,cdoc) : refInvoiceDoc(r);
-    }
+
+  function buildRefDocHTML(r, kind){
+    if(!r) return '<p>No record</p>';
+    var cdoc = (r.customDocs||[]).find(function(cd){ return 'custom_'+cd.id === kind; });
+    if(cdoc) return refCustomDoc(r, cdoc);
     switch(kind){
-      case 'invoice': return refInvoiceDoc(r);
-      case 'packing': return refPackingDoc(r);
-      case 'debit': return refDebitAdviceDoc(r);
-      case 'receipt': return refGoldReceiptDoc(r);
+      case 'invoice':      return refInvoiceDoc(r);
+      case 'packing':      return refPackingDoc(r);
+      case 'debit':        return refDebitAdviceDoc(r);
+      case 'receipt':      return refGoldReceiptDoc(r);
       case 'confirmation': return refConfirmationDoc(r);
-      case 'po': return refPurchaseOrderDoc(r);
-      case 'soc': return refSOCDoc(r);
-      default: return refInvoiceDoc(r);
+      case 'po':           return refPurchaseOrderDoc(r);
+      case 'soc':          return refSOCDoc(r);
+      default:             return refInvoiceDoc(r);
     }
   }
 
@@ -2864,13 +3167,23 @@ document.body.style.overflow = 'hidden';
     var p=document.getElementById('refdoc-mini-paper'); if(!p) return;
     var kind=window.__refPreviewKind||'invoice';
     try{
-      var doc='<!doctype html><html><head><meta charset="utf-8"><style>'+window.paperCSS()+
-        '#preview-zoom{transform:scale(.72);transform-origin:top left}'+
-        'html,body{margin:0;background:#e9e4d8;overflow:auto}'+
-        '</style></head><body><div id="preview-zoom">'+buildRefDocHTML(r,kind)+'</div></body></html>';
+      var css = typeof window.paperCSS==='function' ? window.paperCSS() :
+        'body{font-family:Arial,sans-serif;margin:0;background:#e9e4d8}'
+        +'section.paper,div.paper{background:#fff;padding:15mm 18mm;margin:10mm auto;max-width:190mm;box-sizing:border-box}'
+        +'table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:5px 8px;font-size:10.5px}'
+        +'.bizform{font-size:10.5px;line-height:1.7}.bizform-title{font-size:16px;font-weight:700;margin:12px 0}'
+        +'.kvrow{display:flex;gap:12px;margin:3px 0}.kvrow .k{min-width:160px;font-weight:600}'
+        +'.sign2{display:flex;gap:40px;margin-top:24px}.sign2 .line{border-top:1px solid #000;padding-top:6px;min-width:180px}'
+        +'.letter-body{font-size:10.5px;line-height:1.8}';
+      var doc='<!doctype html><html><head><meta charset="utf-8"><style>'
+        +css
+        +'#preview-zoom{transform:scale(.72);transform-origin:top left}'
+        +'html,body{margin:0;background:#e9e4d8;overflow:auto}'
+        +'</style></head><body><div id="preview-zoom">'+buildRefDocHTML(r,kind)+'</div></body></html>';
       p.srcdoc=doc;
     }catch(e){
-      p.srcdoc='<body style="color:#111;padding:16px;font-family:Arial,sans-serif">Preview unavailable. Please update fields and try again.</body>';
+      console.error('Preview error:', e);
+      p.srcdoc='<body style="color:#c00;padding:16px;font-family:Arial,sans-serif">Preview error: '+e.message+'</body>';
     }
   };
 
@@ -2903,14 +3216,21 @@ document.body.style.overflow = 'hidden';
     saveRefInlineFields();
     var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;}); if(!r) return;
     var kind=window.__refPreviewKind||'invoice';
-    var body=buildRefDocHTML(r,kind);
+    var body;
+    try { body=buildRefDocHTML(r,kind); } catch(e){
+      showToast('❌ Error building document: '+e.message);
+      console.error('buildRefDocHTML error:', e); return;
+    }
     var win=window.open('', '_blank', 'width=980,height=900');
-    if(!win){ showToast('Popup blocked. Please allow popups.'); return; }
-    var html='<!doctype html><html><head><meta charset="utf-8"><title>Refinery Docs - '+esc(r.rfs_ourref||r.id)+'</title><style>'+window.paperCSS()+'</style></head><body><main>'+body+'</main><script>window.onload=function(){setTimeout(function(){window.print();},250)}<\/script></body></html>';
+    if(!win){ showToast('Popup blocked — please allow popups for this page.'); return; }
+    var html='<!doctype html><html><head><meta charset="utf-8"><title>Refinery Docs - '+esc(r.rfs_ourref||r.id)+'</title><style>'+(typeof window.paperCSS==='function'?window.paperCSS():'body{font-family:Arial,sans-serif;background:#fff}section.paper,div.paper{background:#fff;padding:15mm 18mm;margin:0 auto;max-width:190mm;box-sizing:border-box;page-break-after:always}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:5px 8px;font-size:10.5px}.bizform{font-size:10.5px;line-height:1.7}.bizform-title{font-size:16px;font-weight:700;margin:12px 0}.kvrow{display:flex;gap:12px;margin:3px 0}.kvrow .k{min-width:160px;font-weight:600}.sign2{display:flex;gap:40px;margin-top:24px}.sign2 .line{border-top:1px solid #000;padding-top:6px;min-width:180px}.letter-body{font-size:10.5px;line-height:1.8}')+'</style></head><body><main>'+body+'</main><script>window.onload=function(){setTimeout(function(){window.print();},250)}<\/script></body></html>';
     win.document.write(html); win.document.close(); win.focus();
     logRefPrint(r, REF_DOC_TITLES[kind][0]);
-    window.openRefDetailModal(r.id);
-    window.renderRefDocsList();
+    // Delay post-print UI updates to avoid locking main window
+    setTimeout(function(){
+      if(typeof window.openRefDetailModal==='function') window.openRefDetailModal(r.id);
+      if(typeof window.renderRefDocsList==='function') window.renderRefDocsList();
+    }, 800);
   };
 
   // ---------- Hook into the existing Refinery form save ----------
@@ -3355,8 +3675,17 @@ function fieldHTML([label,id,val,pre]){
  let type=(val===&#x27;date&#x27;||val===&#x27;number&#x27;)?val:&#x27;text&#x27;, value=(val!==&#x27;date&#x27;&amp;&amp;val!==&#x27;number&#x27;&amp;&amp;val!==&#x27;textarea&#x27;)?val:&#x27;&#x27;;
  if(pre!==undefined &amp;&amp; pre!==null &amp;&amp; pre!==&#x27;&#x27;) value=pre;
  if(val===&#x27;textarea&#x27;) return `&lt;div class=&quot;field full&quot;&gt;&lt;label&gt;${label}&lt;/label&gt;&lt;textarea id=&quot;${id}&quot;&gt;${pre||&#x27;&#x27;}&lt;/textarea&gt;&lt;/div&gt;`;
- let on=id.match(/^(sp|ss|ks|kp)_/) ? `oninput=&quot;${FORMS[current].calc}();autoSave()&quot;` : &#x27;&#x27;;
- return `&lt;div class=&quot;field&quot;&gt;&lt;label&gt;${label}&lt;/label&gt;&lt;input id=&quot;${id}&quot; type=&quot;${type}&quot; value=&quot;${value}&quot; ${on}&gt;&lt;/div&gt;`;
+ let isComputed=[&#x27;sp_100oz&#x27;,&#x27;sp_100ozxag&#x27;,&#x27;sp_95oz&#x27;,&#x27;sp_95ozxag&#x27;,&#x27;sp_95usd&#x27;,&#x27;sp_95usdxag&#x27;,
+  &#x27;sp_finalcopy&#x27;,&#x27;sp_finalxagcopy&#x27;,&#x27;sp_baloz&#x27;,&#x27;sp_balozxag&#x27;,&#x27;sp_adjoz&#x27;,&#x27;sp_adjozxag&#x27;,
+  &#x27;sp_balusd&#x27;,&#x27;sp_discusd&#x27;,&#x27;ss_loco_del&#x27;,&#x27;ss_loco_rcv&#x27;,&#x27;ss_finalcopy&#x27;,&#x27;ss_finalxagcopy&#x27;,
+  &#x27;ss_baloz5&#x27;,&#x27;ss_bal_ozxag&#x27;,&#x27;ss_loco_bal&#x27;,&#x27;ss_loco_balxag&#x27;,
+  &#x27;kp_oz&#x27;,&#x27;kp_funds&#x27;,&#x27;kp_premusd&#x27;,&#x27;ks_oz&#x27;,&#x27;ks_funds&#x27;,&#x27;ks_premusd&#x27;].includes(id);
+let calcFn=FORMS[current].calc;
+let on=id.match(/^(sp|ss|ks|kp)_/) ? (isComputed
+  ? `oninput=&quot;this.dataset.userEdited=this.value.trim()!==&#x27;&#x27;?&#x27;1&#x27;:&#x27;0&#x27;;${calcFn}();autoSave()&quot; title=&quot;Auto-calculated — editable&quot; style=&quot;border-color:rgba(91,164,245,0.35)&quot;`
+  : `oninput=&quot;${calcFn}();autoSave()&quot;`)
+  : &#x27;&#x27;;
+return `&lt;div class=&quot;field&quot;&gt;&lt;label&gt;${label}&lt;/label&gt;&lt;input id=&quot;${id}&quot; type=&quot;${type}&quot; value=&quot;${value}&quot; ${on}&gt;&lt;/div&gt;`;
 }
 let current=&#x27;purchase&#x27;;
 function render(){
@@ -3378,7 +3707,18 @@ function render(){
  document.getElementById(&#x27;app&#x27;).innerHTML=body; runCalc();
 }
 function showPanel(type){current=type;document.querySelectorAll(&#x27;.tab&#x27;).forEach((b,i)=&gt;b.classList.toggle(&#x27;active&#x27;,Object.keys(FORMS)[i]===type));render();var _s=localStorage.getItem(&#x27;hshsg_&#x27;+type);if(_s){try{JSON.parse(_s).forEach(function(x){if(!x.Key||x.Key===&#x27;_type&#x27;||x.Key===&#x27;_saved&#x27;)return;var _e=document.getElementById(x.Key);if(!_e)return;if(_e.type===&#x27;checkbox&#x27;)_e.checked=String(x.Value).toUpperCase()===&#x27;TRUE&#x27;;else _e.value=x.Value||&#x27;&#x27;;});setTimeout(runCalc,50);}catch(_e){}}}
-function num(id){let e=document.getElementById(id);return e?parseFloat(e.value)||0:0} function val(id,v){let e=document.getElementById(id);if(e)e.value=isFinite(v)?Number(v).toFixed(3):&#x27;&#x27;} function usd(id,v){let e=document.getElementById(id);if(e)e.value=isFinite(v)?Number(v).toFixed(2):&#x27;&#x27;} function money(v){return isFinite(v)?&#x27;$&#x27;+Number(v).toLocaleString(&#x27;en-US&#x27;,{minimumFractionDigits:2,maximumFractionDigits:2}):&#x27;—&#x27;} function oz(v){return isFinite(v)?Number(v).toFixed(3)+&#x27; oz&#x27;:&#x27;—&#x27;}
+function num(id){let e=document.getElementById(id);return e?parseFloat(e.value)||0:0} function val(id,v){
+  let e=document.getElementById(id);
+  if(!e) return;
+  if(e.dataset.userEdited===&#x27;1&#x27; &amp;&amp; e.value.trim()!==&#x27;&#x27;) return;
+  e.value=isFinite(v)?Number(v).toFixed(3):&#x27;&#x27;;
+}
+function usd(id,v){
+  let e=document.getElementById(id);
+  if(!e) return;
+  if(e.dataset.userEdited===&#x27;1&#x27; &amp;&amp; e.value.trim()!==&#x27;&#x27;) return;
+  e.value=isFinite(v)?Number(v).toFixed(2):&#x27;&#x27;;
+} function money(v){return isFinite(v)?&#x27;$&#x27;+Number(v).toLocaleString(&#x27;en-US&#x27;,{minimumFractionDigits:2,maximumFractionDigits:2}):&#x27;—&#x27;} function oz(v){return isFinite(v)?Number(v).toFixed(3)+&#x27; oz&#x27;:&#x27;—&#x27;}
 function summary(rows,total){document.getElementById(&#x27;summaryRows&#x27;).innerHTML=rows.map(([a,b])=&gt;`&lt;div class=&quot;sumrow&quot;&gt;&lt;span&gt;${a}&lt;/span&gt;&lt;b&gt;${b}&lt;/b&gt;&lt;/div&gt;`).join(&#x27;&#x27;);document.getElementById(&#x27;summaryTotal&#x27;).textContent=total;if(typeof autoSave===&#x27;function&#x27;)autoSave();}
 function calcPurchase(){
  let kg=num(&#x27;sp_qty&#x27;),
@@ -8133,10 +8473,18 @@ document.addEventListener('DOMContentLoaded', function(){
     saveShippingModalLogistics(); saveShippingInlineFields();
     r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
     var docs = Array.isArray(kind) ? kind : (kind==='package' ? getDocOptionsForRecord(r).map(function(x){return x[0];}) : [kind]);
-    var html=buildPaperHTML(r, docs);
+    var html;
+    try { html=buildPaperHTML(r, docs); } catch(e){
+      if(typeof showToast==='function') showToast('❌ Error building document: '+e.message);
+      console.error('buildPaperHTML error:', e); return;
+    }
     var win=window.open('', '_blank', 'width=980,height=900');
-    if(!win){ if(typeof showToast==='function') showToast('Popup blocked. Please allow popups.'); return; }
-    win.document.open(); win.document.write(html); win.document.close(); win.focus();
+    if(!win){ if(typeof showToast==='function') showToast('Popup blocked — please allow popups for this page.'); return; }
+    try { win.document.open(); win.document.write(html); win.document.close(); win.focus(); } catch(e){
+      win.close();
+      if(typeof showToast==='function') showToast('❌ Print window error: '+e.message);
+      return;
+    }
     logPrint(r, docs.join(', '));
   }
 
@@ -8425,39 +8773,96 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function packingDocBuy(r){
     var kg=kgFromWeight(r.weight), grams=kg*1000;
-    var boxes=buildBarBoxes(kg, 25);
-    var pairs=[]; for(var i=0;i<boxes.length;i+=2) pairs.push([boxes[i], boxes[i+1]]);
+    var totalBars=Math.max(1, Math.round(kg||1));
+    var barsPerBox=25;
+    var totalBoxes=Math.ceil(totalBars/barsPerBox);
+    var MAX_BOXES_RENDER=50;
+
+    // Large shipment — summary table to prevent browser hang
+    if(totalBoxes > MAX_BOXES_RENDER){
+      var boxRows='';
+      for(var b=1;b<=totalBoxes;b++){
+        var startBar=(b-1)*barsPerBox+1;
+        var endBar=Math.min(b*barsPerBox, totalBars);
+        var boxWt=(endBar-startBar+1)*1000;
+        boxRows+='<tr>'+
+          '<td style="text-align:center">'+b+'</td>'+
+          '<td>'+startBar+' – '+endBar+'</td>'+
+          '<td>'+escapeHtml(r.brand||'')+'</td>'+
+          '<td style="text-align:right">'+(endBar-startBar+1)+'</td>'+
+          '<td style="text-align:right">'+boxWt.toLocaleString()+' g</td>'+
+          '<td></td>'+
+        '</tr>';
+      }
+      return '<section class="paper"><div class="bizform">'+
+        '<div class="bizform-title">PACKING LIST</div>'+
+        '<div style="font-size:10.5px;line-height:1.9;margin-bottom:10px">'+
+          'Order: <b>'+escapeHtml(r.orderNo||'')+'</b><br>'+
+          'Client: '+escapeHtml(r.party||'')+'<br>'+
+          'Route: '+escapeHtml(r.route||r.destination||'')+'<br>'+
+          'MAWB: '+escapeHtml(r.mawb||'—')+'<br>'+
+          'Total: <b>'+totalBars+' bars</b> in <b>'+totalBoxes+' boxes</b> · '+escapeHtml(r.brand||'')+'<br>'+
+          'Gross Weight: '+grams.toLocaleString()+' g ('+kg+' kg)'+
+        '</div>'+
+        '<table class="bizform-table">'+
+          '<thead><tr>'+
+            '<th>Box No.</th><th>Bar Range</th><th>Brand</th>'+
+            '<th>Qty (bars)</th><th>Net Weight</th><th>Seal No.</th>'+
+          '</tr></thead>'+
+          '<tbody>'+boxRows+'</tbody>'+
+          '<tfoot><tr>'+
+            '<td colspan="3" style="text-align:right;font-weight:700">Total</td>'+
+            '<td style="text-align:right;font-weight:700">'+totalBars+'</td>'+
+            '<td style="text-align:right;font-weight:700">'+grams.toLocaleString()+' g</td>'+
+            '<td></td>'+
+          '</tr></tfoot>'+
+        '</table>'+
+        '<div class="bizform-sign">Authorized By<br>Hua Seng Heng Singapore Pte. Ltd.</div>'+
+      '</div></section>';
+    }
+
+    // Normal render ≤ 50 boxes — full bar detail
+    var boxes=buildBarBoxes(kg, barsPerBox);
+    var pairs=[]; for(var i=0;i<boxes.length;i+=2) pairs.push([boxes[i], boxes[i+1]||null]);
     var boxesHTML=pairs.map(function(pair, pi){
       var b1=pair[0], b2=pair[1];
       var head='<tr><th colspan="4">Box No. '+(pi*2+1)+'</th>'+(b2?'<th colspan="4">Box No. '+(pi*2+2)+'</th>':'<th colspan="4"></th>')+'</tr>'+
-        '<tr><th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th><th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th></tr>';
+        '<tr><th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th>'+
+        '<th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th></tr>';
       var barNos=r.barNumbers||[];
       var rows='', maxLen=Math.max(b1.length, b2?b2.length:0);
       for(var k=0;k<maxLen;k++){
         var l=b1[k], rr=b2?b2[k]:null;
         rows+='<tr>'+
-          '<td style="text-align:center">'+(l!==undefined?l:'')+'</td><td>'+(l!==undefined?escapeHtml(r.brand):'')+'</td><td>'+(l!==undefined?escapeHtml(barNos[l-1]||''):'')+'</td><td style="text-align:right">'+(l!==undefined?'1,000':'')+'</td>'+
-          '<td style="text-align:center">'+(rr!==undefined&&rr!==null?rr:'')+'</td><td>'+(rr!==undefined&&rr!==null?escapeHtml(r.brand):'')+'</td><td>'+(rr!==undefined&&rr!==null?escapeHtml(barNos[rr-1]||''):'')+'</td><td style="text-align:right">'+(rr!==undefined&&rr!==null?'1,000':'')+'</td>'+
+          '<td style="text-align:center">'+(l!==undefined?l:'')+'</td>'+
+          '<td>'+(l!==undefined?escapeHtml(r.brand||''):'')+'</td>'+
+          '<td>'+(l!==undefined?escapeHtml(barNos[l-1]||''):'')+'</td>'+
+          '<td style="text-align:right">'+(l!==undefined?'1,000':'')+'</td>'+
+          '<td style="text-align:center">'+(rr!==null&&rr!==undefined?rr:'')+'</td>'+
+          '<td>'+(rr!==null&&rr!==undefined?escapeHtml(r.brand||''):'')+'</td>'+
+          '<td>'+(rr!==null&&rr!==undefined?escapeHtml(barNos[rr-1]||''):'')+'</td>'+
+          '<td style="text-align:right">'+(rr!==null&&rr!==undefined?'1,000':'')+'</td>'+
         '</tr>';
       }
-      var foot='<tr><td colspan="3" style="text-align:right">Total</td><td style="text-align:right">'+(b1.length*1000).toLocaleString()+'</td>'+
-        '<td colspan="3" style="text-align:right">'+(b2?'Total':'')+'</td><td style="text-align:right">'+(b2?(b2.length*1000).toLocaleString():'')+'</td></tr>';
-      return '<table class="bizform-table" style="margin-bottom:10px">'+head+rows+foot+'</table>';
-    }).join('');
+      return '<table class="box-table">'+head+rows+'</table>';
+    }).join('<div style="margin:10px 0"></div>');
+
     return '<section class="paper"><div class="bizform">'+
-    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r.orderDate)+'</span></div>'+
-    '<div class="bizform-toprow"><span><b>Reference Invoice No :</b> '+escapeHtml(r.invoiceNo)+'</span></div>'+
-    '<div class="bizform-title">PACKING LIST</div>'+
-    bizPartyBlock(r)+
-    '<div style="font-size:10.5px;line-height:1.8;margin:14px 0">'+
-      'Quantity :&nbsp; '+grams.toLocaleString()+' Grams<br>'+
-      'Gold 99.99 :&nbsp; '+kg+' Kilos'+
-    '</div>'+
-    '<div style="font-weight:700;color:#00456F;margin-bottom:6px">Bar List</div>'+
-    boxesHTML+
-    '<div class="bizform-sign">Authorized By<br>Hua Seng Heng Singapore Pte. Ltd.</div>'+
+      '<div class="bizform-title">PACKING LIST</div>'+
+      '<div style="font-size:10.5px;line-height:1.9;margin-bottom:10px">'+
+        'Order: <b>'+escapeHtml(r.orderNo||'')+'</b><br>'+
+        'Client: '+escapeHtml(r.party||'')+'<br>'+
+        'Route: '+escapeHtml(r.route||r.destination||'')+'<br>'+
+        'MAWB: '+escapeHtml(r.mawb||'—')+'<br>'+
+        'Total: <b>'+totalBars+' bars</b> in <b>'+totalBoxes+' boxes</b> · '+escapeHtml(r.brand||'')+'<br>'+
+        'Gross Weight: '+grams.toLocaleString()+' g ('+kg+' kg)'+
+      '</div>'+
+      '<div style="font-weight:700;color:#00456F;margin-bottom:6px">Bar List</div>'+
+      boxesHTML+
+      '<div class="bizform-sign">Authorized By<br>Hua Seng Heng Singapore Pte. Ltd.</div>'+
     '</div></section>';
   }
+
   function proformaDoc(r){
     var kg=kgFromWeight(r.weight), oz=ozFromWeight(r.weight);
     var priceOz=numFromText(r.price), premOz=premPerOzFromText(r.premium);
@@ -8548,7 +8953,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function confirmationDoc(r){
     var kg=kgFromWeight(r.weight);
-    var priceKg=numFromText(r.price)*32.148, premKg=premPerOzFromText(r.premium)*32.148;
+    var priceKg=parseFloat(r.rfs_pricekg||0), premKg=0;
     var name=cleanPartyName(r.party);
     return '<section class="paper"><div class="letter-body">'+
     '<div style="text-align:center;font-weight:700;font-size:16px;color:#00456F;margin-bottom:18px">PURCHASE CONFIRMATION LETTER</div>'+
@@ -8960,106 +9365,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
-<script id="ref-no-validation">
-(function(){
-  var SHIP_KEY = 'goldvault_shipping_docs_list_v2';
-  var LAST_KEY = 'goldvault_last_physical_order';
 
-  /* ── collect all existing refNos from localStorage ── */
-  function getAllRefNos(){
-    var refs = {};
-    /* from shipping list */
-    try {
-      var list = JSON.parse(localStorage.getItem(SHIP_KEY)||'[]')||[];
-      list.forEach(function(r){
-        if(r.refNo && r.refNo.trim()) refs[r.refNo.trim().toLowerCase()] = r.orderNo || r.id || '?';
-      });
-    } catch(e){}
-    /* from last order */
-    try {
-      var last = JSON.parse(localStorage.getItem(LAST_KEY)||'null');
-      if(last && last.refNo && last.refNo.trim()) refs[last.refNo.trim().toLowerCase()] = last.orderNo || '?';
-    } catch(e){}
-    return refs;
-  }
-
-  /* returns existing orderNo if duplicate, else null */
-  window.checkRefDuplicate = function(val){
-    if(!val || !val.trim()) return null;
-    var refs = getAllRefNos();
-    return refs[val.trim().toLowerCase()] || null;
-  };
-
-  /* ── real-time validation on input ── */
-  window.validateRefNo = function(val){
-    var inp    = document.getElementById('ph-ref-no');
-    var status = document.getElementById('ph-ref-status');
-    var hint   = document.getElementById('ph-ref-hint');
-    if(!inp || !status) return;
-
-    val = (val||'').trim();
-
-    if(!val){
-      inp.style.borderColor = 'rgba(255,107,107,0.8)';
-      status.style.display  = 'inline';
-      status.style.color    = '#FF6B6B';
-      status.textContent    = '⚠ จำเป็นต้องกรอก';
-      if(hint){ hint.style.color='#FF6B6B'; }
-      updateConfirmButtons(false);
-      return;
-    }
-
-    var dup = window.checkRefDuplicate(val);
-    if(dup){
-      inp.style.borderColor = 'rgba(255,107,107,0.8)';
-      status.style.display  = 'inline';
-      status.style.color    = '#FF6B6B';
-      status.textContent    = '✗ ซ้ำกับ ' + dup;
-      if(hint){ hint.style.color='#FF6B6B'; hint.textContent='Ref No. นี้ถูกใช้ไปแล้ว กรุณาใช้เลขอื่น'; }
-      updateConfirmButtons(false);
-      return;
-    }
-
-    /* all good */
-    inp.style.borderColor = 'rgba(116,198,157,0.8)';
-    status.style.display  = 'inline';
-    status.style.color    = '#74C69D';
-    status.textContent    = '✓ พร้อมใช้งาน';
-    if(hint){ hint.style.color='#5C5850'; hint.textContent='จำเป็นต้องกรอก · ต้องไม่ซ้ำกับ order ที่มีอยู่แล้ว'; }
-    updateConfirmButtons(true);
-  };
-
-  /* ── enable/disable BUY & SELL confirm buttons ── */
-  function updateConfirmButtons(ok){
-    ['confirmTrade(\'buy\',\'physical\')','confirmTrade(\'sell\',\'physical\')'].forEach(function(oc){
-      document.querySelectorAll('button[onclick="'+oc+'"]').forEach(function(btn){
-        btn.disabled     = !ok;
-        btn.style.opacity= ok ? '1' : '0.38';
-        btn.style.cursor = ok ? 'pointer' : 'not-allowed';
-      });
-    });
-  }
-
-  /* ── reset field style after successful confirm ── */
-  window.resetRefNoField = function(){
-    var inp    = document.getElementById('ph-ref-no');
-    var status = document.getElementById('ph-ref-status');
-    var hint   = document.getElementById('ph-ref-hint');
-    if(inp){ inp.value=''; inp.style.borderColor='rgba(255,255,255,0.1)'; }
-    if(status){ status.style.display='none'; status.textContent=''; }
-    if(hint){ hint.style.color='#5C5850'; hint.textContent='จำเป็นต้องกรอก · ต้องไม่ซ้ำกับ order ที่มีอยู่แล้ว'; }
-    updateConfirmButtons(false);
-  };
-
-  /* ── init: disable confirm buttons until user types ── */
-  document.addEventListener('DOMContentLoaded', function(){
-    updateConfirmButtons(false);
-    /* if field already has value (memo restore), validate it */
-    var inp = document.getElementById('ph-ref-no');
-    if(inp && inp.value.trim()) window.validateRefNo(inp.value);
-  });
-})();
-</script>
 <!-- ══ Brand Manager Modal ══ -->
 <div id="brand-manager-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center">
   <div style="background:#1A1A1A;border:.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:24px 22px;width:560px;max-width:94vw;box-shadow:0 24px 60px rgba(0,0,0,0.6)">
@@ -10451,5 +10757,22 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
 })();
 </script>
 
+
+<script id="escape-key-modal-handler">
+(function(){
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    // Close shipping detail modal
+    var sm = document.getElementById('shipping-detail-modal');
+    if(sm && sm.classList.contains('open')){ sm.classList.remove('open'); return; }
+    // Close refinery detail modal
+    var rm = document.getElementById('refinery-detail-modal');
+    if(rm && rm.classList.contains('open')){ rm.classList.remove('open'); return; }
+    // Close any modal with class open
+    var anyModal = document.querySelector('.modal-overlay.open, [id$="-modal"].open');
+    if(anyModal) anyModal.classList.remove('open');
+  });
+})();
+</script>
 </body>
 </html>
