@@ -2386,6 +2386,12 @@ function exportReportPDF(){
       </div>
     </div>
 
+    <!-- Multi-brand staged lines -->
+    <div style="margin-bottom:14px">
+      <button type="button" onclick="qoAddBrandLine()" style="padding:7px 12px;border-radius:7px;background:transparent;border:1px dashed rgba(184,134,11,0.5);color:#B8860B;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">+ Add Brand Line (เพิ่ม Brand อื่นในออเดอร์เดียวกัน)</button>
+      <div id="qo-staged-lines" style="margin-top:8px;display:none"></div>
+    </div>
+
     <!-- Row 3: Note only -->
     <div style="margin-bottom:18px">
       <div style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Note</div>
@@ -4320,6 +4326,35 @@ function loadSettingsToForm(){
     </div>
   </div>
 
+  <div id="ship-email-modal" class="modal-overlay" style="z-index:100001" onclick="if(event.target===this)closeShipEmailModal()">
+    <div class="modal" style="width:600px">
+      <button class="modal-close" onclick="closeShipEmailModal()">×</button>
+      <div class="modal-title">Send Documents by Email</div>
+      <div style="background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.4);border-radius:8px;padding:10px 14px;margin:12px 0 16px;font-size:12.5px;color:#F0EDE6;line-height:1.6">
+        ⚠ <b>There is no "Send" button here on purpose</b> — this app can't send email itself. Click <b>Copy All</b> below, then paste into your own email app (Outlook / Zoho Mail / Gmail), attach the document PDF, and click Send <b>there</b>.
+      </div>
+      <div style="font-size:11px;color:#9A9488;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Documents to include</div>
+      <div id="ship-email-doc-checks" style="display:flex;flex-direction:column;gap:2px;margin-bottom:16px;border:.5px solid rgba(255,255,255,0.08);border-radius:8px;overflow:hidden"></div>
+      <div class="form-group"><label class="form-label">To</label><input id="ship-email-to" style="font-family:'Inter',sans-serif"></div>
+      <div class="form-group"><label class="form-label">Subject</label><input id="ship-email-subject" style="font-family:'Inter',sans-serif"></div>
+      <div class="form-group"><label class="form-label">Body</label><textarea id="ship-email-body" rows="7" style="width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;resize:vertical"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-gold" style="flex:2" onclick="copyShipEmailField('all')">📋 Copy All — then paste &amp; send in your email app</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="copyShipEmailField('to')">Copy To</button>
+        <button class="btn btn-sm" style="flex:1" onclick="copyShipEmailField('subject')">Copy Subject</button>
+        <button class="btn btn-sm" style="flex:1" onclick="copyShipEmailField('body')">Copy Body</button>
+      </div>
+      <div style="font-size:11px;color:#9A9488;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px">Or open directly in webmail (one click from Send)</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="openShipEmailWeb('gmail')">Open in Gmail ↗</button>
+        <button class="btn btn-sm" style="flex:1" onclick="openShipEmailWeb('outlook')">Open in Outlook Web ↗</button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#5C5850">Either way, you still need to attach the printed document PDF(s) yourself — no browser can auto-attach a local file for security reasons.</div>
+    </div>
+  </div>
+
   <div id="shipping-detail-modal" class="modal-overlay" onclick="if(event.target===this)closeShippingDetailModal()">
     <div class="modal ship-easy-modal" style="width:1280px;max-width:98vw;padding:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:.5px solid rgba(255,255,255,.08);background:#151515;position:sticky;top:0;z-index:5">
@@ -4455,6 +4490,35 @@ function loadSettingsToForm(){
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div id="ref-email-modal" class="modal-overlay" style="z-index:100001" onclick="if(event.target===this)closeRefEmailModal()">
+    <div class="modal" style="width:600px">
+      <button class="modal-close" onclick="closeRefEmailModal()">×</button>
+      <div class="modal-title">Send Documents by Email</div>
+      <div style="background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.4);border-radius:8px;padding:10px 14px;margin:12px 0 16px;font-size:12.5px;color:#F0EDE6;line-height:1.6">
+        ⚠ <b>There is no "Send" button here on purpose</b> — this app can't send email itself. Copy or open in webmail below, attach the document PDF, and click Send there.
+      </div>
+      <div style="font-size:11px;color:#9A9488;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Documents to include</div>
+      <div id="ref-email-doc-checks" style="display:flex;flex-direction:column;gap:2px;margin-bottom:16px;border:.5px solid rgba(255,255,255,0.08);border-radius:8px;overflow:hidden"></div>
+      <div class="form-group"><label class="form-label">To</label><input id="ref-email-to" style="font-family:'Inter',sans-serif"></div>
+      <div class="form-group"><label class="form-label">Subject</label><input id="ref-email-subject" style="font-family:'Inter',sans-serif"></div>
+      <div class="form-group"><label class="form-label">Body</label><textarea id="ref-email-body" rows="7" style="width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;resize:vertical"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-gold" style="flex:2" onclick="copyRefEmailField('all')">📋 Copy All — then paste &amp; send in your email app</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="copyRefEmailField('to')">Copy To</button>
+        <button class="btn btn-sm" style="flex:1" onclick="copyRefEmailField('subject')">Copy Subject</button>
+        <button class="btn btn-sm" style="flex:1" onclick="copyRefEmailField('body')">Copy Body</button>
+      </div>
+      <div style="font-size:11px;color:#9A9488;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px">Or open directly in webmail (one click from Send)</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" style="flex:1" onclick="openRefEmailWeb('gmail')">Open in Gmail ↗</button>
+        <button class="btn btn-sm" style="flex:1" onclick="openRefEmailWeb('outlook')">Open in Outlook Web ↗</button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#5C5850">Either way, you still need to attach the printed document PDF(s) yourself — no browser can auto-attach a local file for security reasons.</div>
     </div>
   </div>
 
@@ -5097,6 +5161,7 @@ function loadSettingsToForm(){
       '<div class="ship-doc-picker-actions ship-filter-actions">'+
         '<button class="btn btn-sm" type="button" onclick="refreshRefInlinePreview()">Save / Update Preview</button>'+
         '<button class="btn btn-sm btn-gold" type="button" onclick="printSelectedRefDoc()">Print This Document</button>'+
+        '<button class="btn btn-sm" type="button" onclick="openRefEmailModal()">✉ Send Email</button>'+
       '</div></div>'+
       '<div class="ship-doc-help" style="margin-top:14px">How to use: pick a document from the Filter → fill in the fields for that document → check the real Preview → click Print This Document</div>'+
       '<div id="ref-fields-anchor" class="section-label ship-form-section-title" style="margin-top:4px">Fill details before print</div>'+
@@ -5110,6 +5175,107 @@ function loadSettingsToForm(){
     window.__refPreviewKind=kind;
     var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;});
     if(r) renderRefPrintButtons(r);
+  };
+
+  /* ── Send Email (Refinery docs) — same copy/webmail approach as the main Shipping Docs system ── */
+  function refDocTitle(k, r){
+    if(REF_DOC_TITLES[k]) return REF_DOC_TITLES[k][0];
+    if(k.indexOf('custom_')===0 && r){
+      var cd=(r.customDocs||[]).find(function(c){ return 'custom_'+c.id===k; });
+      if(cd) return cd.title;
+    }
+    return k;
+  }
+  function refEmailAllDocKinds(r){
+    var keys=Object.keys(REF_DOC_TITLES);
+    (r.customDocs||[]).forEach(function(cd){ keys.push('custom_'+cd.id); });
+    return keys;
+  }
+  var refEmailCheckedKinds = [];
+  window.buildRefEmailDraftMulti = function(r, kinds){
+    var titles = kinds.map(function(k){ return refDocTitle(k, r); });
+    var party = typeof findPartyByName==='function' ? findPartyByName(r.rfs_customer) : null;
+    var toEmail = (party && party.email) || '';
+    var customerName = r.rfs_customer || (party && party.name) || 'Customer';
+    var ref = r.rfs_ourref || r.id || '';
+    var docList = titles.length>1 ? titles.map(function(t){ return '- '+t; }).join('\n') : titles[0];
+    var subjectDocPart = titles.length>1 ? (titles.length+' documents') : titles[0];
+    var subject = 'Gold Star Trading — '+subjectDocPart+' — '+ref;
+    var intro = titles.length>1
+      ? 'Please find attached the following documents for the scrap gold shipment (ref. '+ref+'):\n\n'+docList
+      : 'Please find attached the '+titles[0]+' for the scrap gold shipment (ref. '+ref+').';
+    var body = 'Dear '+customerName+',\n\n'+intro+'\n\n'
+      + 'Kind regards,\n'+getCurrentUserName()+'\nGold Star Trading Pte. Ltd.';
+    return { toEmail: toEmail, subject: subject, body: body };
+  };
+  function updateRefEmailDraft(){
+    var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;});
+    if(!r) return;
+    var checks = document.querySelectorAll('#ref-email-doc-checks input[type=checkbox]:checked');
+    refEmailCheckedKinds = Array.prototype.map.call(checks, function(c){ return c.value; });
+    var setV=function(id,v){ var el=document.getElementById(id); if(el) el.value=v; };
+    if(!refEmailCheckedKinds.length){
+      setV('ref-email-to',''); setV('ref-email-subject',''); setV('ref-email-body','(Select at least one document above)');
+      return;
+    }
+    var d = window.buildRefEmailDraftMulti(r, refEmailCheckedKinds);
+    setV('ref-email-to', d.toEmail);
+    setV('ref-email-subject', d.subject);
+    setV('ref-email-body', d.body);
+    if(!d.toEmail && typeof showToast==='function') showToast('⚠ No email on file for this customer in Master Data — fill in "To" manually');
+  }
+  window.updateRefEmailDraftV = updateRefEmailDraft;
+  window.openRefEmailModal = function(){
+    var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;});
+    if(!r){ if(typeof showToast==='function') showToast('Please open a shipment first'); return; }
+    saveRefInlineFields();
+    var currentKind = window.__refPreviewKind || 'invoice';
+    var box=document.getElementById('ref-email-doc-checks');
+    if(box){
+      box.innerHTML = refEmailAllDocKinds(r).map(function(k,i){
+        var checked=(k===currentKind)?'checked':'';
+        var borderTop = i>0 ? 'border-top:.5px solid rgba(255,255,255,0.06);' : '';
+        return '<label style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EDE6;cursor:pointer;padding:9px 12px;'+borderTop+'background:#1C1C1C" onmouseover="this.style.background=\'#232323\'" onmouseout="this.style.background=\'#1C1C1C\'">'
+          +'<input type="checkbox" value="'+k+'" '+checked+' onchange="updateRefEmailDraftV()" style="width:16px;height:16px;accent-color:#B8860B;flex-shrink:0">'
+          +'<span>'+esc(refDocTitle(k,r))+'</span></label>';
+      }).join('');
+    }
+    updateRefEmailDraft();
+    var modal=document.getElementById('ref-email-modal');
+    if(modal) modal.classList.add('open');
+  };
+  window.closeRefEmailModal = function(){
+    var modal=document.getElementById('ref-email-modal');
+    if(modal) modal.classList.remove('open');
+  };
+  window.copyRefEmailField = function(which){
+    var to=document.getElementById('ref-email-to').value;
+    var subject=document.getElementById('ref-email-subject').value;
+    var body=document.getElementById('ref-email-body').value;
+    var text = which==='to'?to : which==='subject'?subject : which==='body'?body :
+      'To: '+to+'\nSubject: '+subject+'\n\n'+body;
+    var done=function(){
+      if(typeof showToast==='function') showToast('📋 Copied to clipboard');
+      var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;});
+      if(r && typeof gvAudit!=='undefined'){
+        gvAudit.log('REF_DOC_EMAIL_COPIED', refEmailCheckedKinds.map(function(k){return refDocTitle(k,r);}).join(', ')+' | Ref: '+(r.rfs_ourref||r.id||'—')+' | To: '+(to||'(none on file)'));
+      }
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){
+        if(typeof showToast==='function') showToast('Could not copy automatically — please select and copy the text manually');
+      });
+    } else if(typeof showToast==='function'){ showToast('Clipboard not available — please select and copy the text manually'); }
+  };
+  window.openRefEmailWeb = function(provider){
+    var to=document.getElementById('ref-email-to').value;
+    var subject=document.getElementById('ref-email-subject').value;
+    var body=document.getElementById('ref-email-body').value;
+    var url = provider==='gmail'
+      ? 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body)
+      : 'https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(to)+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    window.open(url, '_blank');
+    if(typeof showToast==='function') showToast('Opened in a new tab — attach the PDF, then click Send there');
   };
 
   function renderRefInlineFields(r){
@@ -10786,6 +10952,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '<div class="ship-doc-picker-actions ship-filter-actions">'+
         '<button class="btn btn-sm" type="button" onclick="refreshShippingInlinePreview()">Save / Update Preview</button>'+
         '<button class="btn btn-sm btn-gold" type="button" onclick="printSelectedShippingDocs()">Print This Document</button>'+
+        '<button class="btn btn-sm" type="button" onclick="openShipEmailModal()">✉ Send Email</button>'+
       '</div>'+
     '</div>'+
     '<div class="ship-doc-help">How to use: pick a document from the Filter → fill in the fields for that document → check the real Preview → click Print This Document</div>'+
@@ -10915,7 +11082,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // making KJ retype data the system already has. Fields with no real source
   // anywhere (address, HS code, bank/SSI, etc.) are left blank as before.
   function smartFieldDefault(key, r){
-    if(key==='customerName') return r.party && r.party!=='—' ? r.party : '';
+    if(key==='customerName') return r.party && r.party!=='—' ? cleanPartyName(r.party) : '';
     if(key==='authorizedPerson' || key==='signatoryName') return getCurrentUserName();
     var bankFields = {customerAddress:'address', bankName:'bankName', bankIntermediary:'bankIntermediary', bankIntermediarySwift:'bankIntermediarySwift', bankBeneficiary:'bankBeneficiary', bankBeneficiarySwift:'bankBeneficiarySwift', bankAccountNo:'bankAccountNo'};
     if(bankFields[key] && typeof findPartyByName==='function'){
@@ -10987,6 +11154,151 @@ document.addEventListener('DOMContentLoaded', function(){
     r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
     if(!validateDocsBeforePrint(r,kinds)) return;
     doPrintShippingDoc(kinds.length===1?kinds[0]:kinds);
+  };
+
+  /* ── Send Email — opens the staff member's own email client (mailto:), pre-filled from Master Data ──
+     NOTE: mailto: cannot attach files. This drafts the email; staff must attach the printed/saved
+     document PDF themselves before hitting Send in their email app. There is no backend in this
+     app to send email automatically or silently. ── */
+  function findPartyIdInString(s){
+    var m = String(s||'').match(/^([A-Z]{2,4}-\d+)\s*—/);
+    return m ? m[1] : null;
+  }
+  window.buildShippingEmailMailto = function(r, kind){
+    var docTitle = DOC_TITLES[kind]||'Document';
+    var pid = findPartyIdInString(r.party);
+    var party = pid && typeof findPartyById==='function' ? findPartyById(pid) : null;
+    var toEmail = (party && party.email) || '';
+    var customerName = exv(r,'customerName', party ? party.name : cleanPartyName(r.party));
+    var subject = 'Gold Star Trading — '+docTitle+' — '+(r.invoiceNo||r.orderNo||'');
+    var body = 'Dear '+customerName+',\n\n'
+      + 'Please find attached the '+docTitle+' for your recent order ('+(r.orderNo||'—')+', ref. '+(r.invoiceNo||'—')+').\n\n'
+      + 'Kind regards,\n'
+      + getCurrentUserName()+'\n'
+      + 'Gold Star Trading Pte. Ltd.';
+    return {
+      toEmail: toEmail,
+      subject: subject,
+      body: body,
+      mailto: 'mailto:'+encodeURIComponent(toEmail)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body)
+    };
+  };
+  /* ── Build a draft covering one OR SEVERAL selected document types at once ── */
+  window.buildShippingEmailDraftMulti = function(r, kinds){
+    var titles = kinds.map(function(k){ return DOC_TITLES[k]||k; });
+    var pid = findPartyIdInString(r.party);
+    var party = pid && typeof findPartyById==='function' ? findPartyById(pid) : null;
+    var toEmail = (party && party.email) || '';
+    var customerName = exv(r,'customerName', party ? party.name : cleanPartyName(r.party));
+    var docList = titles.length>1
+      ? titles.map(function(t){ return '- '+t; }).join('\n')
+      : titles[0];
+    var subjectDocPart = titles.length>1 ? (titles.length+' documents') : titles[0];
+    var subject = 'Gold Star Trading — '+subjectDocPart+' — '+(r.invoiceNo||r.orderNo||'');
+    var intro = titles.length>1
+      ? 'Please find attached the following documents for your recent order ('+(r.orderNo||'—')+', ref. '+(r.invoiceNo||'—')+'):\n\n'+docList
+      : 'Please find attached the '+titles[0]+' for your recent order ('+(r.orderNo||'—')+', ref. '+(r.invoiceNo||'—')+').';
+    var body = 'Dear '+customerName+',\n\n'+intro+'\n\n'
+      + 'Kind regards,\n'
+      + getCurrentUserName()+'\n'
+      + 'Gold Star Trading Pte. Ltd.';
+    return { toEmail: toEmail, subject: subject, body: body };
+  };
+
+  var shipEmailCheckedKinds = [];
+  function shipEmailAllDocKinds(){
+    // Preserve the same order as the print dropdown
+    return Object.keys(DOC_TITLES).filter(function(k){ return k!=='invoice'; });
+  }
+  function updateShipEmailDraft(){
+    var r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
+    if(!r) return;
+    var checks = document.querySelectorAll('#ship-email-doc-checks input[type=checkbox]:checked');
+    shipEmailCheckedKinds = Array.prototype.map.call(checks, function(c){ return c.value; });
+    if(!shipEmailCheckedKinds.length){
+      setValSafe('ship-email-to',''); setValSafe('ship-email-subject',''); setValSafe('ship-email-body','(Select at least one document above)');
+      return;
+    }
+    var d = window.buildShippingEmailDraftMulti(r, shipEmailCheckedKinds);
+    setValSafe('ship-email-to', d.toEmail);
+    setValSafe('ship-email-subject', d.subject);
+    setValSafe('ship-email-body', d.body);
+    if(!d.toEmail && typeof showToast==='function') showToast('⚠ No email on file for this customer in Master Data — fill in "To" manually');
+  }
+  function setValSafe(id,v){ var el=document.getElementById(id); if(el) el.value=v; }
+
+  window.openShipEmailModal = function(){
+    var r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
+    if(!r){ if(typeof showToast==='function') showToast('Please open a shipping document first'); return; }
+    saveShippingModalLogistics(); saveShippingInlineFields();
+    var currentKind = window.__shipPreviewKind || (String(r.type||'').toUpperCase()==='BUY' ? 'invoice1' : 'invoice');
+    var box = document.getElementById('ship-email-doc-checks');
+    if(box){
+      box.innerHTML = shipEmailAllDocKinds().map(function(k, i){
+        var checked = (k===currentKind) ? 'checked' : '';
+        var borderTop = i>0 ? 'border-top:.5px solid rgba(255,255,255,0.06);' : '';
+        return '<label style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EDE6;cursor:pointer;padding:9px 12px;'+borderTop+'background:#1C1C1C" onmouseover="this.style.background=\'#232323\'" onmouseout="this.style.background=\'#1C1C1C\'">'
+          +'<input type="checkbox" value="'+k+'" '+checked+' onchange="updateShipEmailDraftV()" style="width:16px;height:16px;accent-color:#B8860B;flex-shrink:0">'
+          +'<span>'+escapeHtml(DOC_TITLES[k]||k)+'</span></label>';
+      }).join('');
+    }
+    updateShipEmailDraft();
+    var modal=document.getElementById('ship-email-modal');
+    if(modal) modal.classList.add('open');
+  };
+  window.updateShipEmailDraftV = updateShipEmailDraft;
+  window.closeShipEmailModal = function(){
+    var modal=document.getElementById('ship-email-modal');
+    if(modal) modal.classList.remove('open');
+  };
+  window.copyShipEmailField = function(which){
+    var to=document.getElementById('ship-email-to').value;
+    var subject=document.getElementById('ship-email-subject').value;
+    var body=document.getElementById('ship-email-body').value;
+    var text = which==='to'?to : which==='subject'?subject : which==='body'?body :
+      'To: '+to+'\nSubject: '+subject+'\n\n'+body;
+    var done=function(){
+      if(typeof showToast==='function') showToast('📋 Copied to clipboard');
+      var r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
+      if(r && typeof gvAudit!=='undefined'){
+        gvAudit.log('SHIPPING_DOC_EMAIL_COPIED', shipEmailCheckedKinds.map(function(k){return DOC_TITLES[k]||k;}).join(', ')+' | Order: '+(r.orderNo||'—')+' | To: '+(to||'(none on file)'));
+      }
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){
+        if(typeof showToast==='function') showToast('Could not copy automatically — please select and copy the text manually');
+      });
+    } else {
+      if(typeof showToast==='function') showToast('Clipboard not available — please select and copy the text manually');
+    }
+  };
+
+  window.openShipEmailWeb = function(provider){
+    var to=document.getElementById('ship-email-to').value;
+    var subject=document.getElementById('ship-email-subject').value;
+    var body=document.getElementById('ship-email-body').value;
+    var url;
+    if(provider==='gmail'){
+      url = 'https://mail.google.com/mail/?view=cm&fs=1'
+        + '&to='+encodeURIComponent(to)
+        + '&su='+encodeURIComponent(subject)
+        + '&body='+encodeURIComponent(body);
+    } else {
+      url = 'https://outlook.office.com/mail/deeplink/compose'
+        + '?to='+encodeURIComponent(to)
+        + '&subject='+encodeURIComponent(subject)
+        + '&body='+encodeURIComponent(body);
+    }
+    window.open(url, '_blank');
+    if(typeof showToast==='function') showToast('Opened in a new tab — attach the PDF, then click Send there');
+    var r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
+    if(r && typeof gvAudit!=='undefined'){
+      gvAudit.log('SHIPPING_DOC_EMAIL_WEB_OPENED', (provider==='gmail'?'Gmail':'Outlook Web')+' | Order: '+(r.orderNo||'—')+' | To: '+(to||'(none)'));
+    }
+  };
+  window.emailSelectedShippingDoc = function(){
+    // Kept for backward compatibility — now just opens the multi-document modal
+    window.openShipEmailModal();
   };
 
   function openDocFieldsModal(kind, r){
@@ -11339,6 +11651,18 @@ document.addEventListener('DOMContentLoaded', function(){
     var barsPerBox=25;
     var totalBoxes=Math.ceil(totalBars/barsPerBox);
     var MAX_BOXES_RENDER=50;
+    var purity=exv(r,'purity','99.99%');
+    var headerBlock =
+      '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r.orderDate)+'</span></div>'+
+      '<div class="bizform-toprow"><span><b>Reference Invoice No :</b> '+escapeHtml(r.invoiceNo)+'</span></div>'+
+      '<div class="bizform-title">PACKING LIST</div>'+
+      bizPartyBlock(r)+
+      '<div style="font-size:11px;line-height:2;margin:10px 0">'+
+        '<div class="kvrow"><span class="k">Percentage</span>: '+escapeHtml(purity)+'</div>'+
+        '<div class="kvrow"><span class="k">Box No.</span>: 1 – '+totalBoxes+'</div>'+
+        '<div class="kvrow"><span class="k">Quantity</span>: '+grams.toLocaleString()+' Grams</div>'+
+        '<div class="kvrow"><span class="k">Gold '+escapeHtml(String(purity).replace('%',''))+'</span>: '+kg+' Kilos</div>'+
+      '</div>';
 
     // Large shipment — summary table to prevent browser hang
     if(totalBoxes > MAX_BOXES_RENDER){
@@ -11357,15 +11681,8 @@ document.addEventListener('DOMContentLoaded', function(){
         '</tr>';
       }
       return '<section class="paper"><div class="bizform">'+
-        '<div class="bizform-title">PACKING LIST</div>'+
-        '<div style="font-size:10.5px;line-height:1.9;margin-bottom:10px">'+
-          'Order: <b>'+escapeHtml(r.orderNo||'')+'</b><br>'+
-          'Client: '+escapeHtml(r.party||'')+'<br>'+
-          'Route: '+escapeHtml(r.route||r.destination||'')+'<br>'+
-          'MAWB: '+escapeHtml(r.mawb||'—')+'<br>'+
-          'Total: <b>'+totalBars+' bars</b> in <b>'+totalBoxes+' boxes</b> · '+escapeHtml(r.brand||'')+'<br>'+
-          'Gross Weight: '+grams.toLocaleString()+' g ('+kg+' kg)'+
-        '</div>'+
+        headerBlock+
+        '<div style="font-weight:700;color:#00456F;margin-bottom:6px">Bar List</div>'+
         '<table class="bizform-table">'+
           '<thead><tr>'+
             '<th>Box No.</th><th>Bar Range</th><th>Brand</th>'+
@@ -11406,19 +11723,15 @@ document.addEventListener('DOMContentLoaded', function(){
           '<td style="text-align:right">'+(rr!==null&&rr!==undefined?'1,000':'')+'</td>'+
         '</tr>';
       }
-      return '<table class="box-table">'+head+rows+'</table>';
+      var b1Total=b1.length*1000, b2Total=b2?b2.length*1000:0;
+      var totalRow='<tr><td colspan="2" style="text-align:right;font-weight:700">Total</td><td></td><td style="text-align:right;font-weight:700">'+b1Total.toLocaleString()+'</td>'+
+        (b2?'<td colspan="2" style="text-align:right;font-weight:700">Total</td><td></td><td style="text-align:right;font-weight:700">'+b2Total.toLocaleString()+'</td>':'<td></td><td></td><td></td>')+
+        '</tr>';
+      return '<table class="box-table">'+head+rows+totalRow+'</table>';
     }).join('<div style="margin:10px 0"></div>');
 
     return '<section class="paper"><div class="bizform">'+
-      '<div class="bizform-title">PACKING LIST</div>'+
-      '<div style="font-size:10.5px;line-height:1.9;margin-bottom:10px">'+
-        'Order: <b>'+escapeHtml(r.orderNo||'')+'</b><br>'+
-        'Client: '+escapeHtml(r.party||'')+'<br>'+
-        'Route: '+escapeHtml(r.route||r.destination||'')+'<br>'+
-        'MAWB: '+escapeHtml(r.mawb||'—')+'<br>'+
-        'Total: <b>'+totalBars+' bars</b> in <b>'+totalBoxes+' boxes</b> · '+escapeHtml(r.brand||'')+'<br>'+
-        'Gross Weight: '+grams.toLocaleString()+' g ('+kg+' kg)'+
-      '</div>'+
+      headerBlock+
       '<div style="font-weight:700;color:#00456F;margin-bottom:6px">Bar List</div>'+
       boxesHTML+
       '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
@@ -12330,6 +12643,7 @@ window.updateBrandPreview=function(selectId,previewId){
   var QO_KEY = 'goldvault_quick_orders_v1';
   var qoSide = 'buy';
   var qoQueue = [];
+  var qoStagedLines = []; // brand lines staged for the current in-progress order, before "Add to Queue"
 
   /* ── Load from localStorage ── */
   function loadQueue(){
@@ -12355,18 +12669,25 @@ window.updateBrandPreview=function(selectId,previewId){
     }
   };
 
-  /* ── Weight calc display ── */
+  /* ── Weight calc display (includes staged brand lines + the line currently being typed) ── */
+  function qoToKg(qty, unit){
+    return unit==='kg'? qty : unit==='gram'? qty/1000 : unit==='oz'? qty/32.148 : unit==='baht'? qty*15.244/1000 : qty;
+  }
   function qoUpdateWeight(){
     var qty = parseFloat(document.getElementById('qo-qty').value)||0;
     var unit = document.getElementById('qo-unit').value;
     var display = document.getElementById('qo-weight-display');
     var text = document.getElementById('qo-weight-text');
     if(!display||!text) return;
-    if(qty<=0){ display.style.display='none'; return; }
-    var kg = unit==='kg'? qty : unit==='gram'? qty/1000 : unit==='oz'? qty/32.150 : unit==='baht'? qty*15.244/1000 : qty;
-    var oz = kg*32.150;
+    var stagedKg = qoStagedLines.reduce(function(sum,l){ return sum + l.kg; }, 0);
+    var currentKg = qty>0 ? qoToKg(qty, unit) : 0;
+    var kg = stagedKg + currentKg;
+    if(kg<=0){ display.style.display='none'; return; }
+    var oz = kg*32.148;
     display.style.display='block';
-    text.textContent = qty+' '+unit+' = '+kg.toFixed(5)+' kg = '+oz.toFixed(5)+' oz';
+    var brandCount = qoStagedLines.length + (currentKg>0?1:0);
+    var label = brandCount>1 ? (brandCount+' brands รวม: ') : '';
+    text.textContent = label+kg.toFixed(5)+' kg = '+oz.toFixed(5)+' oz';
   }
 
   /* ── Populate customer datalist from master parties ── */
@@ -12385,6 +12706,37 @@ window.updateBrandPreview=function(selectId,previewId){
   }
 
   /* ── Add to queue ── */
+  /* ── Stage a brand line (lets one order hold multiple brand allocations) ── */
+  window.qoAddBrandLine = function(){
+    var brand = document.getElementById('qo-brand').value;
+    var qty   = parseFloat(document.getElementById('qo-qty').value)||0;
+    var unit  = document.getElementById('qo-unit').value;
+    if(!brand){ alert('กรุณาเลือก Brand ก่อนเพิ่มบรรทัด'); document.getElementById('qo-brand').focus(); return; }
+    if(qty<=0){ alert('กรุณากรอก Quantity ก่อนเพิ่มบรรทัด'); document.getElementById('qo-qty').focus(); return; }
+    qoStagedLines.push({ brand: brand, qty: qty, unit: unit, kg: parseFloat(qoToKg(qty,unit).toFixed(5)) });
+    document.getElementById('qo-brand').value='';
+    document.getElementById('qo-qty').value='';
+    renderStagedLines();
+    qoUpdateWeight();
+  };
+  window.qoRemoveStagedLine = function(idx){
+    qoStagedLines.splice(idx,1);
+    renderStagedLines();
+    qoUpdateWeight();
+  };
+  function renderStagedLines(){
+    var box = document.getElementById('qo-staged-lines');
+    if(!box) return;
+    if(!qoStagedLines.length){ box.style.display='none'; box.innerHTML=''; return; }
+    box.style.display='block';
+    box.innerHTML = qoStagedLines.map(function(l,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;background:#1C1C1C;border:.5px solid rgba(184,134,11,0.3);border-radius:6px;padding:6px 10px;margin-bottom:5px;font-size:12px;color:#F0EDE6">'
+        +'<span>'+l.qty+' '+l.unit+' — '+escHtml(l.brand)+'</span>'
+        +'<button type="button" onclick="qoRemoveStagedLine('+i+')" style="background:transparent;border:none;color:#FF6B6B;cursor:pointer;font-size:13px;padding:0 4px">✕</button>'
+        +'</div>';
+    }).join('');
+  }
+
   window.qoAddToQueue = function(){
     var customer = (document.getElementById('qo-customer').value||'').trim();
     var brand    = document.getElementById('qo-brand').value;
@@ -12393,34 +12745,40 @@ window.updateBrandPreview=function(selectId,previewId){
     var note     = (document.getElementById('qo-note').value||'').trim();
 
     if(!customer){ alert('กรุณากรอกชื่อลูกค้า'); document.getElementById('qo-customer').focus(); return; }
-    if(!brand)   { alert('กรุณาเลือก Brand'); document.getElementById('qo-brand').focus(); return; }
-    if(qty<=0)   { alert('กรุณากรอก Quantity'); document.getElementById('qo-qty').focus(); return; }
+    // The current (not-yet-staged) brand line counts too, if filled in
+    var lines = qoStagedLines.slice();
+    if(brand && qty>0){ lines.push({brand:brand, qty:qty, unit:unit, kg:parseFloat(qoToKg(qty,unit).toFixed(5))}); }
+    if(!lines.length){ alert('กรุณาเลือก Brand และกรอก Quantity อย่างน้อย 1 รายการ'); document.getElementById('qo-brand').focus(); return; }
 
-    var kg = unit==='kg'? qty : unit==='gram'? qty/1000 : unit==='oz'? qty/32.150 : unit==='baht'? qty*15.244/1000 : qty;
-    var item = {
-      id: 'QO-'+Date.now(),
-      side: qoSide,
-      customer: customer,
-      brand: brand,
-      qty: qty,
-      unit: unit,
-      kg: parseFloat(kg.toFixed(5)),
-      ref: '',
-      note: note,
-      ts: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
-    };
+    var groupId = 'ORD-'+Date.now();
+    var ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     loadQueue();
-    qoQueue.push(item);
+    lines.forEach(function(l, i){
+      qoQueue.push({
+        id: 'QO-'+Date.now()+'-'+i,
+        orderGroupId: groupId,
+        brandCount: lines.length,
+        side: qoSide,
+        customer: customer,
+        brand: l.brand,
+        qty: l.qty,
+        unit: l.unit,
+        kg: l.kg,
+        ref: '',
+        note: note,
+        ts: ts
+      });
+    });
     saveQueue();
     qoRender();
     qoClearForm();
-    if(window.showToast) showToast('✅ เพิ่ม '+customer+' ('+qoSide.toUpperCase()+') เข้าคิวแล้ว');
+    var totalKg = lines.reduce(function(s,l){return s+l.kg;},0);
+    if(window.showToast) showToast('✅ เพิ่ม '+customer+' ('+qoSide.toUpperCase()+') '+lines.length+' brand เข้าคิวแล้ว');
     if(typeof gvAudit !== 'undefined'){
       gvAudit.log('QUICK_ORDER_QUEUED',
         qoSide.toUpperCase() + ' | Client: ' + customer +
-        ' | Brand: ' + brand +
-        ' | Qty: ' + qty + ' ' + unit +
-        ' | ≈ ' + parseFloat(kg.toFixed(3)) + ' kg'
+        ' | Brands: ' + lines.map(function(l){return l.brand+' '+l.qty+l.unit;}).join(', ') +
+        ' | ≈ ' + totalKg.toFixed(3) + ' kg total'
       );
     }
   };
@@ -12433,6 +12791,8 @@ window.updateBrandPreview=function(selectId,previewId){
     document.getElementById('qo-note').value='';
     document.getElementById('qo-unit').value='kg';
     document.getElementById('qo-weight-display').style.display='none';
+    qoStagedLines = [];
+    renderStagedLines();
     qoSetSide('buy');
   };
 
@@ -12524,16 +12884,21 @@ window.updateBrandPreview=function(selectId,previewId){
     emptyEl && (emptyEl.style.display='none');
     tableWrap && (tableWrap.style.display='');
 
+    var groupColorMap = {};
+    var nextColorIsAlt = false;
     tbody.innerHTML = qoQueue.map(function(item, i){
       var sideColor = item.side==='buy'?'#2ecc71':'#FF6B6B';
       var sideLabel = item.side==='buy'?'▲ BUY':'▼ SELL';
-      var bgRow = i%2===0?'rgba(255,255,255,0.02)':'transparent';
+      var gid = item.orderGroupId || item.id;
+      if(!(gid in groupColorMap)){ groupColorMap[gid] = nextColorIsAlt; nextColorIsAlt = !nextColorIsAlt; }
+      var bgRow = groupColorMap[gid] ? 'rgba(184,134,11,0.05)' : 'transparent';
       var eid = escHtml(item.id);
+      var brandCell = escHtml(item.brand) + (item.brandCount>1 ? ' <span style="color:#B8860B;font-size:10px">('+item.brandCount+' brands)</span>' : '');
       return '<tr style="border-bottom:.5px solid rgba(255,255,255,0.05);background:'+bgRow+'">'
         +'<td style="padding:9px 10px;color:#5C5850;font-size:12px">'+(i+1)+'</td>'
         +'<td style="padding:9px 10px"><span style="color:'+sideColor+';font-weight:700;font-size:12px">'+sideLabel+'</span></td>'
         +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;font-weight:500">'+escHtml(item.customer)+'</td>'
-        +'<td style="padding:9px 10px;color:#9A9488;font-size:12px">'+escHtml(item.brand)+'</td>'
+        +'<td style="padding:9px 10px;color:#9A9488;font-size:12px">'+brandCell+'</td>'
         +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;text-align:right;font-weight:600">'+item.qty+'</td>'
         +'<td style="padding:9px 10px;color:#9A9488;font-size:12px">'+item.unit+'</td>'
         +'<td style="padding:9px 10px;color:#9A9488;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.note||'—')+'</td>'
