@@ -2763,7 +2763,7 @@ document.addEventListener('click',function(e){
 </div>
 <div id="post-physical-order-actions" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
   <button onclick="openShippingDocsFromOrder()" style="padding:10px;background:#B8860B;border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">📄 Shipping Docs</button>
-  <button onclick="showPage('checklist')" style="padding:10px;background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;color:#B8860B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">✅ Checklist</button>
+  <button onclick="syncPhysicalOrderToChecklist()" style="padding:10px;background:#1C1C1C;border:.5px solid rgba(184,134,11,0.35);border-radius:7px;color:#B8860B;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">✅ Sync to Checklist</button>
   <button onclick="showPage('journal')" style="padding:10px;background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;color:#F0EDE6;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">📒 Journal</button>
 </div>
 </div>
@@ -4365,7 +4365,12 @@ function loadSettingsToForm(){
           </div>
           <div id="ship-modal-sub" style="font-size:12px;color:#9A9488;margin-top:4px">Physical Gold Shipping Documents</div>
         </div>
-        <button class="modal-close" onclick="closeShippingDetailModal()" style="float:none;margin:0;margin-top:8px;line-height:1;font-size:26px">×</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="syncShippingDocToChecklist(window.__activeShippingRecordId)" style="background:rgba(184,134,11,0.15);border:.5px solid #B8860B;color:#B8860B;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            📋 Sync to Checklist
+          </button>
+          <button class="modal-close" onclick="closeShippingDetailModal()" style="float:none;margin:0;line-height:1;font-size:26px">×</button>
+        </div>
       </div>
 
       <div class="ship-easy-layout" style="display:grid;grid-template-columns:0.95fr 1.25fr;gap:0;max-height:86vh;overflow:hidden">
@@ -4383,7 +4388,13 @@ function loadSettingsToForm(){
             <div class="grid-2">
               <div class="form-group"><label class="form-label">Route</label><input id="ship-modal-route" oninput="saveShippingModalLogistics()"></div>
               <div class="form-group"><label class="form-label">MAWB No.</label><input id="ship-modal-mawb" placeholder="e.g. 618-12345678" oninput="saveShippingModalLogistics()"></div>
-              <div class="form-group"><label class="form-label">Flight Details</label><input id="ship-modal-flight" placeholder="e.g. TG / SQ / BKK-VTE" oninput="saveShippingModalLogistics()"></div>
+              <div class="form-group" style="grid-column:1 / -1">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <label class="form-label">Flight Details</label>
+                  <button type="button" onclick="addShippingFlightLeg()" style="background:transparent;border:1px dashed rgba(184,134,11,0.5);color:#B8860B;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">+ Add Flight (connecting)</button>
+                </div>
+                <div id="ship-modal-flight-rows" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+              </div>
               <div class="form-group"><label class="form-label">Carrier / Forwarder</label><input id="ship-modal-carrier" placeholder="e.g. Brinks / Malca-Amit" oninput="saveShippingModalLogistics()"></div>
               <div class="form-group"><label class="form-label">Delivery Date</label><input type="text" id="ship-modal-date" readonly placeholder="DD/MMM/YYYY" onclick="gvDateOpen(this)" style="cursor:pointer;background:transparent;border:none;font-size:13px;color:#F0EDE6;font-family:Inter,sans-serif;width:100%;padding:4px 2px;outline:none"><input type="hidden" id="ship-modal-date_raw"></div>
               <div class="form-group"><label class="form-label">Destination</label><input id="ship-modal-destination" oninput="saveShippingModalLogistics()"></div>
@@ -4814,7 +4825,6 @@ function loadSettingsToForm(){
         '</tbody>'+
       '</table>'+
       '<div style="font-size:10.5px;margin:10px 0;line-height:1.9">'+
-        'Shipment ref: &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_ourref)+'<br>'+
         'Shipment ref: &nbsp;&nbsp;&nbsp;&nbsp;'+esc(r.rfs_ourref)+
       '</div>'+
       '<div style="font-size:11px;font-weight:700;text-align:right;margin:8px 0">Total &nbsp;&nbsp;&nbsp;'+fmtN(totalDebit)+'</div>'+
@@ -4896,6 +4906,7 @@ function loadSettingsToForm(){
         '<div class="kvrow"><span class="k">Our Reference</span>'+esc(r.rfs_ourref||'—')+'</div>'+
         (poNo!=='—'?'<div class="kvrow"><span class="k">Purchase Order No.</span>PO - '+esc(poNo)+'</div>':'')+
         '<div class="kvrow"><span class="k">Quantity (kg)</span>'+esc(r.rfs_weight||'—')+'</div>'+
+        (r.rfs_pieces?'<div class="kvrow"><span class="k">Number of pieces</span>'+esc(r.rfs_pieces)+'</div>':'')+
         '<div class="kvrow"><span class="k">Form</span>'+esc(r.rfs_type||ex.goldForm||'Type of gold')+'</div>'+
         '<div class="kvrow"><span class="k">Price per kg</span>'+fmtN(priceKg)+'</div>'+
         '<div class="kvrow"><span class="k">Total Amount</span>'+fmtN(totalAmt)+'</div>'+
@@ -5413,7 +5424,7 @@ function loadSettingsToForm(){
       sp_purity:    r.rfs_purity,
       sp_mawb:      r.rfs_mawb,
       sp_etd:       r.rfs_shipdate_raw || r.rfs_shipdate,
-      sp_price:     r.rfs_pricekg ? String(parseFloat(r.rfs_pricekg)/32.150) : '',  /* price/oz from price/kg */
+      sp_price:     r.rfs_pricekg ? String(parseFloat(r.rfs_pricekg)/32.148) : '',  /* price/oz from price/kg */
       sp_disc:      r.rfs_discountoz || '',
       sp_remarks:   r.rfs_ourref ? ('Ref: '+r.rfs_ourref+(r.rfs_destination?'  Dest: '+r.rfs_destination:'')) : ''
     };
@@ -5428,7 +5439,7 @@ function loadSettingsToForm(){
       ss_purity:    r.rfs_purity,
       ss_mawb:      r.rfs_mawb || '',
       ss_dest:      r.rfs_destination || '',
-      ss_price:     r.rfs_pricekg ? String(parseFloat(r.rfs_pricekg)/32.150) : '',
+      ss_price:     r.rfs_pricekg ? String(parseFloat(r.rfs_pricekg)/32.148) : '',
       ss_remarks:   r.rfs_ourref ? ('Ref: '+r.rfs_ourref+(r.rfs_pono?'  PO: '+r.rfs_pono:'')) : ''
     };
     frame.contentWindow.postMessage({type:'rfsSyncToChecklist', purchaseFields:purchaseFields, salesFields:salesFields, caseRef:r.id}, '*');
@@ -7482,7 +7493,7 @@ function calcPhysical() {
   var rate = FX2[cur]||1;
   var kgPerUnit = physicalInputToKg(rawSize, unit);
   var totalKg = kgPerUnit * qty;
-  var oz = totalKg * (unit === 'gram' ? 32.150 : 32.148);
+  var oz = totalKg * 32.148;
   var goldVal = oz * price * rate;
   var premPerOz = parseFloat(gv('ph-premium-oz',0)) || 0;
   var prem = oz * premPerOz * rate;
@@ -8049,6 +8060,53 @@ function createPhysicalOrderFromForm(side){
 }
 function setText(id,v){var e=document.getElementById(id); if(e) e.textContent=(v===undefined||v===null||v==='')?'—':v;}
 function setVal(id,v,keepExisting){var e=document.getElementById(id); if(e && (!keepExisting || !e.value)) e.value=v||'';}
+
+/* Push any order-shaped record's details (incl. Premium/Discount, separated from price)
+   into the matching Checklist Center form. The receiving side (orderSyncToChecklist) already
+   existed inside the checklist iframe; this is the missing sender. Reusable from both the
+   just-confirmed order flow and the Shipping Docs list/detail modal. */
+function syncOrderDataToChecklist(order){
+  if(!order){ if(typeof showToast==='function') showToast('Please open or confirm an order first'); showPage('checklist'); return; }
+
+  var premMatch = String(order.premium||'').match(/\(([-\d.]+)\s*USD\/oz\)/i);
+  var premPerOz = premMatch ? premMatch[1] : '';
+  var priceMatch = String(order.price||'').match(/\$?([\d,]+\.?\d*)\s*\/\s*oz/i);
+  var pricePerOz = priceMatch ? priceMatch[1].replace(/,/g,'') : '';
+  var counterpartyName = String(order.party||'').replace(/^[A-Z]{2,4}-\d+\s*—\s*/,'');
+  var isBuy = String(order.side||'').toUpperCase()==='BUY';
+  var formType = isBuy ? 'kilo-purchase' : 'kilo-sales';
+  var remarks = 'Synced from confirmed order '+(order.orderNo||'');
+  var fields = isBuy ? {
+    kp_ref: order.refNo||order.orderNo, kp_date: order.orderDate, kp_counterparty: counterpartyName,
+    kp_qty: order.qty||'1', kp_prem: premPerOz, kp_brand: order.brand, kp_price: pricePerOz, kp_remarks: remarks
+  } : {
+    ks_ref: order.refNo||order.orderNo, ks_date: order.orderDate, ks_customer: counterpartyName,
+    ks_qty: order.qty||'1', ks_prem: premPerOz, ks_brand: order.brand, ks_price: pricePerOz, ks_remarks: remarks
+  };
+  var frame = document.getElementById('gstsgChecklistCenterFrame');
+  if(frame && frame.contentWindow){
+    frame.contentWindow.postMessage({type:'orderSyncToChecklist', formType:formType, fields:fields, caseRef:order.orderNo}, '*');
+  }
+  showPage('checklist');
+  if(typeof showToast==='function') showToast('✅ Order synced to Checklist Center — Premium/Discount: '+(premPerOz||'0')+' USD/oz');
+  if(typeof gvAudit !== 'undefined'){
+    gvAudit.log('ORDER_SYNCED_TO_CHECKLIST', 'Order: '+(order.orderNo||'—')+' | Form: '+formType+' | Premium/Discount: '+(premPerOz||'0')+' USD/oz');
+  }
+}
+window.syncPhysicalOrderToChecklist = function(){
+  var order = window.lastPhysicalOrder;
+  if(!order){ try{ order = JSON.parse(localStorage.getItem('goldvault_last_physical_order')||'null'); }catch(e){} }
+  syncOrderDataToChecklist(order);
+};
+/* Same sync, but from a Shipping Docs list record (identified by activeShippingRecordId) —
+   used by the "Sync to Checklist" button in the Shipping Docs detail modal header. */
+window.syncShippingDocToChecklist = function(id){
+  var targetId = id || window.__activeShippingRecordId;
+  var list = [];
+  try{ list = JSON.parse(localStorage.getItem('goldvault_shipping_docs_list_v2')||'[]')||[]; }catch(e){}
+  var r = list.find(function(x){ return x.id===targetId; });
+  syncOrderDataToChecklist(r);
+};
 
 var currentShippingDoc = 'invoice';
 function selectShippingDocs(list){
@@ -10869,10 +10927,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   window.openShippingDetailModal = function(id){
     activeShippingRecordId=id;
+    window.__activeShippingRecordId=id;
     var r=shipGetList().find(function(x){return x.id===id;});
     if(!r) return;
-    setTextSafe('ship-modal-order', r.orderNo);
-    setTextSafe('ship-modal-sub', (r.partyType||'Client')+' · Physical Gold '+r.type+' · '+(r.route||'—'));
+    setTextSafe('ship-modal-order', r.refNo || r.orderNo);
+    setTextSafe('ship-modal-sub', (r.partyType||'Client')+' · Physical Gold '+r.type+' · '+(r.route||'—')+' · Order No.: '+(r.orderNo||'—'));
     var st=document.getElementById('ship-modal-status');
     if(st){ st.textContent=recordComputedStatus(r); st.className='ship-status-pill '+statusClass(st.textContent); }
     var items=document.getElementById('ship-modal-items');
@@ -10881,7 +10940,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     setValueSafe('ship-modal-route', r.route||'');
     setValueSafe('ship-modal-mawb', r.mawb||'');
-    setValueSafe('ship-modal-flight', r.flight||'');
+    window.renderShippingFlightRows(r.flight||'');
     setValueSafe('ship-modal-carrier', r.carrier||'');
     gvDateSetRaw('ship-modal-date', r.deliveryDate||'');
     setValueSafe('ship-modal-destination', r.destination||r.route||'');
@@ -10982,6 +11041,39 @@ document.addEventListener('DOMContentLoaded', function(){
     if(typeof showToast==='function') showToast('Shipping doc '+r.orderNo+' deleted');
   };
 
+  var SHIP_FLIGHT_SEP = ' → ';
+  window.renderShippingFlightRows = function(value){
+    var box = document.getElementById('ship-modal-flight-rows');
+    if(!box) return;
+    var legs = String(value||'').split(SHIP_FLIGHT_SEP).map(function(s){return s.trim();}).filter(function(s){return s;});
+    if(!legs.length) legs = [''];
+    box.innerHTML = legs.map(function(leg){
+      return '<div style="display:flex;gap:6px;align-items:center">'
+        +'<input class="ship-flight-leg" value="'+escapeAttr(leg)+'" placeholder="e.g. TG 111 BKK-DXB" oninput="saveShippingModalLogistics()" style="flex:1">'
+        +'<button type="button" onclick="removeShippingFlightLeg(this)" style="background:transparent;border:none;color:#FF6B6B;cursor:pointer;font-size:14px;padding:0 4px">✕</button>'
+        +'</div>';
+    }).join('');
+  };
+  window.addShippingFlightLeg = function(){
+    var box = document.getElementById('ship-modal-flight-rows');
+    if(!box) return;
+    box.insertAdjacentHTML('beforeend',
+      '<div style="display:flex;gap:6px;align-items:center">'
+      +'<input class="ship-flight-leg" value="" placeholder="e.g. EK 373 DXB-VTE" oninput="saveShippingModalLogistics()" style="flex:1">'
+      +'<button type="button" onclick="removeShippingFlightLeg(this)" style="background:transparent;border:none;color:#FF6B6B;cursor:pointer;font-size:14px;padding:0 4px">✕</button>'
+      +'</div>');
+    saveShippingModalLogistics();
+  };
+  window.removeShippingFlightLeg = function(btnEl){
+    var box = document.getElementById('ship-modal-flight-rows');
+    if(btnEl && btnEl.parentElement) btnEl.parentElement.remove();
+    if(box && !box.children.length) window.renderShippingFlightRows('');
+    saveShippingModalLogistics();
+  };
+  function getShippingFlightValue(){
+    var inputs = document.querySelectorAll('#ship-modal-flight-rows .ship-flight-leg');
+    return Array.prototype.map.call(inputs, function(el){ return el.value.trim(); }).filter(function(s){return s;}).join(SHIP_FLIGHT_SEP);
+  }
   window.saveShippingModalLogistics = function(){
     if(!activeShippingRecordId) return;
     var list=shipGetList();
@@ -10989,7 +11081,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!r) return;
     r.route=getValueSafe('ship-modal-route')||r.route;
     r.mawb=getValueSafe('ship-modal-mawb');
-    r.flight=getValueSafe('ship-modal-flight');
+    r.flight=getShippingFlightValue();
     r.carrier=getValueSafe('ship-modal-carrier');
     r.deliveryDate=gvDateGetRaw('ship-modal-date');
     r.destination=getValueSafe('ship-modal-destination')||r.route;
@@ -11129,7 +11221,7 @@ document.addEventListener('DOMContentLoaded', function(){
     invoice:[['customerName','Customer Name'],['customerAddress','Customer Address'],['hsCode','HS Code'],['portOfLoading','Port of Loading'],['bankIntermediary','Intermediary Bank'],['bankIntermediarySwift','Intermediary Bank Swift Code'],['bankBeneficiary','Beneficiary Bank'],['bankBeneficiarySwift','Beneficiary Bank Swift Code'],['bankAccountNo','Account No.']],
     invoice1:[['customerName','Customer Name'],['customerAddress','Customer Address'],['hsCode','HS Code'],['portOfLoading','Port of Loading'],['bankIntermediary','Intermediary Bank'],['bankIntermediarySwift','Intermediary Bank Swift Code'],['bankBeneficiary','Beneficiary Bank'],['bankBeneficiarySwift','Beneficiary Bank Swift Code'],['bankAccountNo','Account No.']],
     invoice2:[['customerName','Customer Name'],['customerAddress','Customer Address'],['hsCode','HS Code'],['portOfLoading','Port of Loading'],['bankIntermediary','Intermediary Bank'],['bankIntermediarySwift','Intermediary Bank Swift Code'],['bankBeneficiary','Beneficiary Bank'],['bankBeneficiarySwift','Beneficiary Bank Swift Code'],['bankAccountNo','Account No.']],
-    packing:[['customerName','Customer Name'],['customerAddress','Customer Address']],
+    packing:[['customerName','Customer Name'],['customerAddress','Customer Address'],['barNumbers','Bar Numbers (comma-separated — fill in later once known)']],
     proforma:[['customerName','Customer Name'],['customerAddress','Customer Address'],['bankIntermediary','Intermediary Bank'],['bankIntermediarySwift','Intermediary Bank Swift Code'],['bankBeneficiary','Beneficiary Bank'],['bankBeneficiarySwift','Beneficiary Bank Swift Code'],['bankAccountNo','Account No.']],
     margin:[['customerName','Customer Name'],['customerAddress','Customer Address'],['bankName','Bank Name'],['bankIntermediary','Intermediary Bank'],['bankIntermediarySwift','Intermediary Bank Swift Code'],['bankBeneficiary','Beneficiary Bank'],['bankBeneficiarySwift','Beneficiary Bank Swift Code'],['bankAccountNo','Account No.']],
     release:[['customerName','Customer Name'],['customerAddress','Customer Address'],['forwarderAddress','Forwarder Address'],['authorizedPerson','Authorized Person'],['signatoryName','Name'],['signatoryTitle','Title']],
@@ -11708,7 +11800,8 @@ document.addEventListener('DOMContentLoaded', function(){
       var head='<tr><th colspan="4">Box No. '+(pi*2+1)+'</th>'+(b2?'<th colspan="4">Box No. '+(pi*2+2)+'</th>':'<th colspan="4"></th>')+'</tr>'+
         '<tr><th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th>'+
         '<th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th></tr>';
-      var barNos=r.barNumbers||[];
+      var barNosExtra=(r.extra && r.extra.barNumbers) ? r.extra.barNumbers.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}) : null;
+      var barNos=(barNosExtra && barNosExtra.length) ? barNosExtra : (r.barNumbers||[]);
       var rows='', maxLen=Math.max(b1.length, b2?b2.length:0);
       for(var k=0;k<maxLen;k++){
         var l=b1[k], rr=b2?b2[k]:null;
