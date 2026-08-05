@@ -857,6 +857,451 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
 }
 </style>
 
+
+<style id="kj-mobile-quick-order-fit-v1">
+@media (max-width:900px){
+  html,
+  body{
+    max-width:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  #main-app,
+  #page-quickorder,
+  #page-quickorder .qo-mobile-header,
+  #page-quickorder .qo-mobile-content,
+  #page-quickorder .qo-mobile-form-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #page-quickorder{
+    overflow-x:hidden !important;
+  }
+
+  #page-quickorder .qo-mobile-header{
+    padding:22px 16px 0 !important;
+  }
+
+  #page-quickorder .qo-mobile-content{
+    padding:16px !important;
+  }
+
+  #page-quickorder .qo-mobile-header > div:nth-child(2){
+    font-size:clamp(28px,9vw,38px) !important;
+    line-height:1.08 !important;
+    overflow-wrap:anywhere;
+  }
+
+  #page-quickorder .qo-mobile-header > div:nth-child(3){
+    line-height:1.5 !important;
+  }
+
+  #page-quickorder .qo-mobile-queue-head{
+    align-items:flex-start !important;
+    gap:10px !important;
+    flex-wrap:wrap !important;
+  }
+
+  #page-quickorder #qo-queue-wrap,
+  #page-quickorder #qo-empty,
+  #page-quickorder #qo-queue-table-wrap{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #page-quickorder #qo-empty{
+    padding:20px 14px !important;
+    line-height:1.55 !important;
+  }
+
+  #page-quickorder #qo-queue-table-wrap{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  #page-quickorder #qo-queue-table-wrap table{
+    min-width:720px !important;
+  }
+
+  #page-quickorder .qo-mobile-form-card{
+    padding:18px 16px !important;
+  }
+
+  #page-quickorder .qo-mobile-row-side,
+  #page-quickorder .qo-mobile-row-brand{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:14px !important;
+  }
+
+  #page-quickorder .qo-mobile-row-side > *,
+  #page-quickorder .qo-mobile-row-brand > *{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #page-quickorder input,
+  #page-quickorder select,
+  #page-quickorder textarea,
+  #page-quickorder button{
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #page-quickorder #qo-brand-category-tabs{
+    display:flex !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    gap:8px !important;
+    padding-bottom:5px !important;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  #page-quickorder #qo-brand-category-tabs > *{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+    scroll-snap-align:start;
+  }
+
+  #page-quickorder button[onclick="qoAddBrandLine()"]{
+    width:100% !important;
+    white-space:normal !important;
+    line-height:1.4 !important;
+    text-align:left !important;
+  }
+
+  #page-quickorder .qo-mobile-actions{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+
+  #page-quickorder .qo-mobile-actions > button{
+    width:100% !important;
+    min-height:48px !important;
+  }
+}
+
+@media (max-width:430px){
+  #page-quickorder .qo-mobile-header,
+  #page-quickorder .qo-mobile-content{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #page-quickorder .qo-mobile-form-card{
+    padding:16px 12px !important;
+  }
+
+  #page-quickorder #qo-buy-btn,
+  #page-quickorder #qo-sell-btn{
+    min-width:0 !important;
+    font-size:12px !important;
+  }
+}
+</style>
+
+
+
+
+
+<style id="kj-mobile-responsive-verified-safe-v2">
+/* Safe mobile responsive rules.
+   Desktop remains untouched because all rules are scoped to <=900px. */
+@media (max-width:900px){
+
+  html,
+  body{
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  /* Keep page width inside viewport without hiding table content globally. */
+  #main-app,
+  #main-app > main,
+  [id^="page-"]{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Shared outer containers only. */
+  #page-dashboard > div,
+  #page-order > div,
+  #page-clientrefinery > div,
+  #page-refinery > div,
+  #page-refinerydocs > div,
+  #page-payment > div,
+  #page-settlement > div,
+  #page-reports-center > div,
+  #page-shippingdocs > div,
+  #page-journal > div,
+  #page-freight > div,
+  #page-system-settings > div,
+  #page-backup > div,
+  #page-usersetting > div,
+  #page-onboard > div,
+  #page-security-monitor > div,
+  #page-physical > div{
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Page-specific primary desktop grids -> one column. */
+  #page-order .order-main-grid,
+  #page-order .order-form-grid,
+  #page-clientrefinery .refinery-main-grid,
+  #page-refinery .refinery-main-grid,
+  #page-payment .payment-main-grid,
+  #page-settlement .settlement-main-grid,
+  #page-reports-center .report-filter-grid,
+  #page-reports-center .report-kpi-grid,
+  #page-shippingdocs .shipping-filter-grid,
+  #page-refinerydocs .shipping-filter-grid,
+  #page-journal .journal-form-grid,
+  #page-freight .freight-kpi-grid,
+  #page-freight .freight-form-grid,
+  #page-system-settings .settings-grid,
+  #page-backup .backup-grid,
+  #page-usersetting .user-form-grid,
+  #page-onboard .onboard-grid,
+  #page-security-monitor .security-grid,
+  #page-physical .physical-grid{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    width:100% !important;
+    min-width:0 !important;
+    gap:14px !important;
+  }
+
+  /* Fallbacks for known inline desktop grid patterns, scoped by page. */
+  #page-order [style*="grid-template-columns:1.1fr 0.9fr"],
+  #page-order [style*="grid-template-columns: 1.1fr 0.9fr"],
+  #page-order [style*="grid-template-columns:repeat(4"],
+  #page-order [style*="grid-template-columns: repeat(4"],
+  #page-clientrefinery [style*="grid-template-columns:1fr 320px"],
+  #page-clientrefinery [style*="grid-template-columns: 1fr 320px"],
+  #page-refinery [style*="grid-template-columns:1fr 320px"],
+  #page-refinery [style*="grid-template-columns: 1fr 320px"],
+  #page-payment [style*="grid-template-columns:repeat(4"],
+  #page-payment [style*="grid-template-columns: repeat(4"],
+  #page-settlement [style*="grid-template-columns:repeat(4"],
+  #page-settlement [style*="grid-template-columns: repeat(4"],
+  #page-reports-center [style*="grid-template-columns:repeat(4"],
+  #page-reports-center [style*="grid-template-columns: repeat(4"],
+  #page-reports-center [style*="grid-template-columns:1.1fr"],
+  #page-shippingdocs [style*="grid-template-columns:1fr 200px 200px"],
+  #page-refinerydocs [style*="grid-template-columns:1fr 200px"],
+  #page-journal [style*="grid-template-columns:repeat(4"],
+  #page-freight [style*="grid-template-columns:repeat(4"],
+  #page-freight [style*="grid-template-columns:repeat(3"],
+  #page-system-settings [style*="grid-template-columns:repeat(2"],
+  #page-system-settings [style*="grid-template-columns:repeat(4"],
+  #page-backup [style*="grid-template-columns:repeat(2"],
+  #page-usersetting [style*="grid-template-columns:repeat(2"],
+  #page-onboard [style*="grid-template-columns:repeat(2"],
+  #page-security-monitor [style*="grid-template-columns:repeat(2"],
+  #page-physical [style*="grid-template-columns:repeat(2"]{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+
+  /* Only known toolbar/filter rows wrap. */
+  #page-reports-center .report-toolbar,
+  #page-reports-center .report-actions,
+  #page-shippingdocs .shipping-toolbar,
+  #page-refinerydocs .shipping-toolbar,
+  #page-payment .payment-toolbar,
+  #page-settlement .settlement-toolbar,
+  #page-journal .journal-toolbar,
+  #page-freight .freight-toolbar{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:10px !important;
+    align-items:stretch !important;
+  }
+
+  /* Form controls inside affected pages. */
+  #page-order input,
+  #page-order select,
+  #page-order textarea,
+  #page-clientrefinery input,
+  #page-clientrefinery select,
+  #page-clientrefinery textarea,
+  #page-refinery input,
+  #page-refinery select,
+  #page-refinery textarea,
+  #page-payment input,
+  #page-payment select,
+  #page-payment textarea,
+  #page-settlement input,
+  #page-settlement select,
+  #page-settlement textarea,
+  #page-reports-center input,
+  #page-reports-center select,
+  #page-reports-center textarea,
+  #page-shippingdocs input,
+  #page-shippingdocs select,
+  #page-shippingdocs textarea,
+  #page-refinerydocs input,
+  #page-refinerydocs select,
+  #page-refinerydocs textarea,
+  #page-journal input,
+  #page-journal select,
+  #page-journal textarea,
+  #page-freight input,
+  #page-freight select,
+  #page-freight textarea{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Table scrolling only on known table wrappers. */
+  #page-dashboard .table-wrap,
+  #page-dashboard .table-container,
+  #page-order .table-wrap,
+  #page-clientrefinery .table-wrap,
+  #page-refinery .table-wrap,
+  #page-refinerydocs .table-wrap,
+  #page-payment .table-wrap,
+  #page-settlement .table-wrap,
+  #page-reports-center #rpt-table-container,
+  #page-shippingdocs .table-wrap,
+  #page-refinerydocs .table-wrap,
+  #page-journal .table-wrap,
+  #page-security-monitor .table-wrap,
+  #page-physical .table-wrap{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-inline:contain;
+  }
+
+  /* Known wide tables only. Do not globally change all tables. */
+  #page-dashboard .table-wrap table,
+  #page-dashboard .table-container table,
+  #page-order .table-wrap table,
+  #page-clientrefinery .table-wrap table,
+  #page-refinery .table-wrap table,
+  #page-refinerydocs .table-wrap table,
+  #page-payment .table-wrap table,
+  #page-settlement .table-wrap table,
+  #page-reports-center #rpt-table-container table,
+  #page-shippingdocs .table-wrap table,
+  #page-journal .table-wrap table,
+  #page-security-monitor .table-wrap table,
+  #page-physical .table-wrap table{
+    min-width:720px !important;
+    width:max-content !important;
+    max-width:none !important;
+  }
+
+  #page-shippingdocs .table-wrap table,
+  #page-refinerydocs .table-wrap table{
+    min-width:900px !important;
+  }
+
+  #page-journal .table-wrap table{
+    min-width:840px !important;
+  }
+
+  /* Checklist iframe fits viewport; internal document keeps its own scrolling. */
+  #page-checklist{
+    width:100% !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+  }
+
+  #page-checklist iframe{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    height:calc(100dvh - 118px) !important;
+    border:0 !important;
+  }
+
+  /* Known modal panels only; do not resize overlay wrappers. */
+  #ship-email-modal > div,
+  #ref-email-modal > div,
+  #shipping-view-modal > div,
+  #ref-view-modal > div,
+  #user-modal > div,
+  #payment-modal > div,
+  #settlement-modal > div{
+    width:calc(100vw - 24px) !important;
+    max-width:calc(100vw - 24px) !important;
+    min-width:0 !important;
+    max-height:calc(100dvh - 24px) !important;
+    overflow:auto !important;
+    box-sizing:border-box !important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Large page headings. */
+  #page-dashboard .hero-title,
+  #page-order .hero-title,
+  #page-clientrefinery .hero-title,
+  #page-refinery .hero-title,
+  #page-reports-center .hero-title,
+  #page-shippingdocs .hero-title,
+  #page-refinerydocs .hero-title,
+  #page-journal .hero-title,
+  #page-freight .module-title{
+    font-size:clamp(28px,8.5vw,40px) !important;
+    line-height:1.08 !important;
+    overflow-wrap:anywhere;
+  }
+
+  /* Reports Center spacing. */
+  #page-reports-center{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+}
+
+@media (max-width:430px){
+  #page-reports-center,
+  #page-shippingdocs,
+  #page-refinerydocs,
+  #page-order,
+  #page-clientrefinery,
+  #page-refinery,
+  #page-payment,
+  #page-settlement,
+  #page-journal,
+  #page-freight{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  #page-reports-center button,
+  #page-shippingdocs button,
+  #page-refinerydocs button,
+  #page-order button,
+  #page-payment button,
+  #page-settlement button,
+  #page-journal button{
+    min-height:44px;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -2565,17 +3010,17 @@ function exportReportPDF(){
 <div class="metric-value" id="dash-metric-settle">0</div>
 <div class="metric-sub" style="color:#FFB347" id="dash-metric-settle-sub">T+2 due / bank match</div>
 </div>
-<div class="metric" onclick="showPage('shipment-tracking')" style="cursor:pointer">
+<div class="metric" onclick="showPage('shipment')" style="cursor:pointer">
 <div class="metric-label">Pending shipment</div>
 <div class="metric-value" id="dash-metric-shipment">0</div>
 <div class="metric-sub">Freight / delivery queue</div>
 </div>
-<div class="metric" onclick="showPage('margin-control')" style="cursor:pointer">
+<div class="metric" onclick="showPage('margin')" style="cursor:pointer">
 <div class="metric-label">Margin alerts</div>
 <div class="metric-value" style="color:#FFB347" id="dash-metric-margin">0</div>
 <div class="metric-sub" id="dash-metric-margin-sub">No alerts</div>
 </div>
-<div class="metric" onclick="showPage('inventory')" style="cursor:pointer">
+<div class="metric" onclick="showPage('physical')" style="cursor:pointer">
 <div class="metric-label">Inventory available</div>
 <div class="metric-value" id="dash-metric-inv">—</div>
 <div class="metric-sub" id="dash-metric-inv-sub">From inventory records</div>
@@ -2668,16 +3113,16 @@ function exportReportPDF(){
 
 <!-- ===================== QUICK ORDER ENTRY ===================== -->
 <div class="page" id="page-quickorder">
-<div style="padding:28px 22px 0;max-width:960px;margin:0 auto">
+<div class="qo-mobile-header" style="padding:28px 22px 0;max-width:960px;margin:0 auto">
   <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#B8860B;margin-bottom:5px">Trading Desk</div>
   <div style="font-family:'DM Serif Display',serif;font-size:30px;color:#F0EDE6;margin-bottom:3px">⚡ Quick Order Entry</div>
   <div style="font-size:13px;color:#9A9488">รับออเดอร์เร็ว — กรอกข้อมูลสำคัญก่อน แล้วส่งต่อไปหน้าซื้อขายจริง</div>
 </div>
 
-<div style="max-width:960px;margin:0 auto;padding:20px 22px">
+<div class="qo-mobile-content" style="max-width:960px;margin:0 auto;padding:20px 22px">
 
   <!-- Queue list -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+  <div class="qo-mobile-queue-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
     <div style="font-size:13px;font-weight:600;color:#F0EDE6;letter-spacing:.04em">📋 ORDER QUEUE <span id="qo-count" style="background:#B8860B;color:#000;border-radius:20px;padding:1px 9px;font-size:11px;margin-left:6px">0</span></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" onclick="qoClearAll()" style="color:#FF6B6B;font-size:12px">Clear all</button>
@@ -2709,11 +3154,11 @@ function exportReportPDF(){
   </div>
 
   <!-- Input form -->
-  <div style="background:#151515;border:.5px solid rgba(184,134,11,0.3);border-radius:12px;padding:22px 24px">
+  <div class="qo-mobile-form-card" style="background:#151515;border:.5px solid rgba(184,134,11,0.3);border-radius:12px;padding:22px 24px">
     <div style="font-size:12px;font-weight:600;color:#B8860B;letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px">➕ New Order</div>
 
     <!-- Row 1: Side + Customer -->
-    <div style="display:grid;grid-template-columns:160px 1fr;gap:14px;margin-bottom:14px">
+    <div class="qo-mobile-row-side" style="display:grid;grid-template-columns:160px 1fr;gap:14px;margin-bottom:14px">
       <div>
         <div style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Side *</div>
         <div style="display:flex;gap:6px">
@@ -2730,7 +3175,7 @@ function exportReportPDF(){
     </div>
 
     <!-- Row 2: Brand + Qty + Unit -->
-    <div style="display:grid;grid-template-columns:1fr 120px 120px;gap:14px;margin-bottom:14px">
+    <div class="qo-mobile-row-brand" style="display:grid;grid-template-columns:1fr 120px 120px;gap:14px;margin-bottom:14px">
       <div>
         <div style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">Brand (LBMA) *</div>
         <div id="qo-brand-category-tabs" class="brand-category-tabs-v3" data-brand-target="qo-brand"></div>
@@ -2822,7 +3267,7 @@ function exportReportPDF(){
     </div>
 
     <!-- Add button -->
-    <div style="display:flex;gap:10px">
+    <div class="qo-mobile-actions" style="display:flex;gap:10px">
       <button onclick="qoAddToQueue()" style="flex:2;padding:12px;border-radius:8px;background:#B8860B;color:#000;font-weight:700;font-size:14px;border:none;cursor:pointer;letter-spacing:.04em">
         ➕ Add to Queue
       </button>
@@ -4540,7 +4985,7 @@ function loadSettingsToForm(){
       <div class="flow-title">Customer / Party Data Repository</div>
       <div class="flow-sub">Track current records by type, search master data, and send selected party to the Buy / Sell screen instantly.</div>
     </div>
-    <button class="btn btn-gold" onclick="showPage('client-buys')">Go to Buy / Sell</button>
+    <button class="btn btn-gold" onclick="showPage('order')">Go to Buy / Sell</button>
   </div>
   <div class="party-repo-kpis">
     <div class="party-repo-kpi"><label>Total Records</label><b id="party-count-total">0</b><small>All active master data</small></div>
@@ -8387,7 +8832,7 @@ function quickCreatePartyFromOrder(){
     window._barPickReturnToOrder=false;
     var banner=document.getElementById('inv-pick-banner');
     if(banner) banner.style.display='none';
-    showPage('client-buys');
+    showPage('order');
     setTimeout(function(){
       var barField=document.getElementById('ph-bar-no');
       if(barField){ barField.scrollIntoView({behavior:'smooth',block:'center'}); barField.focus(); }
@@ -8465,7 +8910,7 @@ function quickCreatePartyFromOrder(){
     if(banner) banner.style.display='none';
     window._barPickReturnToOrder=false;
     window.renderInventoryTable(); // reset to normal view
-    showPage('client-buys');
+    showPage('order');
     setTimeout(function(){
       var barField=document.getElementById('ph-bar-no');
       if(barField) barField.scrollIntoView({behavior:'smooth',block:'center'});
@@ -8478,7 +8923,7 @@ function quickCreatePartyFromOrder(){
     window.renderInventoryTable();
     var banner=document.getElementById('inv-pick-banner');
     if(banner) banner.style.display='none';
-    showPage('client-buys');
+    showPage('order');
   };
 
 
@@ -9151,7 +9596,7 @@ function findPartyByName(name){
 }
 function openPartyTrade(id){
   var p=findPartyById(id); if(!p) return;
-  try{ showPage('client-buys'); }catch(e){ try{ showPageGrouped('client-buys'); }catch(x){} }
+  try{ showPage('order'); }catch(e){ try{ showPageGrouped('order'); }catch(x){} }
   setTimeout(function(){
     var typeEl=document.getElementById('ph-party-type'); var input=document.getElementById('ph-client');
     if(typeEl) typeEl.value=p.type;
