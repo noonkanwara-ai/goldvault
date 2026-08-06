@@ -1015,18 +1015,26 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
 
 
 
-<style id="kj-mobile-responsive-verified-safe-v2">
-/* Safe mobile responsive rules.
-   Desktop remains untouched because all rules are scoped to <=900px. */
+
+
+
+<style id="kj-mobile-all-pages-final-v1">
+/*
+  Final mobile layout patch.
+  - Applies only at <= 900px.
+  - Does not modify application JavaScript, stored data, or desktop layout.
+  - Uses :has() to target actual form/table containers instead of every grid/flex.
+*/
 @media (max-width:900px){
 
   html,
   body{
     width:100% !important;
     max-width:100% !important;
+    margin:0 !important;
+    overflow-x:hidden !important;
   }
 
-  /* Keep page width inside viewport without hiding table content globally. */
   #main-app,
   #main-app > main,
   [id^="page-"]{
@@ -1036,154 +1044,122 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
     box-sizing:border-box !important;
   }
 
-  /* Shared outer containers only. */
-  #page-dashboard > div,
-  #page-order > div,
-  #page-clientrefinery > div,
-  #page-refinery > div,
-  #page-refinerydocs > div,
-  #page-payment > div,
-  #page-settlement > div,
-  #page-reports-center > div,
-  #page-shippingdocs > div,
-  #page-journal > div,
-  #page-freight > div,
-  #page-system-settings > div,
-  #page-backup > div,
-  #page-usersetting > div,
-  #page-onboard > div,
-  #page-security-monitor > div,
-  #page-physical > div{
-    max-width:100% !important;
-    min-width:0 !important;
-    box-sizing:border-box !important;
+  [id^="page-"] *,
+  [id^="page-"] *::before,
+  [id^="page-"] *::after{
+    box-sizing:border-box;
   }
 
-  /* Page-specific primary desktop grids -> one column. */
-  #page-order .order-main-grid,
-  #page-order .order-form-grid,
-  #page-clientrefinery .refinery-main-grid,
-  #page-refinery .refinery-main-grid,
-  #page-payment .payment-main-grid,
-  #page-settlement .settlement-main-grid,
-  #page-reports-center .report-filter-grid,
-  #page-reports-center .report-kpi-grid,
-  #page-shippingdocs .shipping-filter-grid,
-  #page-refinerydocs .shipping-filter-grid,
-  #page-journal .journal-form-grid,
-  #page-freight .freight-kpi-grid,
-  #page-freight .freight-form-grid,
-  #page-system-settings .settings-grid,
-  #page-backup .backup-grid,
-  #page-usersetting .user-form-grid,
-  #page-onboard .onboard-grid,
-  #page-security-monitor .security-grid,
-  #page-physical .physical-grid{
-    display:grid !important;
+  /* Ensure fixed-width desktop cards cannot exceed the viewport. */
+  [id^="page-"] div,
+  [id^="page-"] section,
+  [id^="page-"] article,
+  [id^="page-"] form{
+    max-width:100% !important;
+    min-width:0;
+  }
+
+  /* Form grids only: collapse multi-column desktop forms to one column. */
+  [id^="page-"] [style*="display:grid"]:has(input,select,textarea),
+  [id^="page-"] [style*="display: grid"]:has(input,select,textarea),
+  [id^="page-"] [class*="form-grid"]:has(input,select,textarea),
+  [id^="page-"] [class*="filter-grid"]:has(input,select,textarea),
+  [id^="page-"] [class*="input-grid"]:has(input,select,textarea){
     grid-template-columns:minmax(0,1fr) !important;
     width:100% !important;
+    max-width:100% !important;
     min-width:0 !important;
-    gap:14px !important;
+    gap:12px !important;
   }
 
-  /* Fallbacks for known inline desktop grid patterns, scoped by page. */
+  /* Primary page grids containing multiple form cards. */
+  #page-order [style*="grid-template-columns:1fr 1fr"],
+  #page-order [style*="grid-template-columns: 1fr 1fr"],
   #page-order [style*="grid-template-columns:1.1fr 0.9fr"],
   #page-order [style*="grid-template-columns: 1.1fr 0.9fr"],
-  #page-order [style*="grid-template-columns:repeat(4"],
-  #page-order [style*="grid-template-columns: repeat(4"],
+  #page-order [style*="grid-template-columns:160px"],
   #page-clientrefinery [style*="grid-template-columns:1fr 320px"],
   #page-clientrefinery [style*="grid-template-columns: 1fr 320px"],
   #page-refinery [style*="grid-template-columns:1fr 320px"],
   #page-refinery [style*="grid-template-columns: 1fr 320px"],
-  #page-payment [style*="grid-template-columns:repeat(4"],
-  #page-payment [style*="grid-template-columns: repeat(4"],
-  #page-settlement [style*="grid-template-columns:repeat(4"],
-  #page-settlement [style*="grid-template-columns: repeat(4"],
-  #page-reports-center [style*="grid-template-columns:repeat(4"],
-  #page-reports-center [style*="grid-template-columns: repeat(4"],
-  #page-reports-center [style*="grid-template-columns:1.1fr"],
-  #page-shippingdocs [style*="grid-template-columns:1fr 200px 200px"],
+  #page-payment [style*="grid-template-columns:repeat("],
+  #page-settlement [style*="grid-template-columns:repeat("],
+  #page-reports-center [style*="grid-template-columns:repeat("],
+  #page-shippingdocs [style*="grid-template-columns:1fr 200px"],
   #page-refinerydocs [style*="grid-template-columns:1fr 200px"],
-  #page-journal [style*="grid-template-columns:repeat(4"],
-  #page-freight [style*="grid-template-columns:repeat(4"],
-  #page-freight [style*="grid-template-columns:repeat(3"],
-  #page-system-settings [style*="grid-template-columns:repeat(2"],
-  #page-system-settings [style*="grid-template-columns:repeat(4"],
-  #page-backup [style*="grid-template-columns:repeat(2"],
-  #page-usersetting [style*="grid-template-columns:repeat(2"],
-  #page-onboard [style*="grid-template-columns:repeat(2"],
-  #page-security-monitor [style*="grid-template-columns:repeat(2"],
-  #page-physical [style*="grid-template-columns:repeat(2"]{
+  #page-journal [style*="grid-template-columns:repeat("],
+  #page-freight [style*="grid-template-columns:repeat("],
+  #page-system-settings [style*="grid-template-columns:repeat("],
+  #page-backup [style*="grid-template-columns:repeat("],
+  #page-usersetting [style*="grid-template-columns:repeat("],
+  #page-onboard [style*="grid-template-columns:repeat("],
+  #page-security-monitor [style*="grid-template-columns:repeat("],
+  #page-physical [style*="grid-template-columns:repeat("]{
     grid-template-columns:minmax(0,1fr) !important;
   }
 
-  /* Only known toolbar/filter rows wrap. */
-  #page-reports-center .report-toolbar,
-  #page-reports-center .report-actions,
-  #page-shippingdocs .shipping-toolbar,
-  #page-refinerydocs .shipping-toolbar,
-  #page-payment .payment-toolbar,
-  #page-settlement .settlement-toolbar,
-  #page-journal .journal-toolbar,
-  #page-freight .freight-toolbar{
-    display:flex !important;
-    flex-wrap:wrap !important;
-    gap:10px !important;
-    align-items:stretch !important;
-  }
-
-  /* Form controls inside affected pages. */
-  #page-order input,
-  #page-order select,
-  #page-order textarea,
-  #page-clientrefinery input,
-  #page-clientrefinery select,
-  #page-clientrefinery textarea,
-  #page-refinery input,
-  #page-refinery select,
-  #page-refinery textarea,
-  #page-payment input,
-  #page-payment select,
-  #page-payment textarea,
-  #page-settlement input,
-  #page-settlement select,
-  #page-settlement textarea,
-  #page-reports-center input,
-  #page-reports-center select,
-  #page-reports-center textarea,
-  #page-shippingdocs input,
-  #page-shippingdocs select,
-  #page-shippingdocs textarea,
-  #page-refinerydocs input,
-  #page-refinerydocs select,
-  #page-refinerydocs textarea,
-  #page-journal input,
-  #page-journal select,
-  #page-journal textarea,
-  #page-freight input,
-  #page-freight select,
-  #page-freight textarea{
+  /* Form controls always fit their mobile column. */
+  [id^="page-"] input:not([type="checkbox"]):not([type="radio"]),
+  [id^="page-"] select,
+  [id^="page-"] textarea{
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
-    box-sizing:border-box !important;
   }
 
-  /* Table scrolling only on known table wrappers. */
-  #page-dashboard .table-wrap,
-  #page-dashboard .table-container,
-  #page-order .table-wrap,
-  #page-clientrefinery .table-wrap,
-  #page-refinery .table-wrap,
-  #page-refinerydocs .table-wrap,
-  #page-payment .table-wrap,
-  #page-settlement .table-wrap,
-  #page-reports-center #rpt-table-container,
-  #page-shippingdocs .table-wrap,
-  #page-refinerydocs .table-wrap,
-  #page-journal .table-wrap,
-  #page-security-monitor .table-wrap,
-  #page-physical .table-wrap{
+  [id^="page-"] button,
+  [id^="page-"] a{
+    max-width:100% !important;
+    overflow-wrap:anywhere;
+  }
+
+  /* Only flex rows that contain form controls are allowed to wrap. */
+  [id^="page-"] [style*="display:flex"]:has(input,select,textarea,button),
+  [id^="page-"] [style*="display: flex"]:has(input,select,textarea,button),
+  [id^="page-"] .toolbar,
+  [id^="page-"] .filter-row,
+  [id^="page-"] .action-row{
+    flex-wrap:wrap !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+
+  [id^="page-"] [style*="display:flex"]:has(input,select,textarea,button) > *,
+  [id^="page-"] [style*="display: flex"]:has(input,select,textarea,button) > *{
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+
+  /* Compact tab/segmented controls remain horizontal but scroll internally. */
+  [id^="page-"] [class*="tabs"],
+  [id^="page-"] [class*="tab-row"],
+  [id^="page-"] [role="tablist"],
+  #ph-brand-category-tabs,
+  #qo-brand-category-tabs{
+    max-width:100% !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    flex-wrap:nowrap !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+
+  [id^="page-"] [class*="tabs"] > *,
+  [id^="page-"] [class*="tab-row"] > *,
+  [id^="page-"] [role="tablist"] > *,
+  #ph-brand-category-tabs > *,
+  #qo-brand-category-tabs > *{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+  }
+
+  /* Every direct table container scrolls internally without changing table display. */
+  [id^="page-"] div:has(> table),
+  [id^="page-"] section:has(> table),
+  [id^="page-"] .table-wrap,
+  [id^="page-"] .table-container,
+  [id^="page-"] .table-scroll,
+  #rpt-table-container{
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
@@ -1192,35 +1168,29 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
     overscroll-behavior-inline:contain;
   }
 
-  /* Known wide tables only. Do not globally change all tables. */
-  #page-dashboard .table-wrap table,
-  #page-dashboard .table-container table,
-  #page-order .table-wrap table,
-  #page-clientrefinery .table-wrap table,
-  #page-refinery .table-wrap table,
-  #page-refinerydocs .table-wrap table,
-  #page-payment .table-wrap table,
-  #page-settlement .table-wrap table,
-  #page-reports-center #rpt-table-container table,
-  #page-shippingdocs .table-wrap table,
-  #page-journal .table-wrap table,
-  #page-security-monitor .table-wrap table,
-  #page-physical .table-wrap table{
-    min-width:720px !important;
-    width:max-content !important;
+  [id^="page-"] table{
     max-width:none !important;
   }
 
-  #page-shippingdocs .table-wrap table,
-  #page-refinerydocs .table-wrap table{
+  #page-dashboard table,
+  #page-reports-center table,
+  #page-order table,
+  #page-clientrefinery table,
+  #page-refinery table,
+  #page-payment table,
+  #page-settlement table,
+  #page-security-monitor table,
+  #page-physical table{
+    min-width:720px !important;
+  }
+
+  #page-shippingdocs table,
+  #page-refinerydocs table,
+  #page-journal table{
     min-width:900px !important;
   }
 
-  #page-journal .table-wrap table{
-    min-width:840px !important;
-  }
-
-  /* Checklist iframe fits viewport; internal document keeps its own scrolling. */
+  /* Checklist iframe stays inside viewport and scrolls internally. */
   #page-checklist{
     width:100% !important;
     max-width:100% !important;
@@ -1236,14 +1206,26 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
     border:0 !important;
   }
 
-  /* Known modal panels only; do not resize overlay wrappers. */
+  /* Media/charts cannot exceed viewport. */
+  [id^="page-"] iframe:not(#page-checklist iframe),
+  [id^="page-"] canvas,
+  [id^="page-"] img,
+  [id^="page-"] svg,
+  [id^="page-"] video,
+  [id^="page-"] .tradingview-widget-container{
+    max-width:100% !important;
+  }
+
+  /* Known modal content panels; overlay wrappers are not resized. */
   #ship-email-modal > div,
   #ref-email-modal > div,
   #shipping-view-modal > div,
   #ref-view-modal > div,
   #user-modal > div,
   #payment-modal > div,
-  #settlement-modal > div{
+  #settlement-modal > div,
+  #brand-manager-modal > div,
+  #route-manager-modal > div{
     width:calc(100vw - 24px) !important;
     max-width:calc(100vw - 24px) !important;
     min-width:0 !important;
@@ -1253,51 +1235,70 @@ html body #ref-email-modal #ref-email-doc-checks > label.ref-email-doc-row input
     -webkit-overflow-scrolling:touch;
   }
 
-  /* Large page headings. */
-  #page-dashboard .hero-title,
-  #page-order .hero-title,
-  #page-clientrefinery .hero-title,
-  #page-refinery .hero-title,
-  #page-reports-center .hero-title,
-  #page-shippingdocs .hero-title,
-  #page-refinerydocs .hero-title,
-  #page-journal .hero-title,
-  #page-freight .module-title{
-    font-size:clamp(28px,8.5vw,40px) !important;
-    line-height:1.08 !important;
+  /* Large headings scale down. */
+  [id^="page-"] .hero-title,
+  [id^="page-"] .module-title,
+  [id^="page-"] .page-title,
+  [id^="page-"] h1{
+    font-size:clamp(27px,8vw,40px) !important;
+    line-height:1.1 !important;
     overflow-wrap:anywhere;
   }
 
-  /* Reports Center spacing. */
-  #page-reports-center{
+  /* Order page specific: fix the exact grids visible in mobile screenshots. */
+  #page-order > div{
     padding-left:12px !important;
     padding-right:12px !important;
+  }
+
+  #page-order [style*="grid-template-columns:160px minmax(0,1fr)"],
+  #page-order [style*="grid-template-columns:minmax(0,1fr) 94px"],
+  #page-order [style*="grid-template-columns:minmax(0,1fr) 96px"],
+  #page-order [style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+
+  #page-order #ph-brand-category-tabs{
+    display:flex !important;
+    gap:8px !important;
+    padding-bottom:5px !important;
+  }
+
+  #page-order [onclick="openBrandManager()"],
+  #page-order [onclick="openRouteManager()"]{
+    width:auto !important;
+    min-height:40px !important;
+  }
+
+  /* Reports, Shipping and toolbar buttons stack cleanly. */
+  #page-reports-center button,
+  #page-shippingdocs button,
+  #page-refinerydocs button,
+  #page-payment button,
+  #page-settlement button,
+  #page-journal button{
+    min-height:44px;
   }
 }
 
 @media (max-width:430px){
+  #page-order,
   #page-reports-center,
   #page-shippingdocs,
   #page-refinerydocs,
-  #page-order,
   #page-clientrefinery,
   #page-refinery,
   #page-payment,
   #page-settlement,
   #page-journal,
   #page-freight{
-    padding-left:10px !important;
-    padding-right:10px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
   }
 
-  #page-reports-center button,
-  #page-shippingdocs button,
-  #page-refinerydocs button,
-  #page-order button,
-  #page-payment button,
-  #page-settlement button,
-  #page-journal button{
-    min-height:44px;
+  #page-order > div{
+    padding-left:10px !important;
+    padding-right:10px !important;
   }
 }
 </style>
@@ -14545,8 +14546,38 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
 
   function fmtDate(iso){
     if(!iso) return '—';
-    var d=new Date(iso);
-    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+    var s=String(iso).trim();
+
+    // Accept YYYY-MM-DD and ISO datetime beginning with YYYY-MM-DD.
+    var m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+    if(m){
+      var year=parseInt(m[1],10);
+      var month=parseInt(m[2],10);
+      var day=parseInt(m[3],10);
+      var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      // Validate the actual calendar date before formatting.
+      var probe=new Date(Date.UTC(year,month-1,day));
+      var valid=
+        month>=1 && month<=12 &&
+        day>=1 && day<=31 &&
+        probe.getUTCFullYear()===year &&
+        probe.getUTCMonth()===month-1 &&
+        probe.getUTCDate()===day;
+
+      if(valid){
+        return String(day).padStart(2,'0')+'/'+MONTHS[month-1]+'/'+year;
+      }
+      return s;
+    }
+
+    // Fallback for other parseable date values.
+    var d=new Date(s);
+    if(isNaN(d.getTime())) return s;
+
+    var MONTHS_FALLBACK=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return String(d.getDate()).padStart(2,'0')+'/'+MONTHS_FALLBACK[d.getMonth()]+'/'+d.getFullYear();
   }
 
   function parseTotal(t){
@@ -14853,7 +14884,7 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
           var amountDisplay=portfolioAmount(x);
           /* P&L is not stored in current transaction records; do not fabricate it. */
           var pnl='<span style="color:#8A847A;font-style:italic">Not available</span>';
-          var dateShort=fmtDate(x.date).replace(', 2025','').replace(', 2026','').replace(', 2024','');
+          var dateShort=fmtDate(x.date);
           var item=(x.brand||'Gold')+(x.weight?' '+(x.weight):'')+(x.typeName?' · '+x.typeName:'');
           return '<tr>'+
             '<td style="padding:9px 14px;border-bottom:.5px solid rgba(255,255,255,0.04);color:#9A9488">'+dateShort+'</td>'+
