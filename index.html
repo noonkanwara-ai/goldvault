@@ -3144,7 +3144,6 @@ function exportReportPDF(){
             <th style="padding:8px 10px;text-align:left">Customer</th>
             <th style="padding:8px 10px;text-align:left">Brand</th>
             <th style="padding:8px 10px;text-align:right">Qty</th>
-            <th style="padding:8px 10px;text-align:left">Unit</th>
             <th style="padding:8px 10px;text-align:left">Note</th>
             <th style="padding:8px 10px;text-align:center">Action</th>
           </tr>
@@ -3343,7 +3342,7 @@ function exportReportPDF(){
   <span style="color:#5C5850">·</span>
   <span id="ct-badge-note" style="color:#5C5850">Physical gold · Delivery / Vault storage</span>
 </div>
-<div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px">
+<div style="display:grid;grid-template-columns:1fr;gap:16px">
 <!-- ══════ LEFT: Order Form ══════ -->
 <div>
 <div id="form-physical" style="display:block">
@@ -3431,6 +3430,12 @@ document.addEventListener('click',function(e){
 <input id="ph-ref-no" placeholder="e.g. REF-2026-001" oninput="validateRefNo(this.value)" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none;width:100%;transition:border-color .15s"/>
 <div id="ph-ref-hint" style="font-size:10px;color:#5C5850;margin-top:2px">จำเป็นต้องกรอก · ต้องไม่ซ้ำกับ order ที่มีอยู่แล้ว</div>
 </div>
+<div id="ph-multibrand-panel" style="display:none;background:rgba(184,134,11,0.08);border:.5px solid rgba(184,134,11,0.3);border-radius:9px;padding:12px 14px;margin-bottom:14px">
+  <div style="font-size:11px;color:#B8860B;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:8px">📋 ออเดอร์นี้มีหลาย Brand — <span id="ph-multibrand-count">0</span></div>
+  <div id="ph-multibrand-list" style="display:flex;flex-direction:column;gap:6px"></div>
+  <div id="ph-multibrand-total" style="font-size:13px;color:#F0EDE6;font-weight:700;margin-top:10px;padding-top:8px;border-top:.5px solid rgba(184,134,11,0.2)"></div>
+  <div style="font-size:10px;color:#9A9488;margin-top:8px">กดรายการที่รออยู่เพื่อสลับมาแก้ไข — ตรวจสอบให้ถูกต้องแล้วกด Confirm เพียงครั้งเดียว ระบบจะยืนยันให้ครบทุก Brand ให้เองอัตโนมัติ (ใช้ Ref No. เดียวกันทุกใบ)</div>
+</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px">
 <!-- Brand -->
 <div style="display:flex;flex-direction:column;gap:5px">
@@ -3489,6 +3494,7 @@ document.addEventListener('click',function(e){
 </select>
 
 <input id="ph-brand-custom" placeholder="Type brand name..." oninput="calcPhysical()" onblur="promoteCustomBrand();" style="display:none;background:#1C1C1C;border:.5px solid rgba(184,134,11,0.45);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none;margin-top:5px"/>
+<button type="button" onclick="phAddBrandLine()" style="margin-top:8px;padding:7px 12px;border-radius:7px;background:transparent;border:1px dashed rgba(184,134,11,0.5);color:#B8860B;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;align-self:flex-start">+ Add Brand Line (เพิ่ม Brand อื่นในออเดอร์เดียวกัน)</button>
 </div>
 <!-- Bar Size -->
 <div style="display:flex;flex-direction:column;gap:5px">
@@ -3575,7 +3581,7 @@ document.addEventListener('click',function(e){
 <div style="display:flex;justify-content:space-between;align-items:center">
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Bar No.</label>
 <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-<button type="button" onclick="goToInventoryForBarPick()" style="font-size:11px;background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.4);border-radius:6px;padding:3px 10px;color:#B8860B;cursor:pointer;font-family:'Inter',sans-serif">📦 Pick from Inventory</button>
+<button type="button" onclick="openInventoryBarPicker()" style="font-size:11px;background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.4);border-radius:6px;padding:3px 10px;color:#B8860B;cursor:pointer;font-family:'Inter',sans-serif">📦 Pick from Inventory</button>
 <button type="button" onclick="document.getElementById('ph-bulk-bar-file').click()" style="font-size:11px;background:#B8860B;border:1px solid #B8860B;border-radius:6px;padding:3px 10px;color:#000;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">⬆ Import Bar List</button>
 </div>
 </div>
@@ -3610,6 +3616,7 @@ document.addEventListener('click',function(e){
 <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:#9A9488">Gold value</span><span id="ph-s-gold" style="color:#F0EDE6;font-weight:500">$134,023.68</span></div>
 <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:#9A9488">Premium / Discount</span><span id="ph-s-prem" style="color:#F0EDE6;font-weight:500">$0.00</span></div>
 <div style="border-top:.5px solid rgba(255,255,255,0.07);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:600"><span style="color:#9A9488">Total</span><span id="ph-s-total" style="color:#B8860B">$137,374.27 USD</span></div>
+<div id="ph-s-combined-row" style="display:none;margin-top:8px;padding-top:8px;border-top:.5px dashed rgba(184,134,11,0.35);justify-content:space-between;font-size:14px;font-weight:700"><span id="ph-s-combined-label" style="color:#F0EDE6">Order Total</span><span id="ph-s-combined-total" style="color:#74C69D">$0.00 USD</span></div>
 </div>
 <!-- Price lock notice -->
 <div style="background:#3D2800;border:.5px solid rgba(255,179,71,0.2);border-radius:7px;padding:9px 13px;font-size:12px;color:#FFB347;margin-bottom:14px">
@@ -3715,73 +3722,13 @@ document.addEventListener('click',function(e){
 </div>
 </div>
 </div>
-<!-- ══════ RIGHT: Order Book + History ══════ -->
-<div>
-<!-- Order Process Steps -->
-<div style="background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px;margin-bottom:14px">
-<div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase;margin-bottom:14px">Order Flow</div>
-<div style="display:flex;flex-direction:column;gap:0">
-<div style="display:flex;gap:12px;align-items:flex-start;padding-bottom:12px;position:relative">
-<div style="width:24px;height:24px;border-radius:50%;background:rgba(45,106,79,0.2);color:#74C69D;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">✓</div>
-<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#F0EDE6">KYC Verified</div><div style="font-size:11px;color:#5C5850">GV-00001 · Approved</div></div>
-<div style="position:absolute;left:11px;top:28px;width:1px;height:calc(100% - 16px);background:rgba(255,255,255,0.07)"></div>
-</div>
-<div style="display:flex;gap:12px;align-items:flex-start;padding-bottom:12px;position:relative">
-<div style="width:24px;height:24px;border-radius:50%;background:rgba(184,134,11,0.2);color:#B8860B;border:1px solid rgba(184,134,11,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">2</div>
-<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#F0EDE6">Place Order</div><div style="font-size:11px;color:#5C5850">Select type, price &amp; confirm</div></div>
-<div style="position:absolute;left:11px;top:28px;width:1px;height:calc(100% - 16px);background:rgba(255,255,255,0.07)"></div>
-</div>
-<div style="display:flex;gap:12px;align-items:flex-start;padding-bottom:12px;position:relative">
-<div style="width:24px;height:24px;border-radius:50%;background:#1C1C1C;color:#5C5850;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">3</div>
-<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#9A9488">Payment</div><div style="font-size:11px;color:#5C5850">Wire / Card / USDT</div></div>
-<div style="position:absolute;left:11px;top:28px;width:1px;height:calc(100% - 16px);background:rgba(255,255,255,0.07)"></div>
-</div>
-<div style="display:flex;gap:12px;align-items:flex-start;padding-bottom:12px;position:relative">
-<div style="width:24px;height:24px;border-radius:50%;background:#1C1C1C;color:#5C5850;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">4</div>
-<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#9A9488">Back Office Confirms</div><div style="font-size:11px;color:#5C5850">Journal entry auto-posted</div></div>
-<div style="position:absolute;left:11px;top:28px;width:1px;height:calc(100% - 16px);background:rgba(255,255,255,0.07)"></div>
-</div>
-<div style="display:flex;gap:12px;align-items:flex-start">
-<div style="width:24px;height:24px;border-radius:50%;background:#1C1C1C;color:#5C5850;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">5</div>
-<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#9A9488">Dispatch / Settle</div><div style="font-size:11px;color:#5C5850">Physical: ship · Spot: T+2</div></div>
-</div>
-</div>
-</div>
-<!-- Open Orders -->
-<div style="background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;margin-bottom:14px">
-<div style="padding:13px 16px;border-bottom:.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center">
-<div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase">Open Orders</div>
-<button onclick="showPage('blotter')" style="padding:4px 10px;background:transparent;border:.5px solid rgba(255,255,255,0.1);border-radius:5px;color:#9A9488;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">View all →</button>
-</div>
-<div>
-<!-- Open Orders dynamic content -->
-<div id="portfolio-open-orders" style="min-height:60px">
-<div style="text-align:center;color:#5C5850;font-size:12px;padding:20px">Loading...</div>
-</div>
-</div>
-</div>
-<!-- Recent trade history -->
-<div style="background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
-<div style="padding:13px 16px;border-bottom:.5px solid rgba(255,255,255,0.07)">
-<div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase">Trade History — All Accounts</div>
-</div>
-<table style="width:100%;border-collapse:collapse;font-size:12px">
-<thead><tr style="background:#111">
-<th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Date</th>
-<th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Type</th>
-<th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Item</th>
-<th style="text-align:right;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Amount</th>
-<th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">P&amp;L</th>
-</tr></thead>
-<tbody id="portfolio-trade-history">
-<tr><td colspan="5" style="text-align:center;color:#5C5850;padding:20px;font-size:12px">Loading...</td></tr>
-</table>
-</div>
-</div>
+<!-- ══════ RIGHT: Order Book + History (content removed per KJ, right column intentionally empty) ══════ -->
+<div></div>
 </div>
 </div>
 </div>
 <div class="page" id="page-clientrefinery">
+
 <style id="refinery-stable-form-style">
 #page-clientrefinery .rfs-shell{display:grid;grid-template-columns:minmax(0,720px) minmax(280px,1fr);gap:18px;align-items:start}
 #page-clientrefinery .rfs-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.25);border:1px solid rgba(184,134,11,.25)}
@@ -3845,6 +3792,8 @@ document.addEventListener('click',function(e){
 <div class="rfs-gap"></div>
 <div class="rfs-row"><div class="rfs-label">Our Ref</div><div class="rfs-value"><input type="text" id="rfs_ourref" placeholder="e.g. SG 1602610" oninput="rfsAutoPO()"></div></div>
 <div class="rfs-row"><div class="rfs-label">Customer Name</div><div class="rfs-value"><input type="text" id="rfs_customer" list="rfs-customer-dl" placeholder="Customer supplying the scrap gold" oninput="rfsUpdateSideSummary()"><datalist id="rfs-customer-dl"></datalist></div></div>
+<div class="rfs-row"><div class="rfs-label">Agent (optional)</div><div class="rfs-value"><input type="text" id="rfs_agent" placeholder="Agent representing the customer, if any"></div></div>
+<div class="rfs-row"><div class="rfs-label">Counterparty (optional)</div><div class="rfs-value"><input type="text" id="rfs_counterparty" placeholder="Separate counterparty on this deal, if any"></div></div>
 <div class="rfs-row"><div class="rfs-label">Refinery Name</div><div class="rfs-value"><input type="text" id="rfs_refineryname" list="rfs-refinery-dl" oninput="rfsAutoFillRefineryAddress()"><datalist id="rfs-refinery-dl"></datalist><button type="button" class="rfs-mini-btn" onclick="rfsOpenManage('refineries')">✏️ Manage</button></div></div>
 <div class="rfs-row"><div class="rfs-label">Address</div><div class="rfs-value"><input type="text" id="rfs_address" placeholder="Auto fill when refinery has address, or type manually"></div></div>
 <div class="rfs-row"><div class="rfs-label">Type</div><div class="rfs-value"><input type="text" id="rfs_type" list="rfs-type-dl" placeholder="e.g. Gold Pendants"><datalist id="rfs-type-dl"></datalist><button type="button" class="rfs-mini-btn" onclick="rfsOpenManage('types')">✏️ Manage</button></div></div>
@@ -3932,7 +3881,7 @@ document.addEventListener('click',function(e){
   function optKey(k){ return OPT_PREFIX+k; }
   function getOpt(k){ try{ var raw=localStorage.getItem(optKey(k)); if(raw) return JSON.parse(raw)||[]; }catch(e){} var seed=JSON.parse(JSON.stringify(DEFAULTS[k]||[])); setOpt(k, seed); return seed; }
   function setOpt(k,v){ try{ localStorage.setItem(optKey(k), JSON.stringify(v||[])); }catch(e){} }
-  function fieldIds(){ return ['rfs_collectiondate','rfs_ourref','rfs_customer','rfs_refineryname','rfs_address','rfs_type','rfs_tariff','rfs_purity','rfs_boxes','rfs_weight','rfs_valuecif','rfs_discountoz','rfs_destination','rfs_shipdate','rfs_mawb','rfs_grossweight','rfs_podate','rfs_pono','rfs_pieces']; }
+  function fieldIds(){ return ['rfs_collectiondate','rfs_ourref','rfs_customer','rfs_agent','rfs_counterparty','rfs_refineryname','rfs_address','rfs_type','rfs_tariff','rfs_purity','rfs_boxes','rfs_weight','rfs_valuecif','rfs_discountoz','rfs_destination','rfs_shipdate','rfs_mawb','rfs_grossweight','rfs_podate','rfs_pono','rfs_pieces']; }
   function el(id){ return document.getElementById(id); }
   function val(id){ var x=el(id); return x?x.value.trim():''; }
   function money(n){ var x=parseFloat(n); return isFinite(x)?x.toFixed(2):''; }
@@ -4889,6 +4838,37 @@ function loadSettingsToForm(){
     <!-- Summary cards -->
     <div id="rpt-summary-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
       <!-- rendered by JS -->
+    </div>
+
+    <!-- Open Orders + Trade History (consolidated here from Dashboard) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div style="background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
+        <div style="padding:13px 16px;border-bottom:.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase">Open Orders</div>
+          <button onclick="showPage('blotter')" style="padding:4px 10px;background:transparent;border:.5px solid rgba(255,255,255,0.1);border-radius:5px;color:#9A9488;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif">Full Blotter →</button>
+        </div>
+        <div id="rpt-open-orders" style="min-height:60px;max-height:420px;overflow:auto">
+          <div style="text-align:center;color:#5C5850;font-size:12px;padding:20px">Loading...</div>
+        </div>
+      </div>
+      <div style="background:#151515;border:.5px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">
+        <div style="padding:13px 16px;border-bottom:.5px solid rgba(255,255,255,0.07)">
+          <div style="font-size:11px;font-weight:500;letter-spacing:.07em;color:#5C5850;text-transform:uppercase">Trade History — All Accounts</div>
+        </div>
+        <div style="max-height:420px;overflow:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:#111">
+        <th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Date</th>
+        <th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Type</th>
+        <th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Item</th>
+        <th style="text-align:right;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">Amount</th>
+        <th style="text-align:left;padding:7px 14px;color:#5C5850;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid rgba(255,255,255,0.07)">P&amp;L</th>
+        </tr></thead>
+        <tbody id="rpt-trade-history">
+        <tr><td colspan="5" style="text-align:center;color:#5C5850;padding:20px;font-size:12px">Loading...</td></tr>
+        </tbody></table>
+        </div>
+      </div>
     </div>
 
     <!-- Report table -->
@@ -6385,12 +6365,28 @@ function loadSettingsToForm(){
     var frame=document.getElementById('gstsgChecklistCenterFrame');
     if(!frame || !frame.contentWindow) return;
     var purityNum = String(r.rfs_purity||'').replace(/[^0-9.]/g,'');
+    /* Look up each party in Master Data — if a matching registered party exists, use
+       the full "GV-xxxxx — Name" identifier (same convention used everywhere else in
+       the app) instead of just the bare typed name. */
+    function enrichedPartyName(rawName){
+      if(!rawName) return '';
+      var party = (typeof findPartyByName==='function') ? findPartyByName(rawName) : null;
+      return party ? (party.id+' — '+party.name) : rawName;
+    }
+    /* CUSTOMER/AGENT/COUNTERPARTY is one combined field — show every one of the three
+       that actually has data, separated by " / " (e.g. "N / L / P"), not just Customer. */
+    function combinedPartyField(customer, agent, counterparty){
+      var parts=[customer, agent, counterparty].map(enrichedPartyName).filter(function(v){ return v; });
+      return parts.join(' / ');
+    }
+    var customerEnriched = combinedPartyField(r.rfs_customer, r.rfs_agent, r.rfs_counterparty);
+    var refineryEnriched = enrichedPartyName(r.rfs_refineryname);
     // Scrap Gold Purchase: the leg where SG collects/buys scrap from the customer
     var purchaseFields={
       sp_ref:       r.rfs_ourref,
       sp_date:      r.rfs_collectiondate_raw || r.rfs_collectiondate,
       sp_collection:r.rfs_collectiondate_raw || r.rfs_collectiondate,
-      sp_customer:  r.rfs_customer || '',   /* customer/agent name */
+      sp_customer:  customerEnriched,   /* customer/agent/counterparty — full ID + name when matched to Master Data */
       sp_goldtype:  r.rfs_type,
       sp_qty:       r.rfs_weight,
       sp_purity:    purityNum,
@@ -6404,7 +6400,7 @@ function loadSettingsToForm(){
     var salesFields={
       ss_ref:       r.rfs_ourref,
       ss_date:      r.rfs_shipdate_raw || r.rfs_shipdate,
-      ss_customer:  r.rfs_refineryname,
+      ss_customer:  refineryEnriched,
       ss_address:   r.rfs_address || '',
       ss_goldtype:  r.rfs_type,
       ss_qty:       r.rfs_weight,
@@ -6606,40 +6602,40 @@ function loadSettingsToForm(){
 &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;&gt;
 &lt;title&gt;GSTSG Checklist Center&lt;/title&gt;
 &lt;style&gt;
-:root{--bg:#0f1115;--panel:#161a22;--card:#1d2330;--line:#303746;--text:#f8fafc;--muted:#cbd5e1;--gold:#c69214;--green:#52d18a;--blue:#5aa7ff;--danger:#ef4444}
+:root{--bg:#ffffff;--panel:#f6f4ef;--card:#ffffff;--line:#ddd6c7;--text:#1a1a1a;--muted:#6b6459;--gold:#a8760f;--green:#1a7a4c;--blue:#2563a8;--danger:#c62828}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,&quot;Helvetica Neue&quot;,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.nav{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line);background:#0b0d11;position:sticky;top:0;z-index:10}
+.nav{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line);background:#ffffff;position:sticky;top:0;z-index:10}
 .brand{display:flex;gap:12px;align-items:center;font-weight:800;font-size:20px}.mark{width:36px;height:36px;border:1px solid var(--gold);border-radius:10px;display:grid;place-items:center;color:var(--gold)}.brand span{color:var(--gold)}.nav small{color:var(--muted);font-size:14px}
-.hero{padding:28px 32px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#111827,#0b0d11)}
-.hero h1{font-size:38px;margin:0 0 8px}.hero p{margin:0;color:var(--muted);font-size:17px}.stats{display:flex;gap:14px;margin-top:18px}.stat{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:13px 18px;min-width:150px}.stat b{display:block;color:var(--gold);font-size:22px}.stat small{color:var(--muted);letter-spacing:.08em}
+.hero{padding:28px 32px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#fdf6e3,#ffffff)}
+.hero h1{font-size:38px;margin:0 0 8px}.hero p{margin:0;color:var(--muted);font-size:17px}.stats{display:flex;gap:14px;margin-top:18px}.stat{background:rgba(0,0,0,.03);border:1px solid var(--line);border-radius:14px;padding:13px 18px;min-width:150px}.stat b{display:block;color:var(--gold);font-size:22px}.stat small{color:var(--muted);letter-spacing:.08em}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 32px;border-bottom:1px solid var(--line)}
-.tab{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;color:var(--text);cursor:pointer;min-height:126px}.tab.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(198,146,20,.35);background:#191713}.tab h3{margin:8px 0 4px;font-size:20px}.tab p{margin:0;color:var(--muted);font-size:14px}.badge{float:right;color:var(--gold);border:1px solid rgba(198,146,20,.4);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700}
+.tab{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;color:var(--text);cursor:pointer;min-height:126px}.tab.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(168,118,15,.35);background:#fdf3dc}.tab h3{margin:8px 0 4px;font-size:20px}.tab p{margin:0;color:var(--muted);font-size:14px}.badge{float:right;color:var(--gold);border:1px solid rgba(168,118,15,.4);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700}
 .panel{display:none}.panel.active{display:block}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;padding:24px 32px;max-width:1880px;margin:auto}.form{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.side{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;height:max-content;position:sticky;top:84px}
-.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:18px}.btn{border:1px solid var(--line);background:#242b38;color:var(--text);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--gold);color:#111;border-color:var(--gold)}.btn.danger{color:#fecaca;border-color:#7f1d1d;background:#301416}
-.docHead{text-align:center;margin:8px 0 22px}.logo{font-weight:900;color:#22406f;font-size:25px}.docHead h2{font-size:22px;margin:6px 0 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.field label{display:block;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}.field input,.field textarea{width:100%;background:#0f141d;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px;font-size:15px}.field textarea{min-height:90px}.full{grid-column:1/-1}
+.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:18px}.btn{border:1px solid var(--line);background:#f0ede4;color:var(--text);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--gold);color:#fff;border-color:var(--gold)}.btn.danger{color:#a51c1c;border-color:#e8a3a3;background:#fdeded}
+.docHead{text-align:center;margin:8px 0 22px}.logo{font-weight:900;color:#22406f;font-size:25px}.docHead h2{font-size:22px;margin:6px 0 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.field label{display:block;color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}.field input,.field textarea{width:100%;background:#ffffff;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px;font-size:15px}.field textarea{min-height:90px}.full{grid-column:1/-1}
 .section{margin:24px 0}.section h3{color:var(--gold);font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:8px;margin:0 0 12px}
-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{border:1px solid var(--line);padding:8px;vertical-align:middle}th{background:#252b36;color:#fff}.desc{width:42%;font-weight:600}.sub{font-size:12px;color:var(--muted);font-weight:400}.check{text-align:center;width:78px}input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}td input{width:100%;background:#0f141d;border:1px solid #394253;border-radius:6px;color:var(--text);padding:7px}
-input:not(:placeholder-shown):not([readonly]):not([type=checkbox]){border-color:rgba(184,134,11,0.55);background:#0d1209}
-textarea:not(:placeholder-shown){border-color:rgba(184,134,11,0.55);background:#0d1209}.rowhead td{background:#303642;color:#fff;font-weight:800}.readonly{opacity:.9;color:#fef3c7!important}
-.summary h3{margin:0 0 4px}.summary p{margin:0 0 12px;color:var(--muted)}.sumrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:9px 0;gap:12px}.sumrow span:first-child{color:var(--muted)}.sumrow b{color:#fff;text-align:right}.total{margin-top:12px;padding:14px;border:1px solid rgba(198,146,20,.45);border-radius:12px;background:rgba(198,146,20,.08)}.total b{color:var(--gold);font-size:20px}
-.formula{margin-top:14px;color:#dbeafe;background:#111827;border:1px solid #334155;border-radius:12px;padding:12px;font-size:13px}.formula b{color:#facc15}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{border:1px solid var(--line);padding:8px;vertical-align:middle}th{background:#efeade;color:#1a1a1a}.desc{width:42%;font-weight:600}.sub{font-size:12px;color:var(--muted);font-weight:400}.check{text-align:center;width:78px}input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}td input{width:100%;background:#ffffff;border:1px solid #d9d2c2;border-radius:6px;color:var(--text);padding:7px}
+input:not(:placeholder-shown):not([readonly]):not([type=checkbox]){border-color:rgba(168,118,15,0.55);background:#fdf8ec}
+textarea:not(:placeholder-shown){border-color:rgba(168,118,15,0.55);background:#fdf8ec}.rowhead td{background:#eee8da;color:#1a1a1a;font-weight:800}.readonly{opacity:.9;color:#8a6d1f!important}
+.summary h3{margin:0 0 4px}.summary p{margin:0 0 12px;color:var(--muted)}.sumrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:9px 0;gap:12px}.sumrow span:first-child{color:var(--muted)}.sumrow b{color:#1a1a1a;text-align:right}.total{margin-top:12px;padding:14px;border:1px solid rgba(168,118,15,.45);border-radius:12px;background:rgba(168,118,15,.08)}.total b{color:var(--gold);font-size:20px}
+.formula{margin-top:14px;color:#1e3a5f;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px;font-size:13px}.formula b{color:#a8760f}
 
-.txbar{padding:20px 32px;border-bottom:1px solid var(--line);background:#0f1115}
+.txbar{padding:20px 32px;border-bottom:1px solid var(--line);background:#ffffff}
 .txwrap{max-width:1880px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
 .txhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .txhead h2{margin:0;font-size:22px}.txactions{display:flex;gap:8px;flex-wrap:wrap}
 .txfilters{display:grid;grid-template-columns:1.2fr .9fr .9fr .9fr;gap:10px;margin-bottom:12px}
-.txfilters input,.txfilters select{background:#0f141d;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px;font-size:14px}
+.txfilters input,.txfilters select{background:#ffffff;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px;font-size:14px}
 .txcontrols{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;color:var(--muted);font-size:13px}
-.txcontrols select{background:#0f141d;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:8px}
-.txtablewrap{max-height:520px;overflow:auto;border:.5px solid rgba(255,255,255,0.1);border-radius:12px}
-.txtable{width:100%;border-collapse:collapse;font-size:14px;min-width:700px}.txtable th{background:#1a1d24;color:#9A9488;font-size:11px;text-transform:uppercase;letter-spacing:.06em;position:sticky;top:0;z-index:2;font-weight:600}.txtable td,.txtable th{border:.5px solid rgba(255,255,255,0.07);padding:12px 14px;vertical-align:middle}
-.txpill{display:inline-block;border:1px solid rgba(198,146,20,.45);color:var(--gold);border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
-.txtable tr:hover td{background:rgba(255,255,255,0.025)}.txstatus{display:inline-block;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600}
-.txstatus.Completed{background:rgba(82,209,138,.14);color:#86efac}.txstatus.InProgress{background:rgba(250,204,21,.14);color:#fde047}.txstatus.Draft{background:rgba(148,163,184,.16);color:#cbd5e1}
+.txcontrols select{background:#ffffff;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:8px}
+.txtablewrap{max-height:520px;overflow:auto;border:.5px solid rgba(0,0,0,0.12);border-radius:12px}
+.txtable{width:100%;border-collapse:collapse;font-size:14px;min-width:700px}.txtable th{background:#efeade;color:#6b6459;font-size:11px;text-transform:uppercase;letter-spacing:.06em;position:sticky;top:0;z-index:2;font-weight:600}.txtable td,.txtable th{border:.5px solid rgba(0,0,0,0.08);padding:12px 14px;vertical-align:middle}
+.txpill{display:inline-block;border:1px solid rgba(168,118,15,.45);color:var(--gold);border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
+.txtable tr:hover td{background:rgba(0,0,0,0.02)}.txstatus{display:inline-block;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600}
+.txstatus.Completed{background:rgba(26,122,76,.14);color:#0f5c37}.txstatus.InProgress{background:rgba(180,131,0,.16);color:#8a6300}.txstatus.Draft{background:rgba(107,100,89,.14);color:#5c564c}
 @media(max-width:900px){.txfilters{grid-template-columns:1fr}.txtable{font-size:12px}}@media print{.txbar{display:none!important}.toolbar{display:none!important}button{display:none!important}[data-hidden=true]{display:none!important}.col-panel-wrap{display:none!important}#col-panel-0,#col-panel-1,#col-panel-2,#col-panel-3,#col-panel-4,#col-panel-5,#col-panel-6,#col-panel-7,#col-panel-8,#col-panel-9{display:none!important}[id^=col-panel-]{display:none!important}}
 
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111827;border:1px solid var(--gold);padding:12px 20px;border-radius:12px;display:none;z-index:99}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#f5f0e6;border:1px solid var(--gold);padding:12px 20px;border-radius:12px;display:none;z-index:99}
 @media(max-width:1200px){.layout{grid-template-columns:1fr}.side{position:static}.tabs{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.tabs,.grid{grid-template-columns:1fr}.nav{padding:0 16px}.layout,.tabs,.hero{padding-left:16px;padding-right:16px}}
 @media print{
@@ -6650,17 +6646,17 @@ textarea:not(:placeholder-shown){border-color:rgba(184,134,11,0.55);background:#
 
 /* ── Override field indicators ── */
 input[data-override-field]:not([data-user-edited=&quot;0&quot;]) {
-  border-color: #FFD700 !important;
-  background: rgba(255,215,0,0.06) !important;
-  color: #FFD700 !important;
+  border-color: #8a6d1f !important;
+  background: rgba(168,118,15,0.08) !important;
+  color: #8a6d1f !important;
 }
 .gv-reset-btn {
   display: none;
   background: none;
-  border: .5px solid rgba(255,215,0,.4);
+  border: .5px solid rgba(168,118,15,.4);
   border-radius: 4px;
   padding: 1px 5px;
-  color: #FFD700;
+  color: #8a6d1f;
   font-size: 10px;
   cursor: pointer;
   margin-left: 3px;
@@ -6811,10 +6807,10 @@ function renderTranchesHTML(){
  }).join(&#x27;&#x27;);
  let tot=tranchesTotals();
  return `&lt;div class=&quot;section&quot; data-ti=&quot;tranche&quot;&gt;&lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px&quot;&gt;&lt;h3 style=&quot;margin:0&quot;&gt;Sales Tranches&lt;/h3&gt;&lt;button class=&quot;btn&quot; style=&quot;font-size:11px;padding:3px 9px;opacity:.7&quot; onclick=&quot;toggleColPanel(&#x27;tranche&#x27;)&quot;&gt;⚙ Columns&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;col-panel-tranche&quot; style=&quot;display:none;background:rgba(184,134,11,0.08);border:.5px solid rgba(184,134,11,0.3);border-radius:7px;padding:8px 12px;margin-bottom:8px&quot;&gt;&lt;label style=&quot;display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;cursor:pointer&quot;&gt;&lt;input type=&quot;checkbox&quot; checked onchange=&quot;toggleSection(&#x27;tranche&#x27;,this.checked)&quot;&gt; แสดงหัวข้อนี้&lt;/label&gt;&lt;/div&gt;
- &lt;div class=&quot;sub&quot; style=&quot;margin-bottom:8px;color:#cbd5e1;font-size:12px&quot;&gt;Ounces can be sold across multiple rounds at different prices — before or after Final Assay, as decided by the Operations team. Add one row per sale.&lt;/div&gt;
+ &lt;div class=&quot;sub&quot; style=&quot;margin-bottom:8px;color:#6b6459;font-size:12px&quot;&gt;Ounces can be sold across multiple rounds at different prices — before or after Final Assay, as decided by the Operations team. Add one row per sale.&lt;/div&gt;
  &lt;table&gt;&lt;tr&gt;&lt;th&gt;Date&lt;/th&gt;&lt;th&gt;Metal&lt;/th&gt;&lt;th&gt;Oz Sold&lt;/th&gt;&lt;th&gt;Price / Oz (USD)&lt;/th&gt;&lt;th&gt;Amount (USD)&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;${rows}&lt;/table&gt;
  &lt;div style=&quot;margin-top:8px;text-align:right&quot;&gt;&lt;button class=&quot;btn&quot; onclick=&quot;addTranche()&quot;&gt;+ Add Tranche&lt;/button&gt;&lt;/div&gt;
- &lt;div style=&quot;margin-top:10px;font-size:13px;color:#f8fafc&quot; id=&quot;tranche-totals&quot;&gt;Total Oz Sold (XAU): &lt;b&gt;${oz(tot.oz)}&lt;/b&gt; &amp;nbsp; Total Oz Sold (XAG): &lt;b&gt;${oz(tot.ozXag)}&lt;/b&gt; &amp;nbsp; Total Proceeds: &lt;b&gt;${money(tot.usd)}&lt;/b&gt;&lt;/div&gt;
+ &lt;div style=&quot;margin-top:10px;font-size:13px;color:#1a1a1a&quot; id=&quot;tranche-totals&quot;&gt;Total Oz Sold (XAU): &lt;b&gt;${oz(tot.oz)}&lt;/b&gt; &amp;nbsp; Total Oz Sold (XAG): &lt;b&gt;${oz(tot.ozXag)}&lt;/b&gt; &amp;nbsp; Total Proceeds: &lt;b&gt;${money(tot.usd)}&lt;/b&gt;&lt;/div&gt;
  &lt;/div&gt;`;
 }
 function addTranche(){ let list=getTranches(); list.push({date:&#x27;&#x27;,metal:&#x27;XAU&#x27;,oz:&#x27;&#x27;,price:&#x27;&#x27;}); saveTranches(list); render(); runCalc(); }
@@ -6883,7 +6879,7 @@ if(id===&#x27;sp_ref&#x27;||id===&#x27;ss_ref&#x27;||(typeof REF_MAPPED_FIELD_TY
 if(id===&#x27;sp_ref&#x27;) on+=&#x27; onblur=&quot;crossSyncByRef(&amp;#39;purchase&amp;#39;)&quot;&#x27;;
 if(id===&#x27;ss_ref&#x27;) on+=&#x27; onblur=&quot;crossSyncByRef(&amp;#39;sales&amp;#39;)&quot;&#x27;;
 if(ASSAY_FIELD_PAIRS[id]) on+=&#x27; onchange=&quot;syncAssayResult(&amp;#39;&#x27;+id+&#x27;&amp;#39;)&quot;&#x27;;
-return `&lt;div class=&quot;field&quot;&gt;&lt;label&gt;${label}${isComputed?&#x27;&lt;button type=&quot;button&quot; onclick=&quot;gvClResetField(\&#x27;${id}\&#x27;)&quot; title=&quot;Reset to auto&quot; style=&quot;background:none;border:.5px solid rgba(255,215,0,.4);border-radius:3px;padding:1px 5px;color:#FFD700;font-size:10px;cursor:pointer;margin-left:6px;display:none&quot; class=&quot;gv-rst-btn&quot; id=&quot;rst-${id}&quot;&gt;🔄 reset&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;/label&gt;&lt;input id=&quot;${id}&quot; type=&quot;${type}&quot; value=&quot;${value}&quot;${listAttr} ${on} ${isComputed?&#x27;oninput=&quot;gvClMarkOverride(this)&quot;&#x27;:&#x27;&#x27;}&gt;&lt;/div&gt;`;
+return `&lt;div class=&quot;field&quot;&gt;&lt;label&gt;${label}${isComputed?&#x27;&lt;button type=&quot;button&quot; onclick=&quot;gvClResetField(\&#x27;${id}\&#x27;)&quot; title=&quot;Reset to auto&quot; style=&quot;background:none;border:.5px solid rgba(168,118,15,.4);border-radius:3px;padding:1px 5px;color:#8a6d1f;font-size:10px;cursor:pointer;margin-left:6px;display:none&quot; class=&quot;gv-rst-btn&quot; id=&quot;rst-${id}&quot;&gt;🔄 reset&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;/label&gt;&lt;input id=&quot;${id}&quot; type=&quot;${type}&quot; value=&quot;${value}&quot;${listAttr} ${on} ${isComputed?&#x27;oninput=&quot;gvClMarkOverride(this)&quot;&#x27;:&#x27;&#x27;}&gt;&lt;/div&gt;`;
 }
 let current=&#x27;purchase&#x27;;
 function render(){
@@ -6896,8 +6892,8 @@ function render(){
    f.flights.forEach(leg=&gt;{ body+=`&lt;tr&gt;&lt;td&gt;&lt;input id=&quot;${leg.no}&quot; type=&quot;text&quot; style=&quot;width:90px&quot;&gt;&lt;/td&gt;&lt;td&gt;&lt;input id=&quot;${leg.route}&quot; type=&quot;text&quot; placeholder=&quot;e.g. SIN – ZRH&quot;&gt;&lt;/td&gt;&lt;td&gt;&lt;input id=&quot;${leg.date}&quot; type=&quot;date&quot;&gt;&lt;/td&gt;&lt;td style=&quot;white-space:nowrap&quot;&gt;&lt;input id=&quot;${leg.dep}&quot; type=&quot;text&quot; placeholder=&quot;HH:MM&quot; style=&quot;width:56px;text-align:center&quot;&gt; &lt;select id=&quot;${leg.dep}_ap&quot; style=&quot;width:52px;padding:3px 2px&quot;&gt;&lt;option&gt;AM&lt;/option&gt;&lt;option&gt;PM&lt;/option&gt;&lt;/select&gt;&lt;/td&gt;&lt;td style=&quot;white-space:nowrap&quot;&gt;&lt;input id=&quot;${leg.arr}&quot; type=&quot;text&quot; placeholder=&quot;HH:MM&quot; style=&quot;width:56px;text-align:center&quot;&gt; &lt;select id=&quot;${leg.arr}_ap&quot; style=&quot;width:52px;padding:3px 2px&quot;&gt;&lt;option&gt;AM&lt;/option&gt;&lt;option&gt;PM&lt;/option&gt;&lt;/select&gt;&lt;/td&gt;&lt;/tr&gt;`; });
    body+=`&lt;/table&gt;&lt;/div&gt;`;
  }
- f.tables.forEach((t,ti)=&gt;{body+=`&lt;div class=&quot;section&quot; data-ti=&quot;${ti}&quot;&gt;&lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px&quot;&gt;&lt;h3 style=&quot;margin:0&quot;&gt;${t.h}&lt;/h3&gt;&lt;button class=&quot;btn&quot; style=&quot;font-size:11px;padding:3px 9px;opacity:.7&quot; onclick=&quot;toggleColPanel(${ti})&quot;&gt;⚙ Columns&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;col-panel-${ti}&quot; style=&quot;display:none;background:rgba(184,134,11,0.08);border:.5px solid rgba(184,134,11,0.3);border-radius:7px;padding:8px 12px;margin-bottom:8px&quot;&gt;&lt;div style=&quot;margin-bottom:8px;padding-bottom:6px;border-bottom:.5px solid rgba(184,134,11,0.2)&quot;&gt;&lt;label style=&quot;display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:#B8860B&quot;&gt;&lt;input type=&quot;checkbox&quot; checked onchange=&quot;toggleSection(${ti},this.checked)&quot;&gt; แสดงหัวข้อนี้&lt;/label&gt;&lt;/div&gt;${t.cols.slice(1).map(function(c,ci){return &#x27;&lt;label style=&quot;display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;cursor:pointer&quot;&gt;&lt;input type=&quot;checkbox&quot; checked onchange=&quot;toggleCol(&#x27;+ti+&#x27;,&#x27;+(ci+1)+&#x27;,this.checked)&quot;&gt;&#x27;+c+&#x27;&lt;/label&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;div style=&quot;margin-top:8px;padding-top:6px;border-top:.5px solid rgba(184,134,11,0.2);display:flex;flex-wrap:wrap&quot;&gt;${t.rows.map(function(r,ri){var rlabel=Array.isArray(r)?r[0]:r; return &#x27;&lt;label style=&quot;display:flex;align-items:center;gap:5px;margin-right:14px;margin-top:4px;font-size:11px;cursor:pointer;color:#9A9488&quot;&gt;&lt;input type=&quot;checkbox&quot; checked data-row-ri=&quot;&#x27;+ri+&#x27;&quot; onchange=&quot;toggleRowVis(&#x27;+ti+&#x27;,&#x27;+ri+&#x27;,this.checked)&quot;&gt;&#x27;+rlabel+&#x27;&lt;/label&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;&lt;table id=&quot;tbl-${ti}&quot;&gt;&lt;tr&gt;${t.cols.map(function(c,ci){return &#x27;&lt;th data-col=&quot;&#x27;+ci+&#x27;&quot;&gt;&#x27;+c+&#x27;&lt;/th&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;/tr&gt;`;
- t.rows.forEach((r,ri)=&gt;{ if(Array.isArray(r)){let [d,sub,id]=r; body+=`&lt;tr data-ri=&quot;${ri}&quot;&gt;&lt;td class=&quot;desc&quot; data-col=&quot;0&quot;&gt;${d}&lt;div class=&quot;sub&quot;&gt;${sub}&lt;/div&gt;&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;{let isVal=id ? (id.match(/_oz$/) ? ci===1 : ci===0) : (ci===0); let rid=isVal?id:&#x27;&#x27;; let isCalc=(isVal&amp;&amp;id&amp;&amp;id.match(/(oz|usd|funds|premusd|95|bal|disc|adj)/)); body+=`&lt;td data-col=&quot;${ci+1}&quot; style=&quot;position:relative&quot;&gt;&lt;input data-override-field=&quot;${isCalc?&#x27;1&#x27;:&#x27;&#x27;}&quot; data-user-edited=&quot;0&quot; id=&quot;${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&quot; oninput=&quot;${isCalc?&#x27;gvClMarkOverride(this);&#x27;:&#x27;&#x27;}${FORMS[current].calc}();autoSave()&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot; style=&quot;${isCalc?&#x27;border-color:rgba(91,164,245,0.25);cursor:text&#x27;:&#x27;&#x27;}&quot; title=&quot;${isCalc?&#x27;Auto-calculated — พิมพ์ทับได้ กด 🔄 reset&#x27;:&#x27;&#x27;}&quot;&gt;&lt;button type=&quot;button&quot; id=&quot;rst-${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&quot; onclick=&quot;gvClResetField(&#x27;${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&#x27;)&quot; style=&quot;display:none;position:absolute;right:1px;top:1px;background:none;border:.5px solid #FFD700;border-radius:2px;padding:0 3px;color:#FFD700;font-size:8px;cursor:pointer;line-height:1.4&quot;&gt;🔄&lt;/button&gt;&lt;/td&gt;`}); body+=&#x27;&lt;/tr&gt;&#x27;; } else {body+=`&lt;tr data-ri=&quot;${ri}&quot;&gt;&lt;td class=&quot;desc&quot; data-col=&quot;0&quot;&gt;${r}&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;body+= c.toLowerCase().includes(&#x27;email&#x27;)||c.toLowerCase().includes(&#x27;docs&#x27;)?`&lt;td class=&quot;check&quot; data-col=&quot;${ci+1}&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;${f.prefix}_cb_${ti}_${ri}_${ci}&quot; onchange=&quot;fillDoneBy(&#x27;${f.prefix}&#x27;,${ti},${ri},this.checked)&quot;&gt;&lt;/td&gt;`:`&lt;td data-col=&quot;${ci+1}&quot;&gt;&lt;input id=&quot;${f.prefix}_t${ti}_${ri}_${ci}&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot;&gt;&lt;/td&gt;`); body+=&#x27;&lt;/tr&gt;&#x27;;}});
+ f.tables.forEach((t,ti)=&gt;{body+=`&lt;div class=&quot;section&quot; data-ti=&quot;${ti}&quot;&gt;&lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px&quot;&gt;&lt;h3 style=&quot;margin:0&quot;&gt;${t.h}&lt;/h3&gt;&lt;button class=&quot;btn&quot; style=&quot;font-size:11px;padding:3px 9px;opacity:.7&quot; onclick=&quot;toggleColPanel(${ti})&quot;&gt;⚙ Columns&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;col-panel-${ti}&quot; style=&quot;display:none;background:rgba(184,134,11,0.08);border:.5px solid rgba(184,134,11,0.3);border-radius:7px;padding:8px 12px;margin-bottom:8px&quot;&gt;&lt;div style=&quot;margin-bottom:8px;padding-bottom:6px;border-bottom:.5px solid rgba(184,134,11,0.2)&quot;&gt;&lt;label style=&quot;display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:#B8860B&quot;&gt;&lt;input type=&quot;checkbox&quot; checked onchange=&quot;toggleSection(${ti},this.checked)&quot;&gt; แสดงหัวข้อนี้&lt;/label&gt;&lt;/div&gt;${t.cols.slice(1).map(function(c,ci){return &#x27;&lt;label style=&quot;display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;cursor:pointer&quot;&gt;&lt;input type=&quot;checkbox&quot; checked onchange=&quot;toggleCol(&#x27;+ti+&#x27;,&#x27;+(ci+1)+&#x27;,this.checked)&quot;&gt;&#x27;+c+&#x27;&lt;/label&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;div style=&quot;margin-top:8px;padding-top:6px;border-top:.5px solid rgba(184,134,11,0.2);display:flex;flex-wrap:wrap&quot;&gt;${t.rows.map(function(r,ri){var rlabel=Array.isArray(r)?r[0]:r; return &#x27;&lt;label style=&quot;display:flex;align-items:center;gap:5px;margin-right:14px;margin-top:4px;font-size:11px;cursor:pointer;color:#6b6459&quot;&gt;&lt;input type=&quot;checkbox&quot; checked data-row-ri=&quot;&#x27;+ri+&#x27;&quot; onchange=&quot;toggleRowVis(&#x27;+ti+&#x27;,&#x27;+ri+&#x27;,this.checked)&quot;&gt;&#x27;+rlabel+&#x27;&lt;/label&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;&lt;table id=&quot;tbl-${ti}&quot;&gt;&lt;tr&gt;${t.cols.map(function(c,ci){return &#x27;&lt;th data-col=&quot;&#x27;+ci+&#x27;&quot;&gt;&#x27;+c+&#x27;&lt;/th&gt;&#x27;;}).join(&#x27;&#x27;)}&lt;/tr&gt;`;
+ t.rows.forEach((r,ri)=&gt;{ if(Array.isArray(r)){let [d,sub,id]=r; body+=`&lt;tr data-ri=&quot;${ri}&quot;&gt;&lt;td class=&quot;desc&quot; data-col=&quot;0&quot;&gt;${d}&lt;div class=&quot;sub&quot;&gt;${sub}&lt;/div&gt;&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;{let isVal=id ? (id.match(/_oz$/) ? ci===1 : ci===0) : (ci===0); let rid=isVal?id:&#x27;&#x27;; let isCalc=(isVal&amp;&amp;id&amp;&amp;id.match(/(oz|usd|funds|premusd|95|bal|disc|adj)/)); body+=`&lt;td data-col=&quot;${ci+1}&quot; style=&quot;position:relative&quot;&gt;&lt;input data-override-field=&quot;${isCalc?&#x27;1&#x27;:&#x27;&#x27;}&quot; data-user-edited=&quot;0&quot; id=&quot;${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&quot; oninput=&quot;${isCalc?&#x27;gvClMarkOverride(this);&#x27;:&#x27;&#x27;}${FORMS[current].calc}();autoSave()&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot; style=&quot;${isCalc?&#x27;border-color:rgba(91,164,245,0.25);cursor:text&#x27;:&#x27;&#x27;}&quot; title=&quot;${isCalc?&#x27;Auto-calculated — พิมพ์ทับได้ กด 🔄 reset&#x27;:&#x27;&#x27;}&quot;&gt;&lt;button type=&quot;button&quot; id=&quot;rst-${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&quot; onclick=&quot;gvClResetField(&#x27;${rid||`${f.prefix}_t${ti}_${ri}_${ci}`}&#x27;)&quot; style=&quot;display:none;position:absolute;right:1px;top:1px;background:none;border:.5px solid #8a6d1f;border-radius:2px;padding:0 3px;color:#8a6d1f;font-size:8px;cursor:pointer;line-height:1.4&quot;&gt;🔄&lt;/button&gt;&lt;/td&gt;`}); body+=&#x27;&lt;/tr&gt;&#x27;; } else {body+=`&lt;tr data-ri=&quot;${ri}&quot;&gt;&lt;td class=&quot;desc&quot; data-col=&quot;0&quot;&gt;${r}&lt;/td&gt;`; t.cols.slice(1).forEach((c,ci)=&gt;body+= c.toLowerCase().includes(&#x27;email&#x27;)||c.toLowerCase().includes(&#x27;docs&#x27;)?`&lt;td class=&quot;check&quot; data-col=&quot;${ci+1}&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;${f.prefix}_cb_${ti}_${ri}_${ci}&quot; onchange=&quot;fillDoneBy(&#x27;${f.prefix}&#x27;,${ti},${ri},this.checked)&quot;&gt;&lt;/td&gt;`:`&lt;td data-col=&quot;${ci+1}&quot;&gt;&lt;input id=&quot;${f.prefix}_t${ti}_${ri}_${ci}&quot; type=&quot;${c.includes(&#x27;Date&#x27;)?&#x27;date&#x27;:&#x27;text&#x27;}&quot;&gt;&lt;/td&gt;`); body+=&#x27;&lt;/tr&gt;&#x27;;}});
  body+=&#x27;&lt;/table&gt;&#x27;; if(t.h===&#x27;Description&#x27;||t.custom){ body+=`&lt;div style=&quot;margin-top:8px;text-align:right&quot;&gt;&lt;button class=&quot;btn&quot; onclick=&quot;addCustomRow(${ti})&quot;&gt;+ Add Row&lt;/button&gt;&lt;/div&gt;`; } body+=&#x27;&lt;/div&gt;&#x27;;
  if(f.tranches &amp;&amp; t.h===&#x27;Refinery Transfer USD to SG&#x27;){ body+=renderTranchesHTML(); }
  });
@@ -7178,27 +7174,38 @@ window.addEventListener(&#x27;message&#x27;, function(e){
 function toast(t){let el=document.getElementById(&#x27;toast&#x27;);el.textContent=t;el.style.display=&#x27;block&#x27;;setTimeout(()=&gt;el.style.display=&#x27;none&#x27;,1800)}
 function autoCreateTransaction(type, fieldMap, externalRef){
   if(!FORMS[type]) return;
-  var metaMap={purchase:{date:&#x27;sp_date&#x27;,customer:&#x27;sp_customer&#x27;,ref:&#x27;sp_ref&#x27;,qty:&#x27;sp_qty&#x27;},sales:{date:&#x27;ss_date&#x27;,customer:&#x27;ss_customer&#x27;,ref:&#x27;ss_ref&#x27;,qty:&#x27;ss_qty&#x27;},&#x27;kilo-sales&#x27;:{date:&#x27;ks_date&#x27;,customer:&#x27;ks_customer&#x27;,ref:&#x27;ks_ref&#x27;,qty:&#x27;ks_qty&#x27;},&#x27;kilo-purchase&#x27;:{date:&#x27;kp_date&#x27;,customer:&#x27;kp_counterparty&#x27;,ref:&#x27;kp_ref&#x27;,qty:&#x27;kp_qty&#x27;}}[type];
-  function val(id){ return fieldMap &amp;&amp; fieldMap.hasOwnProperty(id) ? fieldMap[id] : &#x27;&#x27;; }
-  var caseId = externalRef ? (typeCode(type)+&#x27;-EXT-&#x27;+String(externalRef).replace(/[^a-zA-Z0-9-]/g,&#x27;&#x27;)) : generateCaseId(type);
-  var rows=[{Section:&#x27;META&#x27;,Key:&#x27;_case_id&#x27;,Label:&#x27;Case ID&#x27;,Value:caseId},{Section:&#x27;META&#x27;,Key:&#x27;_type&#x27;,Label:&#x27;Checklist Type&#x27;,Value:type},{Section:&#x27;META&#x27;,Key:&#x27;_source&#x27;,Label:&#x27;Source&#x27;,Value:&#x27;Auto-synced&#x27;}];
+  var metaMap={purchase:{date:'sp_date',customer:'sp_customer',ref:'sp_ref',qty:'sp_qty'},sales:{date:'ss_date',customer:'ss_customer',ref:'ss_ref',qty:'ss_qty'},'kilo-sales':{date:'ks_date',customer:'ks_customer',ref:'ks_ref',qty:'ks_qty'},'kilo-purchase':{date:'kp_date',customer:'kp_counterparty',ref:'kp_ref',qty:'kp_qty'}}[type];
+  function val(id){ return fieldMap && fieldMap.hasOwnProperty(id) ? fieldMap[id] : ''; }
+  var caseId = externalRef ? (typeCode(type)+'-EXT-'+String(externalRef).replace(/[^a-zA-Z0-9-]/g,'')) : generateCaseId(type);
+  var rows=[{Section:'META',Key:'_case_id',Label:'Case ID',Value:caseId},{Section:'META',Key:'_type',Label:'Checklist Type',Value:type},{Section:'META',Key:'_source',Label:'Source',Value:'Auto-synced'}];
   FORMS[type].fields.forEach(function(f){
-    rows.push({Section:&#x27;Header Information&#x27;,Key:f[1],Label:f[0],Value:val(f[1])});
+    rows.push({Section:'Header Information',Key:f[1],Label:f[0],Value:val(f[1])});
   });
   var record={
     caseId:caseId, type:type, typeName:typeName(type),
     date: val(metaMap.date) || new Date().toISOString().slice(0,10),
-    customer: val(metaMap.customer) || &#x27;-&#x27;,
+    customer: val(metaMap.customer) || '-',
     ref: val(metaMap.ref) || caseId,
-    qty: val(metaMap.qty) || &#x27;&#x27;,
-    status:&#x27;Draft&#x27;, updatedAt:new Date().toISOString(), rows:rows
+    qty: val(metaMap.qty) || '',
+    sourceOrderNo: externalRef || null,
+    status:'Draft', updatedAt:new Date().toISOString(), rows:rows
   };
   var list=getTransactions();
-  var idx=list.findIndex(function(x){return x.caseId===caseId;});
-  if(idx&gt;=0) list[idx]=record; else list.unshift(record);
+  /* This order may already have a record from the OTHER, independent auto-sync path
+     (addChecklistTransactionFromOrder, which fires automatically on every order confirm
+     and page load, using a different caseId format keyed by sourceOrderNo). Match on
+     EITHER scheme so whichever sync runs second updates in place instead of duplicating.
+     Must also match type — Refinery sync intentionally sends the SAME externalRef for
+     BOTH a 'purchase' record (SG buying scrap from customer) AND a 'sales' record (SG
+     selling it on to the refinery); without the type check, the second sync silently
+     overwrote the first instead of creating both. */
+  var idx=list.findIndex(function(x){
+    return x.caseId===caseId || (externalRef && x.sourceOrderNo===externalRef && x.type===type);
+  });
+  if(idx>=0){ record.caseId = list[idx].caseId; list[idx]=record; } else { list.unshift(record); }
   setTransactions(list);
   renderTransactions();
-  if(typeof buildCustomerDatalist===&#x27;function&#x27;) buildCustomerDatalist();
+  if(typeof buildCustomerDatalist==='function') buildCustomerDatalist();
 }
 
 /* ===== Transaction Management Extension ===== */
@@ -7335,14 +7342,18 @@ function txClearDate(){var inp=document.getElementById(&#x27;txDate&#x27;);if(in
  let pageInfo=document.getElementById(&#x27;txPageInfo&#x27;);
  if(pageInfo) pageInfo.textContent = &#x27;Page &#x27; + txPage + &#x27; / &#x27; + totalPages;
  body.innerHTML=list.length?list.map(x=&gt;{
-  var refDisplay=x.ref?`&lt;span style=&quot;font-weight:700;color:#B8860B&quot;&gt;${x.ref}&lt;/span&gt;`:`&lt;span style=&quot;color:#5C5850;font-size:11px&quot;&gt;${x.caseId}&lt;/span&gt;`;
+  var refDisplay=x.ref?`&lt;span style=&quot;font-weight:700;color:#B8860B&quot;&gt;${x.ref}&lt;/span&gt;`:`&lt;span style=&quot;color:#6b6459;font-size:11px&quot;&gt;${x.caseId}&lt;/span&gt;`;
   var actionColor={buy:&#x27;#74C69D&#x27;,sell:&#x27;#FF6B6B&#x27;,&#x27;client-buy&#x27;:&#x27;#74C69D&#x27;,&#x27;client-sell&#x27;:&#x27;#FF6B6B&#x27;}[x.type]||&#x27;#B8860B&#x27;;
+  var brandKeyMap={&#x27;kilo-sales&#x27;:&#x27;ks_brand&#x27;,&#x27;kilo-purchase&#x27;:&#x27;kp_brand&#x27;,purchase:&#x27;sp_goldtype&#x27;,sales:&#x27;ss_goldtype&#x27;};
+  var brandRow=(x.rows||[]).find(function(r){ return r.Key===brandKeyMap[x.type]; });
+  var brandVal=(brandRow&amp;&amp;brandRow.Value)?brandRow.Value:&#x27;&#x27;;
+  var brandSub=brandVal?`&lt;div style=&quot;font-size:11px;color:#6b6459;margin-top:2px&quot;&gt;${brandVal}${x.qty?&#x27; — &#x27;+x.qty+&#x27; kg&#x27;:&#x27;&#x27;}&lt;/div&gt;`:&#x27;&#x27;;
   return `&lt;tr style=&quot;transition:background .15s&quot; onmouseover=&quot;this.style.background=&#x27;rgba(255,255,255,0.03)&#x27;&quot; onmouseout=&quot;this.style.background=&#x27;&#x27;&quot;&gt;
-    &lt;td style=&quot;color:#9A9488;font-size:13px;white-space:nowrap&quot;&gt;${gvFmtDate(x.date)||&#x27;-&#x27;}&lt;/td&gt;
+    &lt;td style=&quot;color:#6b6459;font-size:13px;white-space:nowrap&quot;&gt;${gvFmtDate(x.date)||&#x27;-&#x27;}&lt;/td&gt;
     &lt;td&gt;${refDisplay}&lt;/td&gt;
-    &lt;td style=&quot;font-weight:500;color:#F0EDE6&quot;&gt;${x.customer||&#x27;-&#x27;}&lt;/td&gt;
+    &lt;td style=&quot;font-weight:500;color:#1a1a1a&quot;&gt;${x.customer||&#x27;-&#x27;}&lt;/td&gt;
     &lt;td&gt;&lt;span style=&quot;display:inline-block;background:${actionColor}22;color:${actionColor};border:.5px solid ${actionColor}66;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600&quot;&gt;${x.clientAction||clientActionName(x.type)}&lt;/span&gt;&lt;/td&gt;
-    &lt;td style=&quot;font-size:13px;color:#c9b882&quot;&gt;${x.typeName||typeName(x.type)}&lt;/td&gt;
+    &lt;td style=&quot;font-size:13px;color:#8a6d1f&quot;&gt;${x.typeName||typeName(x.type)}${brandSub}&lt;/td&gt;
     &lt;td&gt;&lt;span class=&quot;txstatus ${String(x.status||&#x27;Draft&#x27;).replace(/ /g,&#x27;&#x27;)}&quot;&gt;${x.status||&#x27;Draft&#x27;}&lt;/span&gt;&lt;/td&gt;
     &lt;td style=&quot;white-space:nowrap&quot;&gt;&lt;button class=&quot;btn&quot; onclick=&quot;loadTransaction(&#x27;${x.caseId}&#x27;)&quot;&gt;View&lt;/button&gt; &lt;button class=&quot;btn danger&quot; onclick=&quot;deleteTransaction(&#x27;${x.caseId}&#x27;)&quot;&gt;Delete&lt;/button&gt;&lt;/td&gt;
   &lt;/tr&gt;`;
@@ -7491,8 +7502,8 @@ function gvClMarkOverride(inp){
   var rst = document.getElementById(&#x27;rst-&#x27; + inp.id);
   if(rst) rst.style.display = inp.dataset.userEdited===&#x27;1&#x27; ? &#x27;inline-block&#x27; : &#x27;none&#x27;;
   if(inp.dataset.userEdited===&#x27;1&#x27;){
-    inp.style.borderColor = &#x27;#FFD700&#x27;;
-    inp.style.color = &#x27;#FFD700&#x27;;
+    inp.style.borderColor = &#x27;#8a6d1f&#x27;;
+    inp.style.color = &#x27;#8a6d1f&#x27;;
     inp.title = &#x27;Manual override — click 🔄 reset to restore auto value&#x27;;
   } else {
     inp.style.borderColor = &#x27;&#x27;;
@@ -8563,6 +8574,27 @@ function calcPhysical() {
   sv('ph-s-gold', fmtMoney(sym,goldVal));
   sv('ph-s-prem', fmtMoney(sym,prem)+' ('+premPerOz.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USD/oz)');
   sv('ph-s-total', fmtMoney(sym,tot)+' '+cur);
+  var combinedRow = document.getElementById('ph-s-combined-row');
+  var pendingQueue = window.phMultiBrandQueue||[];
+  if(combinedRow){
+    if(pendingQueue.length){
+      var pendingOz = 0;
+      pendingQueue.forEach(function(l){
+        var lineSize = (l.size!=null && l.size!=='' && parseFloat(l.size)>0) ? parseFloat(l.size) : 1;
+        var kgPerUnit = (typeof physicalInputToKg==='function') ? physicalInputToKg(lineSize, l.unit) : lineSize;
+        var lineQty = Math.max(1, parseInt(l.qty,10) || 1);
+        var lineKg = kgPerUnit * lineQty;
+        pendingOz += lineKg*32.148;
+      });
+      var combinedTot = tot + (pendingOz*price*rate) + (pendingOz*premPerOz*rate);
+      combinedRow.style.display='flex';
+      sv('ph-s-combined-total', fmtMoney(sym,combinedTot)+' '+cur);
+      var combinedLabel = document.getElementById('ph-s-combined-label');
+      if(combinedLabel) combinedLabel.textContent = 'Order Total ('+(pendingQueue.length+1)+' Brands combined)';
+    } else {
+      combinedRow.style.display='none';
+    }
+  }
   var hint = document.getElementById('ph-fixed-hint');
   if(hint) hint.textContent = overridePrice
     ? '✓ Using overridden price: $'+Number(overridePrice).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3})+' / oz'
@@ -8576,6 +8608,9 @@ function calcPhysical() {
       label.innerHTML = 'Override Price (USD/oz) <span style="color:#3C3830;font-weight:400;text-transform:none;letter-spacing:0">— leave blank to use live</span>';
       if(fixedInput) { fixedInput.style.borderColor='rgba(184,134,11,0.3)'; fixedInput.placeholder='e.g. 4168.50 — optional for market, required for fixed'; }
     }
+  }
+  if(window.phMultiBrandQueue && window.phMultiBrandQueue.length && typeof window.renderPhMultiBrandPanel==='function'){
+    window.renderPhMultiBrandPanel();
   }
 }
 function calcSpot() {
@@ -8642,7 +8677,12 @@ function quickCreatePartyFromOrder(){
         return '<tr onclick="selectInventoryBarAndReturn(\''+escH(b.id)+'\')" title="Click this row to select '+esc(b.barno)+'" style="cursor:pointer;background:rgba(184,134,11,0.035)">'+
           '<td>'+esc(b.brand)+'</td><td>'+esc(b.size)+'</td><td style="font-family:monospace;font-size:11px;color:#B8860B;font-weight:700">'+esc(b.barno)+'</td><td>'+esc(b.supplier)+'</td><td>'+esc(b.purity)+'</td><td>'+statusBadge(b.status)+'</td><td><span class="badge badge-gold">Click to select</span></td></tr>';
       }
-      return '<tr><td>'+esc(b.brand)+'</td><td>'+esc(b.size)+'</td><td style="font-family:monospace;font-size:11px">'+esc(b.barno)+'</td><td>'+esc(b.supplier)+'</td><td>'+esc(b.purity)+'</td><td>'+statusBadge(b.status)+'</td><td><button class="btn btn-sm" style="padding:2px 7px;font-size:11px" onclick="event.stopPropagation();deleteInventoryBar(\''+b.id+'\')">✕</button></td></tr>';
+      return '<tr><td><input value="'+escH(b.brand)+'" placeholder="Brand" oninput="updateBarListField(\''+b.id+'\',\'brand\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.size)+'" placeholder="Size" oninput="updateBarListField(\''+b.id+'\',\'size\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.barno)+'" placeholder="Bar No." oninput="updateBarListField(\''+b.id+'\',\'barno\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:11px;font-family:monospace;outline:none"></td>'+
+        '<td><input value="'+escH(b.supplier)+'" placeholder="Supplier" oninput="updateBarListField(\''+b.id+'\',\'supplier\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.purity)+'" placeholder="Purity" oninput="updateBarListField(\''+b.id+'\',\'purity\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td>'+statusBadge(b.status)+'</td><td><button class="btn btn-sm" style="padding:2px 7px;font-size:11px" onclick="event.stopPropagation();deleteInventoryBar(\''+b.id+'\')">✕</button></td></tr>';
     }).join('');
   };
 
@@ -8783,6 +8823,315 @@ function quickCreatePartyFromOrder(){
     inputEl.value='';
   };
 
+  // Export the current Inventory bar list back out as a flat Excel sheet — round-trips with
+  // the standard "Import Excel / CSV (Bar List)" button above.
+  window.exportInventoryExcel=function(){
+    if(!window.XLSX){ showToast('Excel engine is offline. Please connect internet once.'); return; }
+    var list=getInv();
+    if(!list.length){ showToast('No inventory to export'); return; }
+    var rows=list.map(function(b){
+      return { 'Brand':b.brand||'', 'Bar No':b.barno||'', 'Size':b.size||'', 'Weight(g)':b.weightG||'', 'Supplier':b.supplier||'', 'Purity':b.purity||'', 'Status':b.status||'', 'Box':b.box||'' };
+    });
+    var wbo=XLSX.utils.book_new();
+    var wso=XLSX.utils.json_to_sheet(rows);
+    wso['!cols']=[{wch:18},{wch:16},{wch:12},{wch:12},{wch:18},{wch:10},{wch:10},{wch:14}];
+    XLSX.utils.book_append_sheet(wbo,wso,'Inventory');
+    XLSX.writeFile(wbo,'GoldVault_Inventory_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  };
+
+  /* Import a "Packing List" style Excel sheet — a template shaped like:
+       Row: "Box No. 07"  (blank) (blank) (blank) "Box No. 08"  ...
+       Row: Item | Brand | Bar No. | Weight(g) | Item | Brand | Bar No. | Weight(g) | ...
+       Rows: 1..N numbered bar rows per box, until a "Total" row.
+     Each box's 4 columns are read independently, so multiple boxes side-by-side on the
+     same sheet all import correctly (a plain sheet_to_json would collide on the
+     duplicate "Item"/"Brand"/"Bar No."/"Weight(g)" column headers and lose all but the
+     last box). Every parsed bar is tagged with which box it came from. */
+  window.importInventoryPackingList=function(inputEl){
+    var file=inputEl.files[0];
+    if(!file){ return; }
+    if(!window.XLSX){ showToast('Excel engine is offline. Please connect internet once.'); inputEl.value=''; return; }
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var wb=XLSX.read(e.target.result,{type:'array'});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        var boxGroups=[]; // {label, startCol, endCol, brandCol, barnoCol, weightCol}
+        var headerRowIdx=-1;
+        for(var r=0;r<aoa.length;r++){
+          var row=aoa[r];
+          for(var c=0;c<row.length;c++){
+            var v=String(row[c]||'').trim();
+            if(/^box\s*no/i.test(v)){
+              boxGroups.push({label:v, startCol:c});
+            }
+          }
+          if(boxGroups.length){
+            // each box's own column range ends where the next box's starts (or end of row for the last box)
+            boxGroups.forEach(function(g,gi){
+              g.endCol = (gi+1<boxGroups.length) ? boxGroups[gi+1].startCol : row.length;
+            });
+            // the header sub-row (Item/Brand/Bar No./Weight) is the next non-empty row
+            for(var r2=r+1;r2<aoa.length;r2++){
+              var hrow=aoa[r2];
+              if(hrow.some(function(x){return String(x||'').trim()!=='';})){
+                headerRowIdx=r2;
+                boxGroups.forEach(function(g){
+                  for(var c2=g.startCol;c2<g.endCol && c2<hrow.length;c2++){
+                    var label=String(hrow[c2]||'').trim().toLowerCase();
+                    if(label==='brand') g.brandCol=c2;
+                    else if(/^bar\s*no/.test(label)) g.barnoCol=c2;
+                    else if(/^weight/.test(label)) g.weightCol=c2;
+                  }
+                });
+                break;
+              }
+            }
+            break;
+          }
+        }
+        if(!boxGroups.length || headerRowIdx<0){
+          showToast('Could not find a "Box No." packing list layout in this file — try the regular Bar List import instead.');
+          inputEl.value=''; return;
+        }
+        var list=getInv();
+        var added=0;
+        for(var r3=headerRowIdx+1;r3<aoa.length;r3++){
+          var drow=aoa[r3];
+          if(!drow || !drow.length) continue;
+          boxGroups.forEach(function(g){
+            if(g.brandCol===undefined || g.barnoCol===undefined) return;
+            var brand=String(drow[g.brandCol]||'').trim();
+            var barno=String(drow[g.barnoCol]||'').trim();
+            var weight=drow[g.weightCol!==undefined?g.weightCol:-1];
+            if(!brand && !barno) return; // blank template row / gap — skip
+            if(/^total$/i.test(barno)) return; // summary row — skip
+            if(barno && list.some(function(b){ return String(b.barno).trim()===barno; })) return;
+            list.push({
+              id:'bar-'+Date.now()+'-'+(Math.random()*100000|0),
+              brand:brand, barno:barno, size:'', supplier:'', purity:'',
+              weightG: weight!==undefined && weight!=='' ? String(weight) : '',
+              box: g.label,
+              status:'available', addedAt:new Date().toISOString()
+            });
+            added++;
+          });
+        }
+        setInv(list);
+        window.renderInventoryTable();
+        if(typeof window.renderBarListBoxes==='function') window.renderBarListBoxes();
+        showToast('✓ Imported '+added+' bar'+(added===1?'':'s')+' from packing list ('+boxGroups.length+' box'+(boxGroups.length===1?'':'es')+' found)');
+      }catch(err){ showToast('Error reading packing list: '+err.message); }
+      inputEl.value='';
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  /* ===== Box / Seal Tracking — separate table, separate storage ===== */
+  var BOX_KEY='goldvault_box_seal_tracking_v1';
+  function getBoxList(){ try{ return JSON.parse(localStorage.getItem(BOX_KEY)||'[]'); }catch(e){ return []; } }
+  function setBoxList(list){ localStorage.setItem(BOX_KEY, JSON.stringify(list)); }
+  function boxCol(row,keys){
+    for(var i=0;i<keys.length;i++){
+      for(var k in row){
+        if(String(k).toLowerCase().replace(/[^a-z0-9]/g,'')===keys[i]) return String(row[k]||'').trim();
+      }
+    }
+    return '';
+  }
+  window.renderBoxTrackingTable=function(){
+    var body=document.getElementById('box-body'); if(!body) return;
+    var list=getBoxList();
+    var cnt=document.getElementById('box-count'); if(cnt) cnt.textContent=list.length+' box'+(list.length===1?'':'es');
+    if(!list.length){ body.innerHTML='<tr><td colspan="6" style="text-align:center;color:#5C5850;padding:20px">No boxes yet. Import Excel or add a box manually.</td></tr>'; return; }
+    body.innerHTML=list.map(function(b,i){
+      return '<tr>'+
+        '<td>'+(i+1)+'</td>'+
+        '<td><input value="'+escH(b.boxNumber)+'" oninput="updateBoxField(\''+b.id+'\',\'boxNumber\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.orangeBlueSeal)+'" oninput="updateBoxField(\''+b.id+'\',\'orangeBlueSeal\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.blueRedSeal)+'" oninput="updateBoxField(\''+b.id+'\',\'blueRedSeal\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.netWeight)+'" oninput="updateBoxField(\''+b.id+'\',\'netWeight\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><button class="btn btn-sm" style="padding:2px 7px;font-size:11px" onclick="deleteBoxTrackingRow(\''+b.id+'\')">✕</button></td>'+
+      '</tr>';
+    }).join('');
+  };
+  window.updateBoxField=function(id,field,value){
+    var list=getBoxList();
+    var b=list.find(function(x){return x.id===id;});
+    if(b){ b[field]=value; setBoxList(list); }
+  };
+  window.addBoxTrackingRow=function(){
+    var list=getBoxList();
+    list.push({id:'box-'+Date.now()+'-'+(Math.random()*100000|0), boxNumber:(list.length+1)+' of '+(list.length+1), orangeBlueSeal:'', blueRedSeal:'', netWeight:''});
+    setBoxList(list);
+    window.renderBoxTrackingTable();
+  };
+  window.deleteBoxTrackingRow=function(id){
+    setBoxList(getBoxList().filter(function(x){return x.id!==id;}));
+    window.renderBoxTrackingTable();
+  };
+  window.importBoxTrackingExcel=function(inputEl){
+    var file=inputEl.files[0];
+    if(!file) return;
+    var name=(file.name||'').toLowerCase();
+    var isCSV=/\.(csv|txt)$/.test(name);
+    var reader=new FileReader();
+    function applyRows(rows){
+      var list=getBoxList();
+      var added=0;
+      rows.forEach(function(row){
+        var boxNumber=boxCol(row,['boxnumber','box','boxno']);
+        var orangeBlueSeal=boxCol(row,['orangebagblueseal','orangeblueseal','orangebag']);
+        var blueRedSeal=boxCol(row,['bluebagredseal','blueredseal','bluebag']);
+        var netWeight=boxCol(row,['netweightgrams','netweight','weight']);
+        if(!boxNumber && !netWeight) return;
+        list.push({id:'box-'+Date.now()+'-'+(Math.random()*100000|0), boxNumber:boxNumber, orangeBlueSeal:orangeBlueSeal, blueRedSeal:blueRedSeal, netWeight:netWeight});
+        added++;
+      });
+      setBoxList(list);
+      window.renderBoxTrackingTable();
+      showToast('✓ Imported '+added+' box'+(added===1?'':'es')+' to tracking');
+    }
+    if(window.XLSX && !isCSV){
+      reader.onload=function(e){
+        try{
+          var wb=XLSX.read(e.target.result,{type:'array'});
+          var ws=wb.Sheets[wb.SheetNames[0]];
+          applyRows(XLSX.utils.sheet_to_json(ws,{defval:''}));
+        }catch(err){ showToast('Error reading Excel: '+err.message); }
+      };
+      reader.readAsArrayBuffer(file);
+    }else if(isCSV){
+      reader.onload=function(e){
+        try{ applyRows(parseInventoryCSV(e.target.result)); }
+        catch(err){ showToast('Error reading CSV: '+err.message); }
+      };
+      reader.readAsText(file,'utf-8');
+    }else{
+      showToast('Excel engine is offline. Please save as CSV and upload CSV, or open with internet once.');
+    }
+    inputEl.value='';
+  };
+  window.exportBoxTrackingExcel=function(){
+    if(!window.XLSX){ showToast('Excel engine is offline. Please connect internet once.'); return; }
+    var list=getBoxList();
+    if(!list.length){ showToast('No boxes to export'); return; }
+    var rows=list.map(function(b,i){
+      return { 'No':i+1, 'Box Number':b.boxNumber||'', 'Orang Bag Blue Seal':b.orangeBlueSeal||'', 'Blue Bag Red Seal':b.blueRedSeal||'', 'Net Weight (Grams)':b.netWeight||'' };
+    });
+    var wbo=XLSX.utils.book_new();
+    var wso=XLSX.utils.json_to_sheet(rows);
+    wso['!cols']=[{wch:6},{wch:14},{wch:20},{wch:20},{wch:16}];
+    XLSX.utils.book_append_sheet(wbo,wso,'Box Tracking');
+    XLSX.writeFile(wbo,'GoldVault_BoxTracking_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  };
+
+  /* ===== Bar List (Fill In) — editable Box No. → Item/Brand/Bar No./Weight grid =====
+     Bars entered here are stored in the SAME goldvault_inventory_bars_v1 list as every
+     other inventory bar (just tagged with a `box` name), so they show up in the main
+     Inventory table, the Buy & Sell bar picker, and Export Excel automatically. */
+  window.createBarListBox=function(){
+    var input=document.getElementById('barlist-new-box-name');
+    var name=(input&&input.value||'').trim();
+    if(!name){ showToast('Please type a box name first'); return; }
+    var list=getInv();
+    if(list.some(function(b){ return b.box===name; })){ showToast('A box with that name already exists below'); return; }
+    var countInput=document.getElementById('barlist-new-box-count');
+    var count=parseInt(countInput&&countInput.value,10); if(!count||count<1) count=1; if(count>50) count=50;
+    for(var i=0;i<count;i++){
+      list.push({id:'bar-'+Date.now()+'-'+i+'-'+(Math.random()*100000|0), brand:'', barno:'', size:'', supplier:'', purity:'', weightG:'1000', box:name, status:'available', addedAt:new Date().toISOString()});
+    }
+    setInv(list);
+    if(input) input.value='';
+    window.renderInventoryTable();
+    window.renderBarListBoxes();
+  };
+  window.addBarListItemRow=function(boxName,count){
+    var list=getInv();
+    var n=parseInt(count,10)||1;
+    var existing=list.filter(function(b){return b.box===boxName;}).length;
+    if(existing+n>50) n=Math.max(0,50-existing);
+    if(n<=0){ showToast('This box already has 50 items (max)'); return; }
+    for(var i=0;i<n;i++){
+      list.push({id:'bar-'+Date.now()+'-'+i+'-'+(Math.random()*100000|0), brand:'', barno:'', size:'', supplier:'', purity:'', weightG:'1000', box:boxName, status:'available', addedAt:new Date().toISOString()});
+    }
+    setInv(list);
+    window.renderBarListBoxes();
+  };
+  window.updateBarListField=function(id,field,value){
+    var list=getInv();
+    var b=list.find(function(x){return x.id===id;});
+    if(b){ b[field]=value; setInv(list); }
+    // deliberately NOT re-rendering here — this fires on every keystroke, and re-rendering
+    // the table would replace the input the user is actively typing in, dropping focus and
+    // losing characters. Other views (main table, Bar List boxes, Export) pick up the change
+    // next time they render — on add/delete/import, or navigating back to this page.
+  };
+  window.deleteBarListRow=function(id){
+    var list=getInv().filter(function(b){ return b.id!==id; });
+    setInv(list);
+    window.renderInventoryTable();
+    window.renderBarListBoxes();
+  };
+  window.deleteBarListBox=function(boxName){
+    if(!confirm('Remove the whole "'+boxName+'" box and all its bars?')) return;
+    var list=getInv().filter(function(b){ return b.box!==boxName; });
+    setInv(list);
+    window.renderInventoryTable();
+    window.renderBarListBoxes();
+  };
+  window.renderBarListBoxes=function(){
+    var wrap=document.getElementById('barlist-boxes'); if(!wrap) return;
+    var list=getInv().filter(function(b){ return b.box; });
+    if(!list.length){ wrap.innerHTML='<div style="color:#5C5850;font-size:12px;padding:8px 2px">No boxes yet — type a box name above and click "+ Create Box".</div>'; return; }
+    var boxNames=[]; list.forEach(function(b){ if(boxNames.indexOf(b.box)===-1) boxNames.push(b.box); });
+    function rowHTML(b,idx){
+      return '<tr>'+
+        '<td style="text-align:center;color:#5C5850;width:30px">'+idx+'</td>'+
+        '<td><input value="'+escH(b.brand)+'" placeholder="Brand" oninput="updateBarListField(\''+b.id+'\',\'brand\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none"></td>'+
+        '<td><input value="'+escH(b.barno)+'" placeholder="Bar No." oninput="updateBarListField(\''+b.id+'\',\'barno\',this.value)" style="width:100%;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none;font-family:monospace"></td>'+
+        '<td><input value="'+escH(b.weightG)+'" placeholder="1000" oninput="updateBarListField(\''+b.id+'\',\'weightG\',this.value)" style="width:64px;background:transparent;border:none;color:#F0EDE6;font-size:12px;outline:none;text-align:right"></td>'+
+        '<td style="width:26px"><button class="btn btn-sm" style="padding:1px 5px;font-size:10px" onclick="deleteBarListRow(\''+b.id+'\')">✕</button></td>'+
+      '</tr>';
+    }
+    function colHead(){
+      return '<tr style="font-size:10px;color:#5C5850;text-transform:uppercase"><th style="text-align:center;padding:4px 6px">Item</th><th style="text-align:left;padding:4px 6px">Brand</th><th style="text-align:left;padding:4px 6px">Bar No.</th><th style="text-align:right;padding:4px 6px">Weight(g)</th><th></th></tr>';
+    }
+    wrap.innerHTML=boxNames.map(function(boxName){
+      var items=list.filter(function(b){ return b.box===boxName; });
+      var totalG=items.reduce(function(s,b){ return s+(parseFloat(b.weightG)||0); },0);
+      var body;
+      if(items.length>13){
+        // split into two side-by-side columns once a box has enough items to be worth it,
+        // matching the Excel packing-list layout (numbering continues across both columns).
+        var mid=Math.ceil(items.length/2);
+        var left=items.slice(0,mid), right=items.slice(mid);
+        var leftRows=left.map(function(b,i){ return rowHTML(b,i+1); }).join('');
+        var rightRows=right.map(function(b,i){ return rowHTML(b,mid+i+1); }).join('');
+        body='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:.5px solid rgba(255,255,255,.06)">'+
+          '<table style="width:100%;border-collapse:collapse;border-right:.5px solid rgba(255,255,255,.06)"><thead>'+colHead()+'</thead><tbody>'+leftRows+'</tbody></table>'+
+          '<table style="width:100%;border-collapse:collapse"><thead>'+colHead()+'</thead><tbody>'+rightRows+'</tbody></table>'+
+        '</div>';
+      }else{
+        var rows=items.map(function(b,i){ return rowHTML(b,i+1); }).join('');
+        body='<table style="width:100%;border-collapse:collapse"><thead>'+colHead()+'</thead><tbody>'+rows+'</tbody></table>';
+      }
+      return '<div style="border:.5px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:12px;overflow:hidden">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;padding:8px 12px;flex-wrap:wrap;gap:8px">'+
+          '<span style="font-weight:700;color:#B8860B;font-size:13px">'+escH(boxName)+'</span>'+
+          '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+            '<span style="font-size:11px;color:#5C5850">'+items.length+'/50 item'+(items.length===1?'':'s')+' · '+totalG.toLocaleString()+' g total</span>'+
+            '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px" onclick="addBarListItemRow(\''+escH(boxName)+'\',1)">+1</button>'+
+            '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px" onclick="addBarListItemRow(\''+escH(boxName)+'\',25)">+25</button>'+
+            '<button class="btn btn-sm" style="padding:2px 8px;font-size:11px;color:#FF6B6B" onclick="deleteBarListBox(\''+escH(boxName)+'\')">✕ Remove Box</button>'+
+          '</span>'+
+        '</div>'+
+        body+
+      '</div>';
+    }).join('');
+  };
+
   // Inventory reservation on order confirm
   window.reserveInventoryBars=function(barNumbers, orderNo){
     if(!barNumbers || !barNumbers.length) return;
@@ -8891,12 +9240,24 @@ function quickCreatePartyFromOrder(){
     if(cnt) cnt.textContent=n+' bar'+(n===1?'':'s')+' selected';
   }
   window.confirmPickBars=function(){
-    var barNos=Object.values(selectedBars);
-    if(!barNos.length){ showToast('Please select at least one bar'); return; }
-    var el=document.getElementById('ph-bar-no');
-    if(el) el.value=barNos.join(', ');
+    var ids=Object.keys(selectedBars);
+    if(!ids.length){ showToast('Please select at least one bar'); return; }
+    var allBars=getInv();
+    window._orderBulkBars = window._orderBulkBars || [];
+    var existing={}; window._orderBulkBars.forEach(function(b){ if(b.barno) existing[String(b.barno).trim()]=true; });
+    var added=0;
+    ids.forEach(function(id){
+      var b=allBars.find(function(x){ return x.id===id; });
+      if(!b) return;
+      var key=String(b.barno||'').trim();
+      if(key && existing[key]) return;
+      if(key) existing[key]=true;
+      window._orderBulkBars.push({brand:b.brand,size:b.size,barno:b.barno,supplier:b.supplier,purity:b.purity});
+      added++;
+    });
+    if(window.renderOrderSelectedBars) window.renderOrderSelectedBars();
     window.closeInventoryBarPicker();
-    showToast('✓ '+barNos.length+' bar'+(barNos.length===1?'':'s')+' selected — confirm order to reserve');
+    showToast('✓ '+added+' bar'+(added===1?'':'s')+' selected — confirm order to reserve');
   };
 
   window.confirmPickBarsAndReturn=function(){
@@ -9072,7 +9433,7 @@ function quickCreatePartyFromOrder(){
   };
 
   // Init on page load
-  document.addEventListener('DOMContentLoaded', function(){ window.renderInventoryTable(); });
+  document.addEventListener('DOMContentLoaded', function(){ window.renderInventoryTable(); window.renderBoxTrackingTable(); window.renderBarListBoxes(); });
 })();
 
 var lastPhysicalOrder = JSON.parse(localStorage.getItem('goldvault_last_physical_order') || 'null') || null;
@@ -9129,15 +9490,23 @@ function syncOrderDataToChecklist(order){
   var priceMatch = String(order.price||'').match(/\$?([\d,]+\.?\d*)\s*\/\s*oz/i);
   var pricePerOz = priceMatch ? priceMatch[1].replace(/,/g,'') : '';
   var counterpartyName = String(order.party||'').replace(/^[A-Z]{2,4}-\d+\s*—\s*/,'');
-  var isBuy = String(order.side||'').toUpperCase()==='BUY';
-  var formType = isBuy ? 'kilo-purchase' : 'kilo-sales';
+  var isBuy = String(order.side||order.type||'').toUpperCase()==='BUY';
+  /* Client Buy (isBuy) = we release/sell gold to them → "Kilo Sales" checklist.
+     Client Sell = we receive/purchase gold from them → "Kilo Purchase" checklist. */
+  var formType = isBuy ? 'kilo-sales' : 'kilo-purchase';
   var remarks = 'Synced from confirmed order '+(order.orderNo||'');
+  /* order.qty is the bar/lot COUNT from the order form (e.g. "5" bars), NOT the actual kg
+     weight — wrong whenever bar size isn't exactly 1kg. Extract the real kg figure from
+     order.weight (e.g. "1.00000 kg (32.148 oz)") instead, same as addChecklistTransactionFromOrder. */
+  var qtyMatch = String(order.weight||'').match(/([\d,]+\.?\d*)\s*kg/i);
+  var qtyKg = qtyMatch ? qtyMatch[1].replace(/,/g,'') : (order.qty||'1');
+  var refVal = order.refNo || order.invoiceNo || order.orderNo;
   var fields = isBuy ? {
-    kp_ref: order.refNo||order.orderNo, kp_date: order.orderDate, kp_counterparty: counterpartyName,
-    kp_qty: order.qty||'1', kp_prem: premPerOz, kp_brand: order.brand, kp_price: pricePerOz, kp_remarks: remarks
+    ks_ref: refVal, ks_date: order.orderDate, ks_customer: counterpartyName,
+    ks_qty: qtyKg, ks_prem: premPerOz, ks_brand: order.brand, ks_price: pricePerOz, ks_remarks: remarks
   } : {
-    ks_ref: order.refNo||order.orderNo, ks_date: order.orderDate, ks_customer: counterpartyName,
-    ks_qty: order.qty||'1', ks_prem: premPerOz, ks_brand: order.brand, ks_price: pricePerOz, ks_remarks: remarks
+    kp_ref: refVal, kp_date: order.orderDate, kp_counterparty: counterpartyName,
+    kp_qty: qtyKg, kp_prem: premPerOz, kp_brand: order.brand, kp_price: pricePerOz, kp_remarks: remarks
   };
   var frame = document.getElementById('gstsgChecklistCenterFrame');
   if(frame && frame.contentWindow){
@@ -10405,32 +10774,42 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="hero-sub">Supplier → Inventory → Checklist → Documents · Auto e-sign &amp; email</div>
 </div>
 <div class="container">
-<div class="two-col">
 <div>
+<!-- Bar List (Fill In) — type Box No. → Item/Brand/Bar No./Weight rows directly, no Excel needed.
+     Saves into the same Inventory bars store, tagged with the box name. -->
 <div class="card" style="margin-bottom:16px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-<div class="section-title" style="margin:0">Inventory</div>
+<div class="section-title" style="margin:0">Bar List (Fill In — Box Format)</div>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+<input id="barlist-new-box-name" placeholder="e.g. Box No. 07" style="flex:1;min-width:160px;background:#151515;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 10px;font-size:12px;color:#F0EDE6;outline:none">
+<div style="display:flex;align-items:center;gap:6px">
+<label style="font-size:11px;color:#9A9488;white-space:nowrap">Items</label>
+<input id="barlist-new-box-count" type="number" min="1" max="50" value="25" style="width:64px;background:#151515;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 8px;font-size:12px;color:#F0EDE6;outline:none;text-align:center">
+<span style="font-size:10px;color:#5C5850">(max 50)</span>
+</div>
+<button class="btn btn-sm btn-gold" onclick="createBarListBox()">+ Create Box</button>
+</div>
+<div id="barlist-boxes"></div>
+</div>
+
+<!-- Box / Seal Tracking — separate table for box-level packing checklist (Box Number, Bag/Seal, Net Weight) -->
+<div class="card" style="margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+<div class="section-title" style="margin:0">Box / Seal Tracking</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-sm" onclick="document.getElementById('inv-excel-upload').click()">⬆ Import Excel / CSV (Bar List)</button>
-<input type="file" id="inv-excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="importInventoryExcel(this)">
-<button class="btn btn-sm btn-gold" onclick="openAddBarModal()">+ Add Bar</button>
+<button class="btn btn-sm" onclick="document.getElementById('box-excel-upload').click()">⬆ Import Excel / CSV</button>
+<input type="file" id="box-excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="importBoxTrackingExcel(this)">
+<button class="btn btn-sm" onclick="exportBoxTrackingExcel()">⬇ Export Excel</button>
+<button class="btn btn-sm btn-gold" onclick="addBoxTrackingRow()">+ Add Box</button>
 </div>
-</div>
-<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-<input id="inv-search" placeholder="Search brand, bar no., supplier…" oninput="renderInventoryTable()" style="flex:1;min-width:180px;background:#151515;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:7px 10px;font-size:12px;color:#F0EDE6;outline:none">
-<select id="inv-status-filter" onchange="renderInventoryTable()" style="background:#151515;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:7px 10px;font-size:12px;color:#F0EDE6;outline:none">
-  <option value="">All Status</option>
-  <option value="available">Available</option>
-  <option value="reserved">Reserved</option>
-  <option value="sold">Sold</option>
-</select>
 </div>
 <div style="overflow:auto;border:.5px solid rgba(255,255,255,.07);border-radius:8px">
-<table id="inv-table"><thead><tr><th>Brand</th><th>Size</th><th>Bar No.</th><th>Supplier</th><th>Purity</th><th>Status</th><th style="width:80px"></th></tr></thead>
-<tbody id="inv-body"><tr><td colspan="7" style="text-align:center;color:#5C5850;padding:20px">No inventory yet. Import Excel or add bars manually.</td></tr></tbody>
+<table id="box-table"><thead><tr><th style="width:44px">No</th><th>Box Number</th><th>Orange Bag Blue Seal</th><th>Blue Bag Red Seal</th><th>Net Weight (Grams)</th><th style="width:40px"></th></tr></thead>
+<tbody id="box-body"><tr><td colspan="6" style="text-align:center;color:#5C5850;padding:20px">No boxes yet. Import Excel or add a box manually.</td></tr></tbody>
 </table>
 </div>
-<div id="inv-count" style="font-size:11px;color:#5C5850;margin-top:8px">0 bars</div>
+<div id="box-count" style="font-size:11px;color:#5C5850;margin-top:8px">0 boxes</div>
 </div>
 
 <!-- Add Bar Modal -->
@@ -10450,70 +10829,6 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button onclick="saveAddBar()" style="padding:8px 18px;background:#B8860B;border:none;border-radius:7px;color:#000;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Add Bar</button>
     </div>
   </div>
-</div>
-
-<!-- Inventory Picker Modal (used from Order form) -->
-<div id="inv-picker-modal" class="modal-overlay" onclick="if(event.target===this)closeInventoryBarPicker()">
-  <div class="modal" style="width:700px;max-width:98vw;padding:24px;background:#151515;border:1px solid rgba(184,134,11,.45);border-radius:14px;max-height:85vh;display:flex;flex-direction:column">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:16px;font-weight:700;color:#F0EDE6">Pick Bars from Inventory</div>
-      <button onclick="closeInventoryBarPicker()" style="background:none;border:none;color:#9A9488;font-size:22px;cursor:pointer;font-family:'Inter',sans-serif">×</button>
-    </div>
-    <input id="inv-picker-search" placeholder="Search brand, bar no., supplier…" oninput="renderPickerTable()" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 10px;font-size:12px;color:#F0EDE6;outline:none;margin-bottom:12px">
-    <div style="overflow:auto;flex:1;border:.5px solid rgba(255,255,255,.07);border-radius:8px">
-      <table><thead><tr><th style="width:32px"><input type="checkbox" id="inv-picker-all" onchange="toggleAllPicker(this)"></th><th>Brand</th><th>Bar No.</th><th>Size</th><th>Supplier</th><th>Purity</th><th>Status</th></tr></thead>
-      <tbody id="inv-picker-body"></tbody></table>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
-      <div id="inv-picker-count" style="font-size:12px;color:#9A9488">0 selected</div>
-      <div style="display:flex;gap:8px">
-        <button onclick="closeInventoryBarPicker()" style="padding:8px 18px;background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;color:#9A9488;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
-        <button onclick="confirmPickBars()" style="padding:8px 18px;background:#B8860B;border:none;border-radius:7px;color:#000;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Confirm Selection</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="card">
-<div class="section-title">Suppliers &amp; Freight</div>
-<table><thead><tr><th>Party</th><th>Role</th><th>Lead time</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td><strong>Metalor Technologies</strong></td><td>Supplier</td><td>3–5 days</td><td><span class="badge badge-success">Active</span></td></tr>
-<tr><td><strong>Malca-Amit</strong></td><td>Freight Forwarder</td><td>1–2 days</td><td><span class="badge badge-success">Active</span></td></tr>
-<tr><td><strong>Brinks Global</strong></td><td>Freight Forwarder</td><td>2–3 days</td><td><span class="badge badge-success">Active</span></td></tr>
-<tr><td><strong>AGR Custom Refinery</strong></td><td>Refinery</td><td>5–7 days</td><td><span class="badge badge-warning">Scheduled</span></td></tr>
-</tbody></table>
-</div>
-</div>
-<div>
-<div class="card" style="margin-bottom:16px">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-<div class="section-title" style="margin:0">Checklist — SHP-2025-0042</div>
-<span class="badge badge-warning">In Progress</span>
-</div>
-<div id="checklist-items">
-<div class="checklist-item done" onclick="toggleCheck(this)"><div class="check-box checked">✓</div><div><div style="font-size:13px">Serial verified against LBMA register</div><div style="font-size:11px;color:#5C5850">PA-2025-0091 · Confirmed</div></div></div>
-<div class="checklist-item done" onclick="toggleCheck(this)"><div class="check-box checked">✓</div><div><div style="font-size:13px">Assay certificate attached</div><div style="font-size:11px;color:#5C5850">PAMP cert #2025-0091</div></div></div>
-<div class="checklist-item done" onclick="toggleCheck(this)"><div class="check-box checked">✓</div><div><div style="font-size:13px">Weight verified on certified scale</div><div style="font-size:11px;color:#5C5850">100.02g ± 0.01g</div></div></div>
-<div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div style="font-size:13px">Packaging sealed — tamper evident</div><div style="font-size:11px;color:#5C5850">Awaiting seal</div></div></div>
-<div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div style="font-size:13px">Insurance confirmed (Malca-Amit)</div><div style="font-size:11px;color:#5C5850">Policy #MA-20250609</div></div></div>
-<div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div style="font-size:13px">Customs documents prepared</div><div style="font-size:11px;color:#5C5850">HS Code 7108.13</div></div></div>
-<div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div style="font-size:13px">AWB tracking number generated</div></div></div>
-</div>
-<div style="display:flex;gap:7px;margin-top:12px">
-<button class="btn" onclick="showToast('Docs auto-sent via email + e-sign')" style="flex:1">📧 Auto-send docs</button>
-<button class="btn btn-gold" onclick="showToast('Shipment dispatched — tracking active')" style="flex:1">Dispatch →</button>
-</div>
-</div>
-<div class="card">
-<div class="section-title">Documents</div>
-<table><thead><tr><th>Document</th><th>Shipment</th><th>Recipient</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td>Assay Certificate</td><td>SHP-0042</td><td>a.tan@goldstar.com</td><td><span class="badge badge-success">e-Signed</span></td></tr>
-<tr><td>Commercial Invoice</td><td>SHP-0042</td><td>a.tan@goldstar.com</td><td><span class="badge badge-warning">Pending</span></td></tr>
-<tr><td>Insurance Cert.</td><td>SHP-0041</td><td>s.chen@email.com</td><td><span class="badge badge-success">e-Signed</span></td></tr>
-<tr><td>LBMA COO</td><td>SHP-0040</td><td>t.weber@email.com</td><td><span class="badge badge-success">e-Signed</span></td></tr>
-</tbody></table>
-</div>
 </div>
 </div>
 </div>
@@ -11957,28 +12272,67 @@ document.addEventListener('DOMContentLoaded', function(){
       body.innerHTML='<tr><td colspan="9" style="text-align:center;color:#9A9488;padding:28px">No shipping docs found</td></tr>';
       return;
     }
-    body.innerHTML=filtered.map(function(r){
-      /* Ref No display: show refNo if exists, else orderNo */
-      var refDisplay = r.refNo ? r.refNo : '—';
-      var orderSub   = '<div style="font-size:10px;color:#5C5850;margin-top:2px">'+escapeHtml(r.orderNo)+'</div>';
-      /* Weight display */
-      var weightDisplay = r.weight ? escapeHtml(r.weight) : (r.qty&&r.unit ? escapeHtml(r.qty+' '+r.unit) : '—');
-      /* Brand short */
-      var brandShort = r.brand ? escapeHtml(r.brand.split('—')[0].trim().split(' ').slice(0,2).join(' ')) : '—';
-      /* Date */
-      var dateSub = r.orderDate ? '<div style="font-size:10px;color:#5C5850;margin-top:1px">'+fmtDateTH(r.orderDate)+'</div>' : '';
+    /* Group rows sharing the same Ref No. + Type into one order — a multi-brand order
+       should read as one order in this list too, not a separate row per brand. */
+    var groups=[]; var groupIndex={};
+    filtered.forEach(function(r){
+      var key = (r.refNo ? r.refNo : ('__norf__'+r.id)) + '|' + String(r.type||'').toUpperCase();
+      if(!(key in groupIndex)){ groupIndex[key]=groups.length; groups.push({ key:key, items:[] }); }
+      groups[groupIndex[key]].items.push(r);
+    });
+    body.innerHTML=groups.map(function(g){
+      var items=g.items, r0=items[0];
+      var isMulti = items.length>1;
+      var refDisplay = r0.refNo ? r0.refNo : '—';
+      var orderSub = isMulti
+        ? '<div style="font-size:10px;color:#5C5850;margin-top:2px">'+items.length+' orders</div>'
+        : '<div style="font-size:10px;color:#5C5850;margin-top:2px">'+escapeHtml(r0.orderNo)+'</div>';
+      var dateSub = r0.orderDate ? '<div style="font-size:10px;color:#5C5850;margin-top:1px">'+fmtDateTH(r0.orderDate)+'</div>' : '';
+      var weightDisplay, brandCell, totalCell, statusCell;
+      if(isMulti){
+        var totalKgSum=0, totalAmtSum=0;
+        var allSameStatus = items.every(function(x){ return x.status===r0.status; });
+        items.forEach(function(x){
+          totalKgSum += kgFromWeight(x.weight);
+          totalAmtSum += numFromText(x.total);
+        });
+        brandCell = '<div style="font-weight:600;color:#B8860B;font-size:11px;margin-bottom:2px">'+items.length+' Brands</div>'+
+          items.map(function(x){ return '<div style="font-size:11px;color:#9A9488">'+escapeHtml((x.brand||'—').split('—')[0].trim())+' — '+escapeHtml(x.weight||'—')+'</div>'; }).join('');
+        weightDisplay = totalKgSum.toLocaleString('en-US',{maximumFractionDigits:5})+' kg total';
+        totalCell = fmtUSD(totalAmtSum)+' total';
+        statusCell = allSameStatus ? r0.status : 'Mixed';
+      } else {
+        brandCell = r0.brand ? escapeHtml(r0.brand.split('—')[0].trim().split(' ').slice(0,2).join(' ')) : '—';
+        weightDisplay = r0.weight ? escapeHtml(r0.weight) : (r0.qty&&r0.unit ? escapeHtml(r0.qty+' '+r0.unit) : '—');
+        totalCell = escapeHtml(shipMoney(r0.total));
+        statusCell = r0.status;
+      }
+      var viewIds = items.map(function(x){return x.id;}).join(',');
       return '<tr>'+
         '<td><div style="font-weight:700;color:#B8860B">'+escapeHtml(refDisplay)+'</div>'+orderSub+dateSub+'</td>'+
-        '<td><div style="font-weight:600">'+escapeHtml(r.party)+'</div><div style="font-size:11px;color:#9A9488">'+escapeHtml(r.partyType||'')+'</div></td>'+
-        '<td><span class="badge '+(r.type==='SELL'?'badge-danger':'badge-success')+'">'+escapeHtml(r.type||r.side||'—')+'</span></td>'+
-        '<td style="font-size:12px;color:#9A9488">'+brandShort+'</td>'+
+        '<td><div style="font-weight:600">'+escapeHtml(r0.party)+'</div><div style="font-size:11px;color:#9A9488">'+escapeHtml(r0.partyType||'')+'</div></td>'+
+        '<td><span class="badge '+(r0.type==='SELL'?'badge-danger':'badge-success')+'">'+escapeHtml(r0.type||r0.side||'—')+'</span></td>'+
+        '<td style="font-size:12px;color:#9A9488">'+brandCell+'</td>'+
         '<td style="font-weight:600;color:#F0EDE6">'+weightDisplay+'</td>'+
-        '<td style="font-size:12px">'+escapeHtml(r.route||'—')+'</td>'+
-        '<td style="font-weight:700">'+escapeHtml(shipMoney(r.total))+'</td>'+
-        '<td><span class="ship-status-pill '+statusClass(r.status)+'">'+escapeHtml(r.status)+'</span></td>'+
-        '<td><div class="ship-action-row"><button class="btn btn-sm btn-gold" onclick="openShippingDetailModal(\''+escapeAttr(r.id)+'\')">View</button><button class="btn btn-sm" style="color:#FF6B6B" onclick="deleteShippingDoc(\''+escapeAttr(r.id)+'\')">Delete</button></div></td>'+
+        '<td style="font-size:12px">'+escapeHtml(r0.route||'—')+'</td>'+
+        '<td style="font-weight:700">'+totalCell+'</td>'+
+        '<td><span class="ship-status-pill '+statusClass(statusCell)+'">'+escapeHtml(statusCell)+'</span></td>'+
+        '<td><div class="ship-action-row"><button class="btn btn-sm btn-gold" onclick="openShippingDetailModal(\''+escapeAttr(r0.id)+'\')">View</button><button class="btn btn-sm" style="color:#FF6B6B" onclick="deleteShippingDocGroup(\''+escapeAttr(viewIds)+'\')">Delete</button></div></td>'+
       '</tr>';
     }).join('');
+  };
+  window.deleteShippingDocGroup = function(idsCsv){
+    var ids = idsCsv.split(',');
+    var list = shipGetList();
+    if(ids.length>1){
+      if(!confirm('ลบทั้งออเดอร์นี้ '+ids.length+' brand เลยหรือไม่? การกระทำนี้ยกเลิกไม่ได้')) return;
+      shipSaveList(list.filter(function(x){ return ids.indexOf(x.id)===-1; }));
+      if(ids.indexOf(activeShippingRecordId)>-1) window.closeShippingDetailModal();
+      renderShippingDocsList();
+      if(typeof showToast==='function') showToast(ids.length+' shipping docs deleted');
+    } else {
+      window.deleteShippingDoc(ids[0]);
+    }
   };
 
   window.openShippingDetailModal = function(id){
@@ -11987,12 +12341,20 @@ document.addEventListener('DOMContentLoaded', function(){
     var r=shipGetList().find(function(x){return x.id===id;});
     if(!r) return;
     setTextSafe('ship-modal-order', r.refNo || r.orderNo);
-    setTextSafe('ship-modal-sub', (r.partyType||'Client')+' · Physical Gold '+r.type+' · '+(r.route||'—')+' · Order No.: '+(r.orderNo||'—'));
+    var siblingsForSub = getSiblingRecordsBySameRef(r);
+    var subOrderPart = siblingsForSub.length>1 ? (siblingsForSub.length+' orders combined') : ('Order No.: '+(r.orderNo||'—'));
+    setTextSafe('ship-modal-sub', (r.partyType||'Client')+' · Physical Gold '+r.type+' · '+(r.route||'—')+' · '+subOrderPart);
     var st=document.getElementById('ship-modal-status');
     if(st){ st.textContent=recordComputedStatus(r); st.className='ship-status-pill '+statusClass(st.textContent); }
     var items=document.getElementById('ship-modal-items');
     if(items){
-      items.innerHTML='<tr><td>'+escapeHtml(r.brand)+'</td><td>'+escapeHtml(r.weight)+'</td><td>'+escapeHtml(r.qty)+'</td><td>'+escapeHtml(r.price)+'</td><td>'+escapeHtml(r.premium)+'</td><td style="font-weight:800">'+escapeHtml(r.total)+'</td></tr>';
+      /* A multi-brand order groups several records under one Ref No. (see
+         renderShippingDocsList) — show every sibling brand's line here too, not just
+         the one record that happened to be clicked, so the breakdown is complete. */
+      var siblingsForItems = getSiblingRecordsBySameRef(r);
+      items.innerHTML = siblingsForItems.map(function(x){
+        return '<tr><td>'+escapeHtml(x.brand)+'</td><td>'+escapeHtml(x.weight)+'</td><td>'+escapeHtml(x.qty)+'</td><td>'+escapeHtml(x.price)+'</td><td>'+escapeHtml(x.premium)+'</td><td style="font-weight:800">'+escapeHtml(x.total)+'</td></tr>';
+      }).join('');
     }
     setValueSafe('ship-modal-route', r.route||'');
     setValueSafe('ship-modal-mawb', r.mawb||'');
@@ -12007,6 +12369,16 @@ document.addEventListener('DOMContentLoaded', function(){
     if(modal) modal.classList.add('open');
   };
 
+  function getSiblingRecordsBySameRef(r){
+    if(!r || !r.refNo) return [r];
+    var sameType = String(r.type||'').toUpperCase();
+    var all = shipGetList().filter(function(x){
+      return x.refNo === r.refNo && String(x.type||'').toUpperCase()===sameType;
+    });
+    /* keep the clicked record first so its own invoiceNo/date lead the combined doc */
+    all.sort(function(a,b){ return a.id===r.id ? -1 : (b.id===r.id ? 1 : 0); });
+    return all.length ? all : [r];
+  }
   function getDocOptionsForRecord(r){
     if(String(r.type||'').toUpperCase()==='BUY'){
       return [
@@ -12016,9 +12388,7 @@ document.addEventListener('DOMContentLoaded', function(){
         ['packing','Packing List'],
         ['release','Gold Release Instruction'],
         ['confirmation','Purchase Confirmation Letter'],
-        ['margin','Margin Invoice'],
-        ['debitadvice','Debit Advice'],
-        ['creditadvice','Credit Advice']
+        ['margin','Margin Invoice']
       ];
     }
     return [
@@ -12125,17 +12495,19 @@ document.addEventListener('DOMContentLoaded', function(){
     var current = window.__shipPreviewKind || opts[0][0];
     if(!opts.some(function(o){return o[0]===current;})) current = opts[0][0];
     window.__shipPreviewKind = current;
+    var siblingsForLabel = getSiblingRecordsBySameRef(r);
+    var multiNote = siblingsForLabel.length>1 ? ' — combines all '+siblingsForLabel.length+' brands under this Ref No. automatically' : '';
     var labels={
-      invoice1:'Commercial Invoice combining Premium + Shipping into the gold price',
-      invoice2:'Commercial Invoice with Premium / Shipping shown separately',
-      proforma:'Quotation / pre-delivery payment request',
-      packing:'Packing details, weight, and number of boxes',
-      release:'Letter authorizing gold release from Free Zone',
-      confirmation:'Letter confirming the trade',
+      invoice1:'Commercial Invoice combining Premium + Shipping into the gold price'+multiNote,
+      invoice2:'Commercial Invoice with Premium / Shipping shown separately'+multiNote,
+      proforma:'Quotation / pre-delivery payment request'+multiNote,
+      packing:'Packing details, weight, and number of boxes'+multiNote,
+      release:'Letter authorizing gold release from Free Zone'+multiNote,
+      confirmation:'Letter confirming the trade'+multiNote,
       margin:'Invoice for Margin / Gold account',
-      invoice:'Standard commercial invoice',
-      debitadvice:'Debit Advice — notice of amount debited for this trade',
-      creditadvice:'Credit Advice — notice of amount credited for this trade'
+      invoice:'Standard commercial invoice'+multiNote,
+      debitadvice:'Debit Advice — notice of amount debited for this trade'+multiNote,
+      creditadvice:'Credit Advice — notice of amount credited for this trade'+multiNote
     };
     var options=opts.map(function(o){
       return '<option value="'+escapeAttr(o[0])+'" '+(o[0]===current?'selected':'')+'>'+escapeHtml(o[1])+'</option>';
@@ -12618,17 +12990,19 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function buildDocHTML(r,d){
-    if(d==='packing') return packingDoc(r);
+    var siblings = getSiblingRecordsBySameRef(r);
+    var isMulti = siblings.length>1;
+    if(d==='invoice1') return isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuyCombined(r);
+    if(d==='invoice2') return isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuy(r);
+    if(d==='proforma') return isMulti ? proformaDocCombined(siblings) : proformaDoc(r);
+    if(d==='packing') return isMulti ? packingDocBuyCombined(siblings) : packingDoc(r);
+    if(d==='release') return isMulti ? releaseDocCombined(siblings) : releaseDoc(r);
+    if(d==='confirmation') return isMulti ? confirmationDocCombined(siblings) : confirmationDoc(r);
+    if(d==='debitadvice') return isMulti ? debitAdviceDocCombined(siblings) : debitAdviceDoc(r);
+    if(d==='creditadvice') return isMulti ? creditAdviceDocCombined(siblings) : creditAdviceDoc(r);
     if(d==='delivery') return deliveryDoc(r);
     if(d==='mawb') return mawbDoc(r);
-    if(d==='proforma') return proformaDoc(r);
     if(d==='margin') return marginDoc(r);
-    if(d==='release') return releaseDoc(r);
-    if(d==='confirmation') return confirmationDoc(r);
-    if(d==='invoice1') return invoiceDocBuyCombined(r);
-    if(d==='invoice2') return invoiceDocBuy(r);
-    if(d==='debitadvice') return debitAdviceDoc(r);
-    if(d==='creditadvice') return creditAdviceDoc(r);
     return invoiceDoc(r);
   }
 
@@ -12838,6 +13212,252 @@ document.addEventListener('DOMContentLoaded', function(){
       'Account No.&nbsp; : '+escapeHtml(exv(r,'bankAccountNo'))+ 
     '</div>'+ 
     '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+ 
+    '</div></section>';
+  }
+  function invoiceDocMultiBrandCombined(records){
+    var rows='', grandTotal=0, grandGrams=0;
+    records.forEach(function(r,i){
+      var kg=kgFromWeight(r.weight), grams=kg*1000;
+      var priceOz=numFromText(r.price), priceKg=priceOz*32.148;
+      var premOz=premPerOzFromText(r.premium), premKg=premOz*32.148;
+      var combinedKg=priceKg+premKg, total=kg*combinedKg;
+      grandTotal+=total; grandGrams+=grams;
+      rows+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+escapeHtml(r.brand)+' Kilobars Purity 9999</td><td style="text-align:right">'+grams.toLocaleString()+'</td><td style="text-align:right">'+fmtUSD(combinedKg)+'</td><td style="text-align:right">'+fmtUSD(total)+'</td></tr>';
+    });
+    var r0=records[0];
+    var brandList=records.map(function(r){return r.brand;}).join(', ');
+    return '<section class="paper"><div class="bizform">'+
+    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r0.orderDate)+'</span></div>'+
+    '<div class="bizform-toprow"><span><b>Document Number :</b> '+escapeHtml(r0.invoiceNo)+'</span></div>'+
+    '<div class="bizform-title">COMMERCIAL INVOICE</div>'+
+    '<div class="note" style="margin-bottom:6px">Combined invoice — '+records.length+' brands under Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+    bizPartyBlock(r0)+
+    bizMetaRow('<span>Tax Number&nbsp; <b>—</b></span><span>VAT Number&nbsp; <b>VAT 0</b></span>')+
+    '<table class="bizform-table"><thead><tr><th>No</th><th>Description</th><th>Qty (Grams)</th><th>Unit Price / Kg</th><th>Total Amount</th></tr></thead><tbody>'+
+    rows+
+    '</tbody></table>'+
+    '<div class="note">* Premium + Shipping are included in the gold unit price.</div>'+
+    '<div class="bizform-bottomgrid">'+
+      '<div class="bizform-notes">'+
+        '<div class="row"><span class="lbl">Brands in this invoice</span>: '+escapeHtml(brandList)+'</div>'+
+        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grandGrams.toLocaleString()+' grams</div>'+
+        '<div class="row"><span class="lbl">Ref No.</span>: '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+        '<div class="row"><span class="lbl">Payment Due Date</span>: '+fmtDots(r0.deliveryDate||r0.orderDate)+'</div>'+
+        '<div class="row"><span class="lbl">Port of Destination</span>: '+escapeHtml(r0.destination||r0.route||'—')+'</div>'+
+        '<div class="row">DAP Shipment</div>'+
+      '</div>'+
+      '<div class="bizform-totals"><div class="row"><span>Subtotal :</span><span>'+fmtUSD(grandTotal)+'</span></div><div class="row grand"><span>Total : </span><span>'+fmtUSD(grandTotal)+'</span></div></div>'+
+    '</div>'+
+    '<div class="bizform-ssi"><b>Payment Conditions</b>'+
+      'Intermediary Bank&nbsp; : '+escapeHtml(exv(r0,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankIntermediarySwift'))+'<br>'+
+      'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r0,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankBeneficiarySwift'))+'<br>'+
+      'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+      'Account No.&nbsp; : '+escapeHtml(exv(r0,'bankAccountNo'))+
+    '</div>'+
+    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
+    '</div></section>';
+  }
+  /* ── Combined multi-brand versions of every other document type ── */
+  function debitAdviceDocCombined(records){
+    var rows='', grandTotal=0;
+    records.forEach(function(r){
+      var kg=kgFromWeight(r.weight), oz=ozFromWeight(r.weight);
+      var priceOz=numFromText(r.price);
+      var premOz=numFromText(exv(r,'discountPerOz'))||premPerOzFromText(r.premium);
+      var adviceAmt=numFromText(exv(r,'debitAmount'))||numFromText(r.total);
+      grandTotal+=adviceAmt;
+      rows+='<tr><td>Physical Gold Purchase — '+escapeHtml(r.brand)+' '+kg+' kg</td><td>'+escapeHtml(r.invoiceNo)+'</td><td style="text-align:right">'+oz.toFixed(3)+'</td><td style="text-align:right">'+fmtUSD(priceOz)+'</td><td style="text-align:right">'+fmtUSD(oz*priceOz)+'</td></tr>';
+      if(premOz) rows+='<tr><td>Premium / Discount — '+escapeHtml(r.brand)+'</td><td></td><td style="text-align:right">'+oz.toFixed(3)+'</td><td style="text-align:right">'+fmtUSD(premOz)+'</td><td style="text-align:right">'+fmtUSD(oz*premOz)+'</td></tr>';
+    });
+    var r0=records[0];
+    return '<section class="paper"><div class="bizform">'+
+    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r0.orderDate)+'</span></div>'+
+    '<div class="bizform-toprow"><span><b>Debit Advice No. :</b> DA-'+escapeHtml(r0.refNo||r0.invoiceNo)+'</span></div>'+
+    '<div class="bizform-title">DEBIT ADVICE</div>'+
+    '<div class="note" style="margin-bottom:6px">Combined advice — '+records.length+' brands under Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+    bizPartyBlock(r0)+
+    '<table class="bizform-table"><thead><tr><th>Description</th><th>Ref No.</th><th>Qty (oz)</th><th>Rate / oz (USD)</th><th>Amount (USD)</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="bizform-bottomgrid">'+
+      '<div class="bizform-notes">'+
+        '<div class="row"><span class="lbl">Brands</span>: '+escapeHtml(records.map(function(r){return r.brand;}).join(', '))+'</div>'+
+        '<div class="row"><span class="lbl">Route</span>: '+escapeHtml(r0.route||'—')+'</div>'+
+        '<div class="row"><span class="lbl">MAWB</span>: '+escapeHtml(r0.mawb||'—')+'</div>'+
+        '<div class="row"><span class="lbl">Delivery Date</span>: '+fmtDots(r0.deliveryDate||'—')+'</div>'+
+      '</div>'+
+      '<div class="bizform-totals">'+
+        '<div class="row grand"><span>Total Debit (USD) :</span><span>'+fmtUSD(grandTotal)+'</span></div>'+
+        '<div class="row" style="font-size:10px;color:#555"><span>Please debit your account accordingly.</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bizform-sign">Authorized By — '+escapeHtml(exv(r0,'signatoryName','Gold Star Trading Pte. Ltd.'))+'<br>Gold Star Trading Pte. Ltd.</div>'+
+    '</div></section>';
+  }
+  function creditAdviceDocCombined(records){
+    var rows='', grandTotal=0;
+    records.forEach(function(r){
+      var kg=kgFromWeight(r.weight), oz=ozFromWeight(r.weight);
+      var priceOz=numFromText(r.price);
+      var premOz=numFromText(exv(r,'discountPerOz'))||premPerOzFromText(r.premium);
+      var adviceAmt=numFromText(exv(r,'debitAmount'))||numFromText(r.total);
+      grandTotal+=adviceAmt;
+      rows+='<tr><td>Physical Gold Sale — '+escapeHtml(r.brand)+' '+kg+' kg</td><td>'+escapeHtml(r.invoiceNo)+'</td><td style="text-align:right">'+oz.toFixed(3)+'</td><td style="text-align:right">'+fmtUSD(priceOz)+'</td><td style="text-align:right">'+fmtUSD(oz*priceOz)+'</td></tr>';
+      if(premOz) rows+='<tr><td>Premium / Discount — '+escapeHtml(r.brand)+'</td><td></td><td style="text-align:right">'+oz.toFixed(3)+'</td><td style="text-align:right">'+fmtUSD(premOz)+'</td><td style="text-align:right">'+fmtUSD(oz*premOz)+'</td></tr>';
+    });
+    var r0=records[0];
+    return '<section class="paper"><div class="bizform">'+
+    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r0.orderDate)+'</span></div>'+
+    '<div class="bizform-toprow"><span><b>Credit Advice No. :</b> CA-'+escapeHtml(r0.refNo||r0.invoiceNo)+'</span></div>'+
+    '<div class="bizform-title">CREDIT ADVICE</div>'+
+    '<div class="note" style="margin-bottom:6px">Combined advice — '+records.length+' brands under Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+    bizPartyBlock(r0)+
+    '<table class="bizform-table"><thead><tr><th>Description</th><th>Ref No.</th><th>Qty (oz)</th><th>Rate / oz (USD)</th><th>Amount (USD)</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="bizform-bottomgrid">'+
+      '<div class="bizform-notes">'+
+        '<div class="row"><span class="lbl">Brands</span>: '+escapeHtml(records.map(function(r){return r.brand;}).join(', '))+'</div>'+
+        '<div class="row"><span class="lbl">Route</span>: '+escapeHtml(r0.route||'—')+'</div>'+
+        '<div class="row"><span class="lbl">MAWB</span>: '+escapeHtml(r0.mawb||'—')+'</div>'+
+        '<div class="row"><span class="lbl">Delivery Date</span>: '+fmtDots(r0.deliveryDate||'—')+'</div>'+
+      '</div>'+
+      '<div class="bizform-totals">'+
+        '<div class="row grand"><span>Total Credit (USD) :</span><span>'+fmtUSD(grandTotal)+'</span></div>'+
+        '<div class="row" style="font-size:10px;color:#555"><span>Please credit your account accordingly.</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bizform-sign">Authorized By — '+escapeHtml(exv(r0,'signatoryName','Gold Star Trading Pte. Ltd.'))+'<br>Gold Star Trading Pte. Ltd.</div>'+
+    '</div></section>';
+  }
+  function proformaDocCombined(records){
+    var rows='', grandTotal=0, idx=1;
+    records.forEach(function(r){
+      var kg=kgFromWeight(r.weight), oz=ozFromWeight(r.weight);
+      var priceOz=numFromText(r.price), premOz=premPerOzFromText(r.premium);
+      var goldAmt=oz*priceOz, premAmt=oz*premOz;
+      grandTotal+=goldAmt+premAmt;
+      rows+='<tr><td style="text-align:center">'+(idx++)+'</td><td>'+escapeHtml(r.brand)+' 99.99% @ '+kg+' Kgs</td><td style="text-align:right">'+oz.toFixed(3)+'</td><td style="text-align:right">'+fmtUSD(priceOz)+'</td><td style="text-align:right">'+fmtUSD(goldAmt)+'</td></tr>';
+      rows+='<tr><td style="text-align:center">'+(idx++)+'</td><td>Premium + Shipping — '+escapeHtml(r.brand)+'</td><td></td><td></td><td style="text-align:right">'+fmtUSD(premAmt)+'</td></tr>';
+    });
+    var r0=records[0];
+    return '<section class="paper"><div class="bizform">'+
+    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r0.orderDate)+'</span></div>'+
+    '<div class="bizform-toprow"><span><b>Document Number :</b> '+escapeHtml(r0.invoiceNo)+'</span></div>'+
+    '<div class="bizform-title">PROFORMA INVOICE</div>'+
+    '<div class="note" style="margin-bottom:6px">Combined — '+records.length+' brands under Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+    bizPartyBlock(r0)+bizMetaRow('')+
+    '<table class="bizform-table"><thead><tr><th>No</th><th>Description</th><th>Qty (Oz)</th><th>Unit Price / Oz</th><th>Total Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="bizform-bottomgrid">'+
+      '<div class="bizform-notes"><div style="font-weight:700;color:#00456F;margin-bottom:6px">SSI :</div>'+
+        'Intermediary Bank&nbsp; : '+escapeHtml(exv(r0,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankIntermediarySwift'))+'<br>'+
+        'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r0,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankBeneficiarySwift'))+'<br>'+
+        'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+        'Account No.&nbsp; : '+escapeHtml(exv(r0,'bankAccountNo'))+
+      '</div>'+
+      '<div class="bizform-totals">'+
+        '<div class="row"><span>Subtotal :</span><span>'+fmtUSD(grandTotal)+'</span></div>'+
+        '<div class="row"><span>Freight</span><span>'+fmtUSD(0)+'</span></div>'+
+        '<div class="row"><span>Insurance</span><span>'+fmtUSD(0)+'</span></div>'+
+        '<div class="row grand"><span>Total :</span><span>'+fmtUSD(grandTotal)+'</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte Ltd</div>'+
+    '</div></section>';
+  }
+  function releaseDocCombined(records){
+    var r0=records[0];
+    var totalValue=0, itemRows='';
+    records.forEach(function(r){
+      var oz=ozFromWeight(r.weight);
+      totalValue+=numFromText(r.total);
+      itemRows+='<div class="kvrow"><span class="k">'+escapeHtml(r.brand)+' Kilo Bars purity 9999</span>: '+oz.toFixed(3)+' troy ounces (Invoice '+escapeHtml(r.invoiceNo)+')</div>';
+    });
+    return '<section class="paper"><div class="letter-body">'+
+    '<div style="text-align:center;font-weight:700;font-size:14px;color:#00456F;margin-bottom:18px">Instruction Form for releasing from Free Zone</div>'+
+    '<div>Date: '+fmtDots(r0.orderDate)+'</div>'+
+    '<div style="margin-top:10px">'+escapeHtml(r0.carrier||'Forwarder Name')+'<br>'+escapeHtml(exv(r0,'forwarderAddress'))+'</div>'+
+    '<div style="margin-top:14px">Attn: '+escapeHtml(r0.carrier||'Forwarder')+' Team</div>'+
+    '<div style="margin-top:8px">Dear Team,</div>'+
+    '<div style="margin-top:8px">This is to authorize you to RELEASE the shipment as follow ('+records.length+' brands, Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+');</div>'+
+    '<div style="margin-top:14px">'+itemRows+
+      '<div class="kvrow"><span class="k">Total Value</span>: '+fmtUSD(totalValue)+'</div>'+
+      '<div class="kvrow"><span class="k">Consignee</span>: '+escapeHtml(cleanPartyName(r0.party))+'</div>'+
+      '<div class="kvrow"><span class="k">Authorized person</span>: '+escapeHtml(exv(r0,'authorizedPerson',getCurrentUserName()))+'</div>'+
+      '<div class="kvrow"><span class="k">Delivery address</span>: '+escapeHtml(r0.destination||r0.route||'—')+'</div>'+
+    '</div>'+
+    '<div style="margin-top:18px">Thank you.<br>Yours faithfully,</div>'+
+    '<div class="sign2"><div><div class="line">'+escapeHtml(exv(r0,'signatoryName','Name'))+'<br>'+escapeHtml(exv(r0,'signatoryTitle','Title'))+'</div></div><div></div></div>'+
+    '</div></section>';
+  }
+  function confirmationDocCombined(records){
+    var r0=records[0];
+    var name=cleanPartyName(r0.party);
+    var totalValue=0, itemRows='';
+    records.forEach(function(r){
+      var kg=kgFromWeight(r.weight);
+      totalValue+=numFromText(r.total);
+      itemRows+='<div class="kvrow"><span class="k">'+escapeHtml(r.brand)+'</span>9999 Gold Bar — '+kg+' kg (Ref '+escapeHtml(r.invoiceNo)+')</div>';
+    });
+    return '<section class="paper"><div class="letter-body">'+
+    '<div style="text-align:center;font-weight:700;font-size:16px;color:#00456F;margin-bottom:18px">PURCHASE CONFIRMATION LETTER</div>'+
+    '<div>To : '+escapeHtml(name)+'<br>&nbsp;&nbsp;'+escapeHtml(exv(r0,'customerAddress'))+'</div>'+
+    '<div style="margin-top:14px">This letter is a confirmation of our recent conversation on WhatsApp where we agreed to sell the following ('+records.length+' brands, Ref '+escapeHtml(r0.refNo||r0.orderNo)+'):</div>'+
+    '<div style="margin-top:14px">'+itemRows+
+      '<div class="kvrow"><span class="k">Total Amount</span>'+fmtUSD(totalValue)+'</div>'+
+      '<div class="kvrow"><span class="k">Shipment Date</span>'+fmtDots(r0.deliveryDate||r0.orderDate)+'</div>'+
+      '<div class="kvrow"><span class="k">Destination</span>'+escapeHtml(r0.destination||r0.route||'—')+'</div>'+
+    '</div>'+
+    '<div style="margin-top:18px">The total amount stated above include insurance, freight and all expenses that comes with this shipment.</div>'+
+    '<div style="margin-top:8px">This shipment will be sent to the above destination.</div>'+
+    '<div class="sign2"><div><div class="line">'+escapeHtml(exv(r0,'signatoryName','Name'))+'<br>'+escapeHtml(exv(r0,'signatoryTitle','Title'))+'</div></div><div></div></div>'+
+    '</div></section>';
+  }
+  function packingDocBuyCombined(records){
+    var r0=records[0];
+    var grandGrams=0;
+    var sections=records.map(function(r){
+      var kg=kgFromWeight(r.weight), grams=kg*1000;
+      grandGrams+=grams;
+      var boxes=buildBarBoxes(kg, 25);
+      var pairs=[]; for(var i=0;i<boxes.length;i+=2) pairs.push([boxes[i], boxes[i+1]||null]);
+      var barNosExtra=(r.extra && r.extra.barNumbers) ? r.extra.barNumbers.split(',').map(function(s){return s.trim();}).filter(function(s){return s;}) : null;
+      var barNos=(barNosExtra && barNosExtra.length) ? barNosExtra : (r.barNumbers||[]);
+      var boxesHTML=pairs.map(function(pair, pi){
+        var b1=pair[0], b2=pair[1];
+        var head='<tr><th colspan="4">Box No. '+(pi*2+1)+'</th>'+(b2?'<th colspan="4">Box No. '+(pi*2+2)+'</th>':'<th colspan="4"></th>')+'</tr>'+
+          '<tr><th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th>'+
+          '<th>Item</th><th>Brand</th><th>Bar No.</th><th>Weight(g)</th></tr>';
+        var rows='', maxLen=Math.max(b1.length, b2?b2.length:0);
+        for(var k=0;k<maxLen;k++){
+          var l=b1[k], rr=b2?b2[k]:null;
+          rows+='<tr>'+
+            '<td style="text-align:center">'+(l!==undefined?l:'')+'</td>'+
+            '<td>'+(l!==undefined?escapeHtml(r.brand||''):'')+'</td>'+
+            '<td>'+(l!==undefined?escapeHtml(barNos[l-1]||''):'')+'</td>'+
+            '<td style="text-align:right">'+(l!==undefined?'1,000':'')+'</td>'+
+            '<td style="text-align:center">'+(rr!==null&&rr!==undefined?rr:'')+'</td>'+
+            '<td>'+(rr!==null&&rr!==undefined?escapeHtml(r.brand||''):'')+'</td>'+
+            '<td>'+(rr!==null&&rr!==undefined?escapeHtml(barNos[rr-1]||''):'')+'</td>'+
+            '<td style="text-align:right">'+(rr!==null&&rr!==undefined?'1,000':'')+'</td>'+
+          '</tr>';
+        }
+        var b1Total=b1.length*1000, b2Total=b2?b2.length*1000:0;
+        var totalRow='<tr><td colspan="2" style="text-align:right;font-weight:700">Total</td><td></td><td style="text-align:right;font-weight:700">'+b1Total.toLocaleString()+'</td>'+
+          (b2?'<td colspan="2" style="text-align:right;font-weight:700">Total</td><td></td><td style="text-align:right;font-weight:700">'+b2Total.toLocaleString()+'</td>':'<td></td><td></td><td></td>')+
+          '</tr>';
+        return '<table class="box-table">'+head+rows+totalRow+'</table>';
+      }).join('<div style="margin:10px 0"></div>');
+      return '<div style="font-weight:700;color:#00456F;margin:14px 0 6px">Brand: '+escapeHtml(r.brand)+' — '+grams.toLocaleString()+' g</div>'+boxesHTML;
+    }).join('');
+    return '<section class="paper"><div class="bizform">'+
+    '<div class="bizform-toprow" style="justify-content:space-between"><span></span><span><b>Date :</b> '+fmtDots(r0.orderDate)+'</span></div>'+
+    '<div class="bizform-toprow"><span><b>Reference Invoice No :</b> '+escapeHtml(r0.invoiceNo)+'</span></div>'+
+    '<div class="bizform-title">PACKING LIST</div>'+
+    '<div class="note" style="margin-bottom:6px">Combined — '+records.length+' brands under Ref No. '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+    bizPartyBlock(r0)+
+    '<div style="font-size:11px;line-height:2;margin:10px 0">'+
+      '<div class="kvrow"><span class="k">Brands</span>: '+escapeHtml(records.map(function(r){return r.brand;}).join(', '))+'</div>'+
+      '<div class="kvrow"><span class="k">Total Quantity</span>: '+grandGrams.toLocaleString()+' Grams</div>'+
+    '</div>'+
+    sections+
+    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
     '</div></section>';
   }
   function invoiceDocBuy(r){
@@ -13228,7 +13848,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var brand = order.brand || '';
     var party = order.party || '—';
     var date = order.orderDate || new Date().toISOString().slice(0,10);
-    var ref = order.invoiceNo || order.orderNo;
+    var ref = order.refNo || order.invoiceNo || order.orderNo;
     var xauOz = qty * 32.148;
     var premUsd = xauOz * prem;
     var funds = xauOz * price;
@@ -13288,6 +13908,244 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   // After confirming Physical Gold, auto-create Shipping Docs record and jump to Shipping Docs List.
+  /* ── Multi-brand order panel (Buy & Sell page) ──
+     When a Quick Order group with several brands is opened via qoOpenGroup, the first
+     brand fills the main form as usual; the REST wait here, visible on this same page,
+     instead of being lost or requiring a trip back to the Quick Order queue. */
+  window.phMultiBrandQueue = window.phMultiBrandQueue || [];
+  function phEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function phFillBrandQty(line){
+    var br = document.getElementById('ph-brand');
+    if(br){
+      var matched = false;
+      for(var i=0;i<br.options.length;i++){
+        if(br.options[i].value===line.brand){ br.selectedIndex=i; matched=true; break; }
+      }
+      if(!matched && typeof toggleCustomBrand==='function'){
+        br.value='other';
+        var bc=document.getElementById('ph-brand-custom');
+        if(bc){ bc.value=line.brand; bc.style.display=''; }
+      }
+      if(typeof toggleCustomBrand==='function') toggleCustomBrand();
+    }
+    var qs=document.getElementById('ph-qty'); if(qs) qs.value=line.qty;
+    var un=document.getElementById('ph-unit'); if(un){ un.value=line.unit; if(typeof syncPhysicalUnitPrecision==='function') syncPhysicalUnitPrecision(); }
+    /* Lines added via phAddBrandLine carry their own Bar Size/Weight (line.size); lines that
+       came from Quick Order never set one (their qty is already a total, not a bar count) —
+       leave ph-size untouched in that case so it keeps behaving as before. */
+    if(line.size!=null && line.size!==''){
+      var sz=document.getElementById('ph-size'); if(sz) sz.value=line.size;
+    }
+    if(typeof calcPhysical==='function') calcPhysical();
+  }
+  /* What's currently sitting in the main form, read back out as a {brand,qty,unit,size} line —
+     used when the user picks a different pending brand to edit, so the one being replaced
+     goes back into the queue instead of being lost. */
+  function phReadCurrentBrandLine(){
+    var br = document.getElementById('ph-brand');
+    var brandVal = br ? br.value : '';
+    if(brandVal==='other'){
+      var bc=document.getElementById('ph-brand-custom');
+      brandVal = bc ? bc.value : brandVal;
+    }
+    var qs=document.getElementById('ph-qty');
+    var un=document.getElementById('ph-unit');
+    var sz=document.getElementById('ph-size');
+    return { brand: brandVal, qty: qs?qs.value:'', unit: un?un.value:'kg', size: sz?sz.value:1 };
+  }
+  /* Manual "+ Add Brand Line" button on the Buy & Sell form itself (same idea as Quick
+     Order's qoAddBrandLine): stash whatever brand/qty is currently filled in into the
+     pending queue, then clear just the brand+qty fields so the next brand can be picked.
+     Bar Size/Weight (ph-size) is carried along with the line (see phLineKg) — each line
+     remembers the size it was added with, but ph-size itself is left as-is on the form
+     since in practice every brand in one order usually shares the same bar size. */
+  window.phAddBrandLine = function(){
+    var current = phReadCurrentBrandLine();
+    if(!current.brand){
+      toast('⚠️ กรุณาเลือก Brand ก่อนเพิ่มบรรทัด');
+      var br=document.getElementById('ph-brand'); if(br) br.focus();
+      return;
+    }
+    if(!current.qty || parseFloat(current.qty)<=0){
+      toast('⚠️ กรุณากรอก Quantity ก่อนเพิ่มบรรทัด');
+      var qs=document.getElementById('ph-qty'); if(qs) qs.focus();
+      return;
+    }
+    window.phMultiBrandQueue = window.phMultiBrandQueue || [];
+    window.phMultiBrandQueue.push(current);
+    window.phMultiBrandPanelActive = true; /* keep the panel visible even if later deletes bring the queue back to 0 */
+    var brSel=document.getElementById('ph-brand');
+    if(brSel){ brSel.selectedIndex=0; }
+    var bc=document.getElementById('ph-brand-custom'); if(bc){ bc.value=''; bc.style.display='none'; }
+    var qtyEl=document.getElementById('ph-qty'); if(qtyEl) qtyEl.value='';
+    if(typeof calcPhysical==='function') calcPhysical();
+    window.renderPhMultiBrandPanel();
+    var brField=document.getElementById('ph-brand'); if(brField) brField.focus();
+    var lineKgTxt = phLineKg(current).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:5});
+    toast('+ เพิ่ม '+current.brand+' ('+current.qty+' × '+current.size+' '+current.unit+' = '+lineKgTxt+' kg) เข้าออเดอร์แล้ว — เลือก Brand ถัดไปได้เลย');
+  };
+  /* Rough USD estimate for a given kg quantity, using whatever price/premium is currently
+     set in the form — the same live/fixed price and premium apply order-wide, so this gives
+     a reasonable running total even for brands not yet loaded/confirmed. */
+  function phEstimateValueForKg(kgQty){
+    if(typeof gv!=='function' || typeof FX2==='undefined') return 0;
+    var cur = gv('ph-cur','USD');
+    var pt  = gv('ph-ptype','market');
+    var dashboardPrice = Number(window.currentPrice || (typeof currentPrice!=='undefined'?currentPrice:4168.535));
+    var fixedInput = document.getElementById('ph-fixed');
+    var overridePrice = fixedInput && fixedInput.value !== '' ? parseFloat(fixedInput.value) : null;
+    var price = (pt==='fixed' && overridePrice) ? overridePrice : (overridePrice ? overridePrice : dashboardPrice);
+    var rate = FX2[cur]||1;
+    var oz = kgQty * 32.148;
+    var premPerOz = parseFloat(gv('ph-premium-oz',0)) || 0;
+    return (oz*price + oz*premPerOz) * rate;
+  }
+  /* Real weight of one line = Quantity (bar count) × Bar Size — same formula calcPhysical()
+     uses for the form's own total. Lines that came from Quick Order never carry a `size`
+     (their qty is already a total amount, not a bar count), so size defaults to 1 — which
+     makes the formula collapse back to exactly the old qty-only behavior for those lines. */
+  function phLineKg(l){
+    if(typeof physicalInputToKg!=='function') return parseFloat(l.qty)||0;
+    var size = (l.size!=null && l.size!=='') ? parseFloat(l.size) : 1;
+    if(!(size>0)) size=1;
+    var kgPerUnit = physicalInputToKg(size, l.unit);
+    return kgPerUnit * phEffectiveQty(l.qty);
+  }
+  /* calcPhysical()'s own "Total weight" (and therefore the Confirm modal / actual order
+     that gets created) treats an empty or zero Quantity field as 1, not 0 — it never lets
+     the currently-loaded line preview as worthless. phLineKg has to use that exact same
+     floor, or the multi-brand panel's running total silently under-counts whatever line is
+     still sitting in the form and disagrees with what Confirm will actually charge. */
+  function phEffectiveQty(rawQty){
+    return Math.max(1, parseInt(rawQty,10) || 1);
+  }
+  window.renderPhMultiBrandPanel = function(){
+    var panel=document.getElementById('ph-multibrand-panel');
+    var list=document.getElementById('ph-multibrand-list');
+    var countEl=document.getElementById('ph-multibrand-count');
+    var totalEl=document.getElementById('ph-multibrand-total');
+    if(!panel||!list) return;
+    var q=window.phMultiBrandQueue||[];
+    /* Stay visible once the multi-brand flow has started (window.phMultiBrandPanelActive),
+       even if deletes bring the pending queue back down to 0 — otherwise removing the last
+       pending brand makes the whole panel (including line 1, still filled in) vanish at
+       once, which reads as "2 lines disappeared" even though only 1 was actually deleted. */
+    if(!q.length && !window.phMultiBrandPanelActive){ panel.style.display='none'; return; }
+    panel.style.display='';
+    countEl.textContent=(q.length+1)+' รายการ'; /* +1 = the brand currently loaded in the form */
+    var currentLine = phReadCurrentBrandLine();
+    var currentRow = '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(184,134,11,0.15);border:.5px solid rgba(184,134,11,0.4);border-radius:6px;padding:7px 10px;font-size:12px">'
+      +'<span style="color:#F0EDE6;font-weight:600">1. '+phEsc(currentLine.brand||'—')+' — '+phEffectiveQty(currentLine.qty)+' × '+(currentLine.size||1)+' '+currentLine.unit+' = '+phLineKg(currentLine).toFixed(3)+' kg</span>'
+      +'<span style="display:flex;align-items:center;gap:10px">'
+        +'<span style="color:#B8860B;font-size:10px">📝 กำลังกรอกอยู่นี้</span>'
+        +'<button type="button" onclick="phClearCurrentBrandLine();event.stopPropagation();" title="ยกเลิกบรรทัดนี้" style="background:none;border:none;color:#9A9488;font-size:13px;cursor:pointer;line-height:1;padding:2px 4px">✕</button>'
+      +'</span>'
+    +'</div>';
+    var pendingRows = q.map(function(l,i){
+      return '<div data-ph-pending-idx="'+i+'" style="display:flex;justify-content:space-between;align-items:center;background:#1C1C1C;border:.5px solid transparent;border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer" '
+        +'onmouseover="this.style.borderColor=&#39;rgba(184,134,11,0.5)&#39;" onmouseout="this.style.borderColor=&#39;transparent&#39;">'
+        +'<span style="color:#F0EDE6">'+(i+2)+'. '+phEsc(l.brand)+' — '+phEffectiveQty(l.qty)+' × '+(l.size||1)+' '+l.unit+' = '+phLineKg(l).toFixed(3)+' kg</span>'
+        +'<span style="display:flex;align-items:center;gap:10px">'
+          +'<span style="color:#B8860B;font-size:10px">✏️ กดเพื่อแก้ไข</span>'
+          +'<button type="button" data-ph-delete-idx="'+i+'" title="ลบรายการนี้" style="background:none;border:none;color:#9A9488;font-size:13px;cursor:pointer;line-height:1;padding:2px 4px">✕</button>'
+        +'</span>'
+      +'</div>';
+    }).join('');
+    list.innerHTML = currentRow + pendingRows;
+    list.onclick = function(e){
+      var delBtn = e.target.closest('[data-ph-delete-idx]');
+      if(delBtn){
+        e.stopPropagation();
+        var delIdx = parseInt(delBtn.getAttribute('data-ph-delete-idx'),10);
+        window.phDeletePendingBrand(delIdx);
+        return;
+      }
+      var row = e.target.closest('[data-ph-pending-idx]');
+      if(!row) return;
+      var idx = parseInt(row.getAttribute('data-ph-pending-idx'),10);
+      window.phSelectPendingBrand(idx);
+    };
+    if(totalEl){
+      var totalKg = phLineKg(currentLine);
+      q.forEach(function(l){ totalKg += phLineKg(l); });
+      var estTotal = phEstimateValueForKg(totalKg);
+      var cur = (typeof gv==='function') ? gv('ph-cur','USD') : 'USD';
+      totalEl.textContent = 'รวมทั้ง '+(q.length+1)+' Brand ('+totalKg.toFixed(2)+' kg) ≈ '+estTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+cur+' (ราคา ณ ตอนนี้ ยังไม่ล็อกจนกว่าจะ Confirm)';
+    }
+  };
+  /* Remove one pending (queued) brand line entirely — for undoing a mis-click on
+     "+ Add Brand Line" or dropping a brand the user no longer wants in this order. */
+  window.phDeletePendingBrand = function(idx){
+    var q = window.phMultiBrandQueue||[];
+    if(idx<0 || idx>=q.length) return;
+    var removed = q.splice(idx,1)[0];
+    window.phMultiBrandQueue = q;
+    if(typeof calcPhysical==='function') calcPhysical();
+    window.renderPhMultiBrandPanel();
+    if(removed) toast('ลบ '+removed.brand+' ออกจากออเดอร์แล้ว');
+  };
+  /* "✕" on the currently-loaded row (line 1). Just blanking the fields wasn't enough to
+     actually cancel it — since an empty Quantity still floors to 1 bar (phEffectiveQty,
+     matching calcPhysical's own behavior), a "cleared" line 1 would still get confirmed as
+     a real order. So this now genuinely REMOVES line 1 from the order: whatever's next in
+     the queue gets promoted into the form (the discarded content is NOT pushed back — the
+     user explicitly doesn't want it), or if nothing's queued, it fully exits multi-brand
+     mode and returns to a normal blank single order. */
+  window.phClearCurrentBrandLine = function(){
+    var q = window.phMultiBrandQueue||[];
+    if(q.length){
+      var next = q.shift();
+      window.phMultiBrandQueue = q;
+      phFillBrandQty(next);
+      window.renderPhMultiBrandPanel();
+      toast('ยกเลิกบรรทัดนี้แล้ว — โหลด '+next.brand+' เข้ามาแทน');
+      return;
+    }
+    var brSel=document.getElementById('ph-brand'); if(brSel) brSel.selectedIndex=0;
+    var bc=document.getElementById('ph-brand-custom'); if(bc){ bc.value=''; bc.style.display='none'; }
+    var qtyEl=document.getElementById('ph-qty'); if(qtyEl) qtyEl.value='';
+    window.phMultiBrandPanelActive = false; /* nothing left queued — back to a normal single order */
+    if(typeof calcPhysical==='function') calcPhysical();
+    window.renderPhMultiBrandPanel();
+    toast('ยกเลิกบรรทัดนี้แล้ว');
+  };
+  /* Swap: whatever brand is currently in the main form goes back into the pending queue,
+     and the picked pending brand loads into the form for editing/confirming. If the form
+     was only half-filled (e.g. brand picked but Quantity not typed yet), that scratch input
+     was never actually "added" — discard it instead of storing a ghost 0kg line, which would
+     otherwise corrupt the running total and could even get auto-confirmed as a $0 order. */
+  window.phSelectPendingBrand = function(idx){
+    var q = window.phMultiBrandQueue||[];
+    if(idx<0 || idx>=q.length) return;
+    var picked = q[idx];
+    var current = phReadCurrentBrandLine();
+    var currentIsValid = current.brand && parseFloat(current.qty)>0;
+    if(currentIsValid){ q.splice(idx,1,current); }
+    else { q.splice(idx,1); }
+    window.phMultiBrandQueue = q;
+    phFillBrandQty(picked);
+    window.renderPhMultiBrandPanel();
+  };
+  /* After a brand in a multi-brand order is confirmed, load the next one into the form.
+     Per KJ's request, EVERY brand in the same multi-brand order shares the exact same
+     Ref No. (not a suffixed variant) — window.phMultiBrandSharedRef marks that ref as an
+     intentional, allowed repeat so the duplicate-ref check doesn't block it. */
+  window.phAdvanceMultiBrand = function(baseRef){
+    var q=window.phMultiBrandQueue||[];
+    /* Defensive: drop any incomplete/ghost lines (blank brand or zero qty) that might have
+       slipped in, so an empty line never gets auto-confirmed as a real order. */
+    q = q.filter(function(l){ return l && l.brand && parseFloat(l.qty)>0; });
+    if(!q.length){ window.phMultiBrandQueue=q; return false; }
+    var next=q.shift();
+    window.phMultiBrandQueue=q;
+    phFillBrandQty(next);
+    var refEl=document.getElementById('ph-ref-no');
+    if(refEl){ refEl.value=baseRef; window.phMultiBrandSharedRef=baseRef; if(typeof validateRefNo==='function') validateRefNo(refEl.value); }
+    window.renderPhMultiBrandPanel();
+    
+    return true;
+  };
+
   var oldConfirm=window.confirmTrade;
   window.confirmTrade=function(side,type){
     if(String(type).toLowerCase()==='physical'){
@@ -13300,7 +14158,8 @@ document.addEventListener('DOMContentLoaded', function(){
         validateRefNo('');
         return;
       }
-      var dupCheck=checkRefDuplicate(refVal);
+      var isSharedMultiBrandRef = window.phMultiBrandSharedRef && refVal===window.phMultiBrandSharedRef;
+      var dupCheck = isSharedMultiBrandRef ? null : checkRefDuplicate(refVal);
       if(dupCheck){
         if(refEl) refEl.style.borderColor='rgba(255,107,107,0.8)';
         toast('⚠️ Ref No. "'+refVal+'" ถูกใช้ไปแล้วใน '+dupCheck+' — กรุณาใช้เลขอื่น');
@@ -13345,6 +14204,19 @@ document.addEventListener('DOMContentLoaded', function(){
             ' | Route: ' + _route
           );
         }
+        var hasMoreBrands = false;
+        if(window.phMultiBrandQueue && window.phMultiBrandQueue.length){
+          if(!window.phMultiBrandBaseRef) window.phMultiBrandBaseRef = refVal;
+          hasMoreBrands = window.phAdvanceMultiBrand(window.phMultiBrandBaseRef);
+        }
+        if(hasMoreBrands){
+          /* Confirm the next brand automatically too — one click confirms the whole order. */
+          window.confirmTrade(side, type);
+          return;
+        }
+        window.phMultiBrandBaseRef = null;
+        window.phMultiBrandSharedRef = null;
+        window.phMultiBrandPanelActive = false;
         if(typeof showPage==='function'){
           showPage('shippingdocs');
           setTimeout(function(){ window.fillShippingDocs(order); },120);
@@ -14051,6 +14923,36 @@ window.updateBrandPreview=function(selectId,previewId){
     qoRender();
   };
 
+  /* ── Remove an entire multi-brand order (all lines sharing the same orderGroupId) ── */
+  window.qoRemoveGroup = function(gid){
+    loadQueue();
+    var lines = qoQueue.filter(function(x){ return (x.orderGroupId||x.id)===gid; });
+    if(lines.length>1){
+      if(!confirm('ลบออเดอร์นี้ทั้ง '+lines.length+' brand?')) return;
+    }
+    qoQueue = qoQueue.filter(function(x){ return (x.orderGroupId||x.id)!==gid; });
+    saveQueue();
+    qoRender();
+  };
+
+  /* ── Open a multi-brand order: the Buy & Sell confirm page only supports one brand
+     per confirmed order, so open the FIRST remaining brand line, then remove just that
+     line — the group shrinks and stays in the queue until every brand has been opened
+     and confirmed, instead of losing the other brands or looking like separate orders. ── */
+  window.qoOpenGroup = function(gid){
+    loadQueue();
+    var lines = qoQueue.filter(function(x){ return (x.orderGroupId||x.id)===gid; });
+    if(!lines.length) return;
+    var first = lines[0];
+    window.qoOpenFull(first.id);
+    /* The whole group moves onto the Buy & Sell page now — remove it from the Quick Order queue entirely. */
+    qoQueue = qoQueue.filter(function(x){ return (x.orderGroupId||x.id)!==gid; });
+    saveQueue();
+    qoRender();
+    window.phMultiBrandQueue = lines.slice(1).map(function(l){ return { brand:l.brand, qty:l.qty, unit:l.unit }; });
+    setTimeout(function(){ if(typeof renderPhMultiBrandPanel==='function') renderPhMultiBrandPanel(); }, 400);
+  };
+
   /* ── Send to full order page ── */
   window.qoOpenFull = function(id){
     loadQueue();
@@ -14122,38 +15024,59 @@ window.updateBrandPreview=function(selectId,previewId){
     emptyEl && (emptyEl.style.display='none');
     tableWrap && (tableWrap.style.display='');
 
-    var groupColorMap = {};
-    var nextColorIsAlt = false;
-    tbody.innerHTML = qoQueue.map(function(item, i){
-      var sideColor = item.side==='buy'?'#2ecc71':'#FF6B6B';
-      var sideLabel = item.side==='buy'?'▲ BUY':'▼ SELL';
+    /* Group queue items by orderGroupId — a multi-brand order is one logical order
+       and must render as ONE row, not one row per brand line. */
+    var groups = [];
+    var groupIndex = {};
+    qoQueue.forEach(function(item){
       var gid = item.orderGroupId || item.id;
-      if(!(gid in groupColorMap)){ groupColorMap[gid] = nextColorIsAlt; nextColorIsAlt = !nextColorIsAlt; }
-      var bgRow = groupColorMap[gid] ? 'rgba(184,134,11,0.05)' : 'transparent';
-      var eid = escHtml(item.id);
-      var brandCell = escHtml(item.brand) + (item.brandCount>1 ? ' <span style="color:#B8860B;font-size:10px">('+item.brandCount+' brands)</span>' : '');
+      if(!(gid in groupIndex)){
+        groupIndex[gid] = groups.length;
+        groups.push({ gid: gid, items: [] });
+      }
+      groups[groupIndex[gid]].items.push(item);
+    });
+
+    tbody.innerHTML = groups.map(function(g, i){
+      var first = g.items[0];
+      var sideColor = first.side==='buy'?'#2ecc71':'#FF6B6B';
+      var sideLabel = first.side==='buy'?'▲ BUY':'▼ SELL';
+      var bgRow = (i%2===1) ? 'rgba(184,134,11,0.05)' : 'transparent';
+      var gidAttr = escHtml(g.gid);
+      var brandCell = g.items.map(function(l){
+        return escHtml(l.brand)+' — '+l.qty+' '+l.unit;
+      }).join('<br>');
+      var sameUnit = g.items.every(function(l){ return l.unit===first.unit; });
+      var qtyCell;
+      if(g.items.length===1){
+        qtyCell = first.qty+' '+first.unit;
+      } else if(sameUnit){
+        var totalQty = g.items.reduce(function(s,l){return s+(parseFloat(l.qty)||0);},0);
+        qtyCell = totalQty+' '+first.unit+' total';
+      } else {
+        qtyCell = g.items.length+' lines';
+      }
       return '<tr style="border-bottom:.5px solid rgba(255,255,255,0.05);background:'+bgRow+'">'
         +'<td style="padding:9px 10px;color:#5C5850;font-size:12px">'+(i+1)+'</td>'
         +'<td style="padding:9px 10px"><span style="color:'+sideColor+';font-weight:700;font-size:12px">'+sideLabel+'</span></td>'
-        +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;font-weight:500">'+escHtml(item.customer)+'</td>'
-        +'<td style="padding:9px 10px;color:#9A9488;font-size:12px">'+brandCell+'</td>'
-        +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;text-align:right;font-weight:600">'+item.qty+'</td>'
-        +'<td style="padding:9px 10px;color:#9A9488;font-size:12px">'+item.unit+'</td>'
-        +'<td style="padding:9px 10px;color:#9A9488;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.note||'—')+'</td>'
+        +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;font-weight:500">'+escHtml(first.customer)+'</td>'
+        +'<td style="padding:9px 10px;color:#9A9488;font-size:12px;line-height:1.6">'+brandCell+'</td>'
+        +'<td style="padding:9px 10px;color:#F0EDE6;font-size:13px;text-align:right;font-weight:600">'+qtyCell+'</td>'
+        +'<td style="padding:9px 10px;color:#9A9488;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(first.note||'—')+'</td>'
         +'<td style="padding:9px 10px;text-align:center;white-space:nowrap">'
-          +'<button data-qoid="'+eid+'" data-qoact="open" style="background:#B8860B;color:#000;border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-right:5px">Open →</button>'
-          +'<button data-qoid="'+eid+'" data-qoact="del" style="background:transparent;color:#FF6B6B;border:.5px solid rgba(255,107,107,0.3);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer">✕</button>'
+          +'<button data-qogid="'+gidAttr+'" data-qoact="open" style="background:#B8860B;color:#000;border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-right:5px">Open →</button>'
+          +'<button data-qogid="'+gidAttr+'" data-qoact="del" style="background:transparent;color:#FF6B6B;border:.5px solid rgba(255,107,107,0.3);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer">✕</button>'
         +'</td>'
         +'</tr>';
     }).join('');
-    /* event delegation for Open/Delete buttons */
+    /* event delegation for Open/Delete buttons — now group-based */
     tbody.onclick = function(e){
-      var btn = e.target.closest('[data-qoid]');
+      var btn = e.target.closest('[data-qogid]');
       if(!btn) return;
-      var id = btn.getAttribute('data-qoid');
+      var gid = btn.getAttribute('data-qogid');
       var act = btn.getAttribute('data-qoact');
-      if(act==='open') window.qoOpenFull(id);
-      else if(act==='del') window.qoRemove(id);
+      if(act==='open') window.qoOpenGroup(gid);
+      else if(act==='del') window.qoRemoveGroup(gid);
     };
   }
 
@@ -14833,14 +15756,14 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
 
     /* ── Open Orders ── */
     var ooEl = document.getElementById('portfolio-open-orders');
-    if(ooEl){
+    var ooElFull = document.getElementById('rpt-open-orders');
+    if(ooEl || ooElFull){
       var openList = list.filter(function(x){
         return !isClosedPortfolioOrder(x);
       });
-      if(!openList.length){
-        ooEl.innerHTML='<div style="text-align:center;color:#5C5850;font-size:12px;padding:20px">No open orders</div>';
-      } else {
-        ooEl.innerHTML = openList.slice(0,5).map(function(x){
+      var renderOpenOrders = function(rows){
+        if(!rows.length) return '<div style="text-align:center;color:#5C5850;font-size:12px;padding:20px">No open orders</div>';
+        return rows.map(function(x){
           var sideInfo=portfolioSideInfo(x);
           var up=sideInfo.isBuy;
           var typeLabel=sideInfo.label;
@@ -14866,18 +15789,19 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
             '<div><span style="background:'+statusBg+';color:'+statusClr+';border-radius:20px;padding:2px 7px;font-size:10px">'+realStatus+'</span></div>'+
           '</div>';
         }).join('');
-      }
+      };
+      if(ooEl) ooEl.innerHTML = renderOpenOrders(openList.slice(0,3));
+      if(ooElFull) ooElFull.innerHTML = renderOpenOrders(openList.slice(0,20));
     }
 
     /* ── Trade History ── */
     var thEl = document.getElementById('portfolio-trade-history');
-    if(thEl){
+    var thElFull = document.getElementById('rpt-trade-history');
+    if(thEl || thElFull){
       var showList = list.filter(function(x){ return isClosedPortfolioOrder(x); });
-      if(!showList.length){
-        thEl.innerHTML='<tr><td colspan="5" style="text-align:center;color:#5C5850;padding:20px;font-size:12px">No completed or closed transactions yet</td></tr>';
-      } else {
-        var xauPrice = (window.GV_MARKET_PRICE&&window.GV_MARKET_PRICE.price)||0;
-        thEl.innerHTML = showList.slice(0,10).map(function(x){
+      var renderTradeHistory = function(rows){
+        if(!rows.length) return '<tr><td colspan="5" style="text-align:center;color:#5C5850;padding:20px;font-size:12px">No completed or closed transactions yet</td></tr>';
+        return rows.map(function(x){
           var sideInfo=portfolioSideInfo(x);
           var up=sideInfo.isBuy;
           var typeLabel=sideInfo.label;
@@ -14894,7 +15818,9 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
             '<td style="padding:9px 14px;border-bottom:.5px solid rgba(255,255,255,0.04)">'+pnl+'</td>'+
           '</tr>';
         }).join('');
-      }
+      };
+      if(thEl) thEl.innerHTML = renderTradeHistory(showList.slice(0,3));
+      if(thElFull) thElFull.innerHTML = renderTradeHistory(showList.slice(0,20));
     }
   }
 
@@ -14904,15 +15830,13 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
     renderDashboard();
     renderPortfolio();
   }
+  /* Exposed globally because this file reassigns window.showPage many times over —
+     only the LAST assignment (in a later, separate IIFE) is actually live, so hooking
+     showPage locally here gets silently overwritten. The real active navigation code
+     calls window.gvDashboardRefresh directly instead. */
+  window.gvDashboardRefresh = refresh;
 
   document.addEventListener('DOMContentLoaded', refresh);
-
-  /* Hook showPage to refresh when navigating to dashboard/portfolio */
-  var _origSP = window.showPage;
-  window.showPage = function(p){
-    if(typeof _origSP==='function') _origSP(p);
-    if(p==='dashboard'||p==='portfolio') setTimeout(refresh, 100);
-  };
 
   /* Also refresh every 30s in case data changed */
   setInterval(refresh, 30000);
@@ -15254,6 +16178,12 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
     try{ if(page==='freight' && typeof window.renderFreightBookings==='function') renderFreightBookings(); }catch(e){}
     try{ if(page==='onboard' && typeof window.refreshPipelineTable==='function') refreshPipelineTable(); }catch(e){}
     try{ if(page==='approval' && typeof window.renderApprovalPipeline==='function') renderApprovalPipeline(); }catch(e){}
+    try{ if((page==='dashboard'||page==='portfolio'||page==='reports-center') && typeof window.gvDashboardRefresh==='function') setTimeout(window.gvDashboardRefresh, 100); }catch(e){}
+    try{ if(page==='physical'){
+      if(typeof window.renderInventoryTable==='function') window.renderInventoryTable();
+      if(typeof window.renderBarListBoxes==='function') window.renderBarListBoxes();
+      if(typeof window.renderBoxTrackingTable==='function') window.renderBoxTrackingTable();
+    } }catch(e){}
     window.scrollTo(0,0);
   }
   function build(){
@@ -15456,6 +16386,28 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
   syncState();
 })();
 </script>
+
+<!-- Inventory Picker Modal (used from Buy/Sell Order form — kept outside all .page containers so it overlays regardless of which page is currently active) -->
+<div id="inv-picker-modal" class="modal-overlay" onclick="if(event.target===this)closeInventoryBarPicker()">
+  <div class="modal" style="width:700px;max-width:98vw;padding:24px;background:#151515;border:1px solid rgba(184,134,11,.45);border-radius:14px;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:16px;font-weight:700;color:#F0EDE6">Pick Bars from Inventory</div>
+      <button onclick="closeInventoryBarPicker()" style="background:none;border:none;color:#9A9488;font-size:22px;cursor:pointer;font-family:'Inter',sans-serif">×</button>
+    </div>
+    <input id="inv-picker-search" placeholder="Search brand, bar no., supplier…" oninput="renderPickerTable()" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 10px;font-size:12px;color:#F0EDE6;outline:none;margin-bottom:12px">
+    <div style="overflow:auto;flex:1;border:.5px solid rgba(255,255,255,.07);border-radius:8px">
+      <table><thead><tr><th style="width:32px"><input type="checkbox" id="inv-picker-all" onchange="toggleAllPicker(this)"></th><th>Brand</th><th>Bar No.</th><th>Size</th><th>Supplier</th><th>Purity</th><th>Status</th></tr></thead>
+      <tbody id="inv-picker-body"></tbody></table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
+      <div id="inv-picker-count" style="font-size:12px;color:#9A9488">0 selected</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeInventoryBarPicker()" style="padding:8px 18px;background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;color:#9A9488;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
+        <button onclick="confirmPickBars()" style="padding:8px 18px;background:#B8860B;border:none;border-radius:7px;color:#000;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Confirm Selection</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
