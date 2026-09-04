@@ -3520,10 +3520,6 @@ document.addEventListener('click',function(e){
 <label style="font-size:11px;color:#5C5850;text-transform:uppercase;letter-spacing:.06em">Currency</label>
 <select id="ph-cur" onchange="calcPhysical()" style="background:#1C1C1C;border:.5px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 11px;font-size:13px;color:#F0EDE6;font-family:'Inter',sans-serif;outline:none">
 <option value="USD">USD</option>
-<option value="GBP">GBP</option>
-<option value="EUR">EUR</option>
-<option value="SGD">SGD</option>
-<option value="THB">THB</option>
 </select>
 </div>
 <!-- Delivery Route -->
@@ -5300,6 +5296,7 @@ function loadSettingsToForm(){
     </div>
   </div>
 </div>
+
 <!-- ===================== SHIPPING DOCS (REFINERY) ===================== -->
 <div class="page" id="page-refinerydocs">
   <div class="page-hero">
@@ -5936,17 +5933,21 @@ function loadSettingsToForm(){
   function buildRefDocHTML(r, kind){
     if(!r) return '<p>No record</p>';
     var cdoc = (r.customDocs||[]).find(function(cd){ return 'custom_'+cd.id === kind; });
-    if(cdoc) return refCustomDoc(r, cdoc);
-    switch(kind){
-      case 'invoice':      return refInvoiceDoc(r);
-      case 'packing':      return refPackingDoc(r);
-      case 'debit':        return refDebitAdviceDoc(r);
-      case 'receipt':      return refGoldReceiptDoc(r);
-      case 'confirmation': return refConfirmationDoc(r);
-      case 'po':           return refPurchaseOrderDoc(r);
-      case 'soc':          return refSOCDoc(r);
-      default:             return refInvoiceDoc(r);
+    var html;
+    if(cdoc){ html = refCustomDoc(r, cdoc); }
+    else{
+      switch(kind){
+        case 'invoice':      html = refInvoiceDoc(r); break;
+        case 'packing':      html = refPackingDoc(r); break;
+        case 'debit':        html = refDebitAdviceDoc(r); break;
+        case 'receipt':      html = refGoldReceiptDoc(r); break;
+        case 'confirmation': html = refConfirmationDoc(r); break;
+        case 'po':           html = refPurchaseOrderDoc(r); break;
+        case 'soc':          html = refSOCDoc(r); break;
+        default:             html = refInvoiceDoc(r);
+      }
     }
+    return (typeof window.injectESignature==='function') ? window.injectESignature(html) : html;
   }
 
   // ---------- List page ----------
@@ -6074,6 +6075,7 @@ function loadSettingsToForm(){
     if(typeof showToast==='function') showToast('Deleted');
   };
   window.openRefDetailModal=function(id){
+    if(window.activeRefRecordId!==id) window.__activeESignature = null; /* switching records — sign fresh */
     var r=rGetList().find(function(x){return x.id===id;}); if(!r) return;
     window.activeRefRecordId=id;
     document.getElementById('refdoc-modal-ref').textContent=r.rfs_ourref||r.id;
@@ -6102,6 +6104,14 @@ function loadSettingsToForm(){
   window.closeRefDetailModal=function(){
     document.getElementById('refinery-detail-modal').classList.remove('open');
     window.activeRefRecordId=null;
+    window.__activeESignature = null; /* signature never carries over — must sign fresh next time */
+  };
+  /* Called by the shared applyESign() (defined in the Shipping Docs script) after the person
+     signs, when the E-Sign modal was opened from this (Refinery) side. */
+  window.__refAfterSign = function(){
+    var r=rGetList().find(function(x){return x.id===window.activeRefRecordId;});
+    if(r) window.renderRefMiniPreview(r);
+    var btn=document.getElementById('refdoc-esign-status-btn'); if(btn) btn.textContent='✓ Signed — change';
   };
 
   function renderRefPrintButtons(r){
@@ -6123,6 +6133,7 @@ function loadSettingsToForm(){
       '<div class="ship-selected-summary"><div class="ship-selected-icon">📄</div><div><b>'+esc(currentTitle)+'</b><span>'+esc(currentDesc)+'</span></div></div>'+
       '<div class="ship-doc-picker-actions ship-filter-actions">'+
         '<button class="btn btn-sm" type="button" onclick="refreshRefInlinePreview()">Save / Update Preview</button>'+
+        '<button class="btn btn-sm" type="button" id="refdoc-esign-status-btn" onclick="openESignModal(\'refinery\')">'+(window.__activeESignature?'✓ Signed — change':'✍️ E-Sign')+'</button>'+
         '<button class="btn btn-sm btn-gold" type="button" onclick="printSelectedRefDoc()">Print This Document</button>'+
         '<button class="btn btn-sm" type="button" onclick="openRefEmailModal()">✉ Send Email</button>'+
       '</div></div>'+
@@ -12336,6 +12347,7 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   window.openShippingDetailModal = function(id){
+    if(activeShippingRecordId!==id) window.__activeESignature = null; /* switching records — sign fresh */
     activeShippingRecordId=id;
     window.__activeShippingRecordId=id;
     var r=shipGetList().find(function(x){return x.id===id;});
@@ -12527,6 +12539,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '</div>'+
       '<div class="ship-doc-picker-actions ship-filter-actions">'+
         '<button class="btn btn-sm" type="button" onclick="refreshShippingInlinePreview()">Save / Update Preview</button>'+
+        '<button class="btn btn-sm" type="button" id="esign-status-btn" onclick="openESignModal()">'+(window.__activeESignature?'✓ Signed — change':'✍️ E-Sign')+'</button>'+
         '<button class="btn btn-sm btn-gold" type="button" onclick="printSelectedShippingDocs()">Print This Document</button>'+
         '<button class="btn btn-sm" type="button" onclick="openShipEmailModal()">✉ Send Email</button>'+
       '</div>'+
@@ -12544,7 +12557,111 @@ document.addEventListener('DOMContentLoaded', function(){
     var modal=document.getElementById('shipping-detail-modal');
     if(modal) modal.classList.remove('open');
     activeShippingRecordId=null;
+    window.__activeESignature = null; /* signature never carries over — must sign fresh next time */
     renderShippingDocsList();
+  };
+
+  /* ── E-Sign: draw or type a signature, applied only to the current print/preview session.
+     Never written to localStorage — window.__activeESignature lives in memory only and is
+     cleared on closeShippingDetailModal / openShippingDetailModal, so every document needs a
+     fresh signature. ── */
+  window.__activeESignature = null;
+  var esignCtx = null, esignDrawing = false, esignHasStroke = false;
+  function esignCanvasPos(evt, canvas){
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return { x: (clientX-rect.left)*scaleX, y: (clientY-rect.top)*scaleY };
+  }
+  function esignSetupCanvas(){
+    var canvas = document.getElementById('esign-canvas');
+    if(!canvas) return;
+    esignCtx = canvas.getContext('2d');
+    esignCtx.clearRect(0,0,canvas.width,canvas.height);
+    esignCtx.lineWidth = 2.4; esignCtx.lineCap='round'; esignCtx.lineJoin='round'; esignCtx.strokeStyle='#111';
+    esignHasStroke = false;
+    var start = function(e){ esignDrawing=true; var p=esignCanvasPos(e,canvas); esignCtx.beginPath(); esignCtx.moveTo(p.x,p.y); e.preventDefault(); };
+    var move = function(e){ if(!esignDrawing) return; var p=esignCanvasPos(e,canvas); esignCtx.lineTo(p.x,p.y); esignCtx.stroke(); esignHasStroke=true; e.preventDefault(); };
+    var end = function(e){ esignDrawing=false; };
+    canvas.onmousedown=start; canvas.onmousemove=move; canvas.onmouseup=end; canvas.onmouseleave=end;
+    canvas.ontouchstart=start; canvas.ontouchmove=move; canvas.ontouchend=end;
+  }
+  window.clearESignCanvas = function(){
+    var canvas = document.getElementById('esign-canvas');
+    if(canvas && esignCtx) esignCtx.clearRect(0,0,canvas.width,canvas.height);
+    esignHasStroke = false;
+  };
+  window.switchESignTab = function(tab){
+    var drawPane=document.getElementById('esign-draw-pane'), typePane=document.getElementById('esign-type-pane');
+    var drawBtn=document.getElementById('esign-tab-draw'), typeBtn=document.getElementById('esign-tab-type');
+    if(drawPane) drawPane.style.display = tab==='draw' ? '' : 'none';
+    if(typePane) typePane.style.display = tab==='type' ? '' : 'none';
+    if(drawBtn) drawBtn.classList.toggle('btn-gold', tab==='draw');
+    if(typeBtn) typeBtn.classList.toggle('btn-gold', tab==='type');
+    window.__esignTab = tab;
+  };
+  window.renderESignTypedPreview = function(){
+    var input=document.getElementById('esign-type-input'), prev=document.getElementById('esign-type-preview');
+    if(prev) prev.textContent = input ? input.value : '';
+  };
+  window.openESignModal = function(target){
+    window.__esignTarget = target || 'shipping';
+    var modal=document.getElementById('esign-modal'); if(!modal) return;
+    var input=document.getElementById('esign-type-input'); if(input) input.value='';
+    window.renderESignTypedPreview();
+    window.switchESignTab('draw');
+    modal.classList.add('open');
+    setTimeout(esignSetupCanvas, 30); /* after modal is visible so canvas has real layout size */
+  };
+  window.closeESignModal = function(){
+    var modal=document.getElementById('esign-modal'); if(modal) modal.classList.remove('open');
+  };
+  window.applyESign = function(){
+    var dataUrl = null;
+    if(window.__esignTab==='type'){
+      var name=(document.getElementById('esign-type-input')||{}).value||'';
+      if(!name.trim()){ if(typeof toast==='function') toast('⚠️ กรุณาพิมพ์ชื่อก่อน'); return; }
+      var c=document.createElement('canvas'); c.width=520; c.height=140;
+      var ctx=c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.fillStyle='#111'; ctx.font="52px 'Brush Script MT','Segoe Script',cursive"; ctx.textBaseline='middle';
+      ctx.fillText(name, 16, c.height/2);
+      dataUrl = c.toDataURL('image/png');
+    } else {
+      if(!esignHasStroke){ if(typeof toast==='function') toast('⚠️ กรุณาวาดลายเซ็นก่อน'); return; }
+      var canvas=document.getElementById('esign-canvas');
+      dataUrl = canvas.toDataURL('image/png');
+    }
+    window.__activeESignature = dataUrl;
+    window.closeESignModal();
+    if(window.__esignTarget==='refinery'){
+      if(typeof window.__refAfterSign==='function') window.__refAfterSign();
+    } else {
+      var r=shipGetList().find(function(x){return x.id===activeShippingRecordId;});
+      if(r) renderShippingMiniPreview(r);
+      var btn=document.getElementById('esign-status-btn'); if(btn) btn.textContent='✓ Signed — change';
+    }
+    if(typeof toast==='function') toast('✓ เซ็นเรียบร้อย — จะแนบไปกับเอกสารตอนพิมพ์/ดูตัวอย่าง');
+  };
+  /* Stamp the active signature (if any) onto a document's "Authorized By" line. Works for both
+     the single-signature templates (.bizform-sign) and the two-party letters (.sign2, where it
+     goes on the FIRST — our side's — signature line only). */
+  window.injectESignature = function(html){
+    var sig = window.__activeESignature;
+    if(!sig) return html;
+    var imgTag = '<img src="'+sig+'" style="max-height:46px;max-width:170px;display:block;margin:0 auto 2px">';
+    if(html.indexOf('class="bizform-sign"')>-1){
+      return html.replace('<div class="bizform-sign">', '<div class="bizform-sign">'+imgTag);
+    }
+    if(html.indexOf('class="sign2"')>-1){
+      var idx = html.indexOf('class="line"');
+      if(idx>-1){
+        var tagEndOfOpen = html.indexOf('>', idx)+1;
+        return html.slice(0,tagEndOfOpen)+imgTag+html.slice(tagEndOfOpen);
+      }
+    }
+    return html;
   };
 
   window.deleteShippingDoc = function(id){
@@ -12992,18 +13109,20 @@ document.addEventListener('DOMContentLoaded', function(){
   function buildDocHTML(r,d){
     var siblings = getSiblingRecordsBySameRef(r);
     var isMulti = siblings.length>1;
-    if(d==='invoice1') return isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuyCombined(r);
-    if(d==='invoice2') return isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuy(r);
-    if(d==='proforma') return isMulti ? proformaDocCombined(siblings) : proformaDoc(r);
-    if(d==='packing') return isMulti ? packingDocBuyCombined(siblings) : packingDoc(r);
-    if(d==='release') return isMulti ? releaseDocCombined(siblings) : releaseDoc(r);
-    if(d==='confirmation') return isMulti ? confirmationDocCombined(siblings) : confirmationDoc(r);
-    if(d==='debitadvice') return isMulti ? debitAdviceDocCombined(siblings) : debitAdviceDoc(r);
-    if(d==='creditadvice') return isMulti ? creditAdviceDocCombined(siblings) : creditAdviceDoc(r);
-    if(d==='delivery') return deliveryDoc(r);
-    if(d==='mawb') return mawbDoc(r);
-    if(d==='margin') return marginDoc(r);
-    return invoiceDoc(r);
+    var html;
+    if(d==='invoice1') html = isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuyCombined(r);
+    else if(d==='invoice2') html = isMulti ? invoiceDocMultiBrandCombined(siblings) : invoiceDocBuy(r);
+    else if(d==='proforma') html = isMulti ? proformaDocCombined(siblings) : proformaDoc(r);
+    else if(d==='packing') html = isMulti ? packingDocBuyCombined(siblings) : packingDoc(r);
+    else if(d==='release') html = isMulti ? releaseDocCombined(siblings) : releaseDoc(r);
+    else if(d==='confirmation') html = isMulti ? confirmationDocCombined(siblings) : confirmationDoc(r);
+    else if(d==='debitadvice') html = isMulti ? debitAdviceDocCombined(siblings) : debitAdviceDoc(r);
+    else if(d==='creditadvice') html = isMulti ? creditAdviceDocCombined(siblings) : creditAdviceDoc(r);
+    else if(d==='delivery') html = deliveryDoc(r);
+    else if(d==='mawb') html = mawbDoc(r);
+    else if(d==='margin') html = marginDoc(r);
+    else html = invoiceDoc(r);
+    return injectESignature(html);
   }
 
   /* ── Debit Advice ── */
@@ -13196,7 +13315,7 @@ document.addEventListener('DOMContentLoaded', function(){
         '<div class="row"><span class="lbl">Type of Gold</span>: '+escapeHtml(r.brand)+'</div>'+ 
         '<div class="row"><span class="lbl">Quantity</span>: '+kg+' Kgs.</div>'+ 
         '<div class="row"><span class="lbl">Brand</span>: '+escapeHtml(r.brand)+'</div>'+ 
-        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grams.toLocaleString()+' grams</div>'+ 
+        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grams.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' grams</div>'+ 
         '<div class="row"><span class="lbl">HS Code</span>: '+escapeHtml(exv(r,'hsCode'))+'</div>'+ 
         '<div class="row"><span class="lbl">Payment Due Date</span>: '+fmtDots(r.deliveryDate||r.orderDate)+'</div>'+ 
         '<div class="row"><span class="lbl">Port of Loading</span>: '+escapeHtml(exv(r,'portOfLoading'))+'</div>'+ 
@@ -13208,7 +13327,7 @@ document.addEventListener('DOMContentLoaded', function(){
     '<div class="bizform-ssi"><b>Payment Conditions</b>'+ 
       'Intermediary Bank&nbsp; : '+escapeHtml(exv(r,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankIntermediarySwift'))+'<br>'+ 
       'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankBeneficiarySwift'))+'<br>'+ 
-      'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+ 
+      'Account Name&nbsp; : Gold Star Trading Pte. Ltd.<br>'+ 
       'Account No.&nbsp; : '+escapeHtml(exv(r,'bankAccountNo'))+ 
     '</div>'+ 
     '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+ 
@@ -13239,19 +13358,23 @@ document.addEventListener('DOMContentLoaded', function(){
     '<div class="note">* Premium + Shipping are included in the gold unit price.</div>'+
     '<div class="bizform-bottomgrid">'+
       '<div class="bizform-notes">'+
-        '<div class="row"><span class="lbl">Brands in this invoice</span>: '+escapeHtml(brandList)+'</div>'+
-        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grandGrams.toLocaleString()+' grams</div>'+
-        '<div class="row"><span class="lbl">Ref No.</span>: '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
+        '<div class="row"><span class="lbl">Type of Gold</span>: '+escapeHtml(brandList)+'</div>'+
+        '<div class="row"><span class="lbl">Quantity</span>: '+(grandGrams/1000).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' Kgs.</div>'+
+        '<div class="row"><span class="lbl">Brand</span>: '+escapeHtml(brandList)+'</div>'+
+        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grandGrams.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' grams</div>'+
+        '<div class="row"><span class="lbl">HS Code</span>: '+escapeHtml(exv(r0,'hsCode'))+'</div>'+
         '<div class="row"><span class="lbl">Payment Due Date</span>: '+fmtDots(r0.deliveryDate||r0.orderDate)+'</div>'+
+        '<div class="row"><span class="lbl">Port of Loading</span>: '+escapeHtml(exv(r0,'portOfLoading'))+'</div>'+
         '<div class="row"><span class="lbl">Port of Destination</span>: '+escapeHtml(r0.destination||r0.route||'—')+'</div>'+
         '<div class="row">DAP Shipment</div>'+
+        '<div class="row"><span class="lbl">Ref No.</span>: '+escapeHtml(r0.refNo||r0.orderNo)+'</div>'+
       '</div>'+
       '<div class="bizform-totals"><div class="row"><span>Subtotal :</span><span>'+fmtUSD(grandTotal)+'</span></div><div class="row grand"><span>Total : </span><span>'+fmtUSD(grandTotal)+'</span></div></div>'+
     '</div>'+
     '<div class="bizform-ssi"><b>Payment Conditions</b>'+
       'Intermediary Bank&nbsp; : '+escapeHtml(exv(r0,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankIntermediarySwift'))+'<br>'+
       'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r0,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankBeneficiarySwift'))+'<br>'+
-      'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+      'Account Name&nbsp; : Gold Star Trading Pte. Ltd.<br>'+
       'Account No.&nbsp; : '+escapeHtml(exv(r0,'bankAccountNo'))+
     '</div>'+
     '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
@@ -13348,7 +13471,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '<div class="bizform-notes"><div style="font-weight:700;color:#00456F;margin-bottom:6px">SSI :</div>'+
         'Intermediary Bank&nbsp; : '+escapeHtml(exv(r0,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankIntermediarySwift'))+'<br>'+
         'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r0,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r0,'bankBeneficiarySwift'))+'<br>'+
-        'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+        'Account Name&nbsp; : Gold Star Trading Pte. Ltd.<br>'+
         'Account No.&nbsp; : '+escapeHtml(exv(r0,'bankAccountNo'))+
       '</div>'+
       '<div class="bizform-totals">'+
@@ -13358,7 +13481,7 @@ document.addEventListener('DOMContentLoaded', function(){
         '<div class="row grand"><span>Total :</span><span>'+fmtUSD(grandTotal)+'</span></div>'+
       '</div>'+
     '</div>'+
-    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte Ltd</div>'+
+    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
     '</div></section>';
   }
   function releaseDocCombined(records){
@@ -13480,7 +13603,7 @@ document.addEventListener('DOMContentLoaded', function(){
         '<div class="row"><span class="lbl">Type of Gold</span>: '+escapeHtml(r.brand)+'</div>'+
         '<div class="row"><span class="lbl">Quantity</span>: '+kg+' Kgs.</div>'+
         '<div class="row"><span class="lbl">Brand</span>: '+escapeHtml(r.brand)+'</div>'+
-        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grams.toLocaleString()+' grams</div>'+
+        '<div class="row"><span class="lbl">Total Gross Weight</span>: '+grams.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' grams</div>'+
         '<div class="row"><span class="lbl">HS Code</span>: '+escapeHtml(exv(r,'hsCode'))+'</div>'+
         '<div class="row"><span class="lbl">Payment Due Date</span>: '+fmtDots(r.deliveryDate||r.orderDate)+'</div>'+
         '<div class="row"><span class="lbl">Port of Loading</span>: '+escapeHtml(exv(r,'portOfLoading'))+'</div>'+
@@ -13495,7 +13618,7 @@ document.addEventListener('DOMContentLoaded', function(){
     '<div class="bizform-ssi"><b>SSI :</b>'+
       'Intermediary Bank&nbsp; : '+escapeHtml(exv(r,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankIntermediarySwift'))+'<br>'+
       'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankBeneficiarySwift'))+'<br>'+
-      'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+      'Account Name&nbsp; : Gold Star Trading Pte. Ltd.<br>'+
       'Account No.&nbsp; : '+escapeHtml(exv(r,'bankAccountNo'))+
     '</div>'+
     '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
@@ -13613,7 +13736,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '<div class="bizform-notes"><div style="font-weight:700;color:#00456F;margin-bottom:6px">SSI :</div>'+
         'Intermediary Bank&nbsp; : '+escapeHtml(exv(r,'bankIntermediary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankIntermediarySwift'))+'<br>'+
         'Beneficiary Bank&nbsp; : '+escapeHtml(exv(r,'bankBeneficiary'))+'&nbsp; &nbsp; Swift : '+escapeHtml(exv(r,'bankBeneficiarySwift'))+'<br>'+
-        'Account Name&nbsp; : Gold Star Trading Pte Ltd<br>'+
+        'Account Name&nbsp; : Gold Star Trading Pte. Ltd.<br>'+
         'Account No.&nbsp; : '+escapeHtml(exv(r,'bankAccountNo'))+
       '</div>'+
       '<div class="bizform-totals">'+
@@ -13626,7 +13749,7 @@ document.addEventListener('DOMContentLoaded', function(){
         '<div class="row grand"><span>Total :</span><span>'+fmtUSD(total)+'</span></div>'+
       '</div>'+
     '</div>'+
-    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte Ltd</div>'+
+    '<div class="bizform-sign">Authorized By<br>Gold Star Trading Pte. Ltd.</div>'+
     '</div></section>';
   }
   function marginDoc(r){
@@ -13704,7 +13827,7 @@ document.addEventListener('DOMContentLoaded', function(){
     '<div style="margin-top:18px">The total amount stated above include insurance, freight and all expenses that comes with this shipment.</div>'+
     '<div style="margin-top:8px">This shipment will be sent to the above destination.</div>'+
     '<div style="margin-top:8px">By signing this letter we agreed to transfer the goods by agreed schedule and you agreed to transfer total amount stated to our bank account.</div>'+
-    '<div class="sign2"><div><div class="line">Date<br><br>For Gold Star Trading Pte Ltd<br><br>Name : '+escapeHtml(exv(r,'signatoryName',''))+'</div></div><div><div class="line">Date<br><br>For '+escapeHtml(name)+'</div></div></div>'+
+    '<div class="sign2"><div><div class="line">Date<br><br>For Gold Star Trading Pte. Ltd.<br><br>Name : '+escapeHtml(exv(r,'signatoryName',''))+'</div></div><div><div class="line">Date<br><br>For '+escapeHtml(name)+'</div></div></div>'+
     '</div></section>';
   }
   function paperCSS(){
@@ -16405,6 +16528,38 @@ function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,
         <button onclick="closeInventoryBarPicker()" style="padding:8px 18px;background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;color:#9A9488;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
         <button onclick="confirmPickBars()" style="padding:8px 18px;background:#B8860B;border:none;border-radius:7px;color:#000;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Confirm Selection</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- E-Sign Modal — used by both Shipping Docs and Shipping Docs (Refinery). Kept outside all
+     .page containers so it overlays correctly regardless of which page triggered it (see
+     inv-picker-modal above for why that matters). Signature is captured fresh each time
+     (never saved to storage) and only applies to the current print/preview session — it's
+     cleared whenever the relevant detail modal is closed or a different record is opened, so
+     the next document always needs a fresh signature. -->
+<div id="esign-modal" class="modal-overlay" onclick="if(event.target===this)closeESignModal()">
+  <div class="modal" style="width:460px;max-width:96vw;padding:22px">
+    <button class="modal-close" onclick="closeESignModal()">✕</button>
+    <div class="modal-title" style="margin-bottom:2px">✍️ E-Sign Document</div>
+    <div class="modal-sub" style="margin-bottom:14px">Sign fresh for this document — the signature is not saved and won't carry over to the next one.</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button type="button" id="esign-tab-draw" onclick="switchESignTab('draw')" class="btn btn-sm" style="flex:1">✏️ Draw</button>
+      <button type="button" id="esign-tab-type" onclick="switchESignTab('type')" class="btn btn-sm" style="flex:1">⌨️ Type</button>
+    </div>
+    <div id="esign-draw-pane">
+      <canvas id="esign-canvas" width="416" height="160" style="width:100%;height:160px;background:#fff;border-radius:8px;border:1px solid rgba(255,255,255,.15);touch-action:none;cursor:crosshair"></canvas>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px">
+        <button type="button" class="btn btn-sm" onclick="clearESignCanvas()">Clear</button>
+      </div>
+    </div>
+    <div id="esign-type-pane" style="display:none">
+      <input id="esign-type-input" placeholder="Type your name" oninput="renderESignTypedPreview()" style="width:100%;background:#1C1C1C;border:.5px solid rgba(255,255,255,.1);border-radius:7px;padding:10px 12px;font-size:14px;color:#F0EDE6;outline:none;margin-bottom:10px">
+      <div id="esign-type-preview" style="background:#fff;border-radius:8px;min-height:110px;display:flex;align-items:center;justify-content:center;padding:10px;font-family:'Brush Script MT','Segoe Script',cursive;font-size:34px;color:#111;overflow:hidden;white-space:nowrap"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button type="button" class="btn" style="flex:1" onclick="closeESignModal()">Cancel</button>
+      <button type="button" class="btn btn-gold" style="flex:1" onclick="applyESign()">Apply Signature</button>
     </div>
   </div>
 </div>
